@@ -25,58 +25,36 @@ Exit criteria:
 
 ---
 
-## M1 - Project rules, architecture and tooling baseline
-Status: current
+## M1 - Workflow definition
+Status: done
 
 Goal:
-- Define the minimum project rules required to start firmware work without structural rework.
+- Define the repository workflow for human discussion, milestone consolidation, and Codex execution.
 
 Scope:
-- Add `.gitignore`
-- Add `.editorconfig`
-- Add `.clang-format`
-- Add `docs/c_style.md`
-- Add `docs/firmware_architecture.md`
-- Add `AGENTS.md`
-- Align milestone tracking documents
-- Define initial static analysis strategy
+- Define milestone source-of-truth document
+- Define design workspace document
+- Define agent execution prompt document
+- Define persistent agent instructions
+- Align roadmap and current milestone docs
 
 Out of scope:
-- CubeMX project generation
-- VSCode build/debug
-- FreeRTOS integration
-- Service implementation
-- Hardware bring-up
+- C coding style
+- Formatting rules
+- Static analysis
+- Firmware architecture decisions
+- CubeMX
+- Firmware implementation
 
 Exit criteria:
-- Repository ignores generated/build/temp files correctly
-- Formatting rules are committed and unambiguous
-- Layering and dependency rules are documented
-- Human and AI guidance are aligned
-- `docs/current_milestone.md` reflects the actual deliverables of M1
+- Workflow documents created
+- Roles of each document are explicit
+- Human -> ChatGPT -> repo -> Codex flow is clear
 
 ---
 
-## M2 - STM32U575 hello world baseline
-Status: next
-
-Goal:
-- Create the first working firmware baseline on target.
-
-Scope:
-- Create CubeMX project for STM32U575
-- Confirm generated project builds cleanly
-- Configure one LED
-- Configure one UART
-- Place generated code under `firmware/generated/`
-- Keep user code outside generated files except required hooks
-
-Exit criteria:
-- Build works
-- Flash works
-- LED blinks
-- UART prints hello
-- Project structure respects documented architecture
+## M2 - Coding rules and tooling baseline
+Status: current
 
 ---
 
