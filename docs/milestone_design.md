@@ -1,25 +1,78 @@
-# Milestone Design
+## Current Milestone: M2 - Coding rules and tooling baseline
 
-## Purpose
-This file is the design workspace for the active milestone.
+### Goal
+Define the minimum set of rules and tools required to write consistent embedded C code,
+compatible with both human development and AI-assisted generation.
 
-It is used to summarize technical reasoning discussed between the human and ChatGPT before work is consolidated into the milestone definition or converted into an execution prompt.
+---
 
-## Rules
-- This file is not the source of truth for milestone scope.
-- This file may contain alternatives, tradeoffs, and rejected options.
-- This file must stay concise and decision-oriented.
-- This file must not become a raw conversation log.
+### Constraints
+- Must be simple and practical
+- Must avoid over-engineering
+- Must not conflict with AI-generated code (Codex)
+- Must be easy to maintain long term
+- Must not introduce unnecessary dependencies
 
-## Current design focus
-Define the workflow between:
-- human discussion
-- ChatGPT reasoning
-- repository documents
-- Codex execution
+---
 
-## Current decisions
-- `docs/current_milestone.md` is the source of truth for the active milestone
-- `docs/agent_prompt.md` is the execution input for Codex
-- `AGENTS.md` provides persistent instructions for agents
-- `docs/milestone_design.md` stores concise reasoning and alternatives
+### Non-goals
+- No firmware architecture definition
+- No CubeMX setup
+- No RTOS integration
+- No complex static analysis setup
+- No process-heavy documentation
+
+---
+
+### Key questions
+- How strict should naming rules be?
+- How much should be enforced by formatter vs manual rules?
+- Do we include static analysis now or later?
+- How to avoid conflict between human style and generated code?
+
+---
+
+### Candidate approach
+
+Minimal baseline:
+
+- `.editorconfig`
+  → whitespace, encoding, line endings
+
+- `.clang-format`
+  → automatic formatting (single source of truth for layout)
+
+- `docs/c_style.md`
+  → naming, file structure, API rules
+
+- No static analysis for now
+  → postpone until real code exists
+
+---
+
+### Tradeoffs
+
+Pros:
+- fast to implement
+- low friction
+- compatible with Codex
+- avoids premature complexity
+
+Cons:
+- less strict enforcement initially
+- potential inconsistencies until rules stabilize
+
+---
+
+### Decisions (to confirm)
+
+- Use clang-format as the only formatter
+- Keep style rules minimal and human-readable
+- Avoid static analysis in this milestone
+- Prioritize consistency over strictness
+
+---
+
+### Open points (if any)
+- Naming strictness level (to finalize in `c_style.md`)
+- Whether to define error handling conventions now or later
