@@ -44,12 +44,14 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    # Add user sources here
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../app/fm_app_hello_world.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../port/fm_port_platform.c
 )
 
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
-    # Add user defined include paths
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../app
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../port
 )
 
 # Add project symbols (macros)
