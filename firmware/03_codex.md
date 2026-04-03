@@ -1,20 +1,21 @@
 # Plantillas operativas para Codex
-Versión: v0.4
+Versión: v0.5
 
 ## Regla general
 Para cualquier análisis o cambio dentro del repo:
 - revisar `STYLE.md`,
 - revisar `CHANGELOG.md` si la tarea depende de continuidad,
-- usar `firmware/style-examples/` como referencia mínima de estilo y forma,
+- revisar `AGENTS.md` si la tarea se ejecuta como trabajo delegado,
+- usar `style-examples/` como referencia mínima de estilo y forma,
 - respetar la separación entre:
-  - `firmware/port/`
-  - `firmware/bsp/`
-  - `firmware/services/`
-  - `firmware/app/`
-  - `firmware/cube/`
+  - `app/`
+  - `bsp/`
+  - `cube/`
+  - `port/`
+  - `services/`
 
 Importante:
-No uses `firmware/style-examples/` como arquitectura objetivo.
+No uses `style-examples/` como arquitectura objetivo.
 Úsalo como referencia mínima de naming, forma de módulo, separación pública/privada y simplicidad.
 
 No asumas naming de archivos o prefijos por intuición.
@@ -30,8 +31,9 @@ Alcance:
 
 Antes de resumir:
 1. revisa `STYLE.md`,
-2. identifica ejemplos relevantes en `firmware/style-examples/`,
-3. considera `CHANGELOG.md` si aporta continuidad.
+2. identifica ejemplos relevantes en `style-examples/`,
+3. considera `CHANGELOG.md` si aporta continuidad,
+4. considera `AGENTS.md` si la tarea implica reglas de ejecución del agente.
 
 Necesito:
 - funciones públicas y privadas,
@@ -40,7 +42,7 @@ Necesito:
 - acceso a hardware,
 - responsabilidad principal del módulo,
 - evaluación de si está en la carpeta correcta,
-- ejemplos mínimos de `firmware/style-examples/` que se parezcan en forma.
+- ejemplos mínimos de `style-examples/` que se parezcan en forma.
 
 Restricciones:
 - no propongas cambios todavía,
@@ -62,7 +64,8 @@ Inspecciona el código y detecta:
 Referencias:
 - `STYLE.md`
 - `CHANGELOG.md`
-- `firmware/style-examples/`
+- `AGENTS.md`
+- `style-examples/`
 
 Restricciones:
 - no modifiques código,
@@ -81,28 +84,29 @@ Objetivo:
 [describir objetivo]
 
 Carpeta objetivo:
-[`firmware/port/` / `firmware/bsp/` / `firmware/services/` / `firmware/app/` / `firmware/cube/`]
+[`app/` / `bsp/` / `cube/` / `port/` / `services/`]
 
 Alcance permitido:
 [archivos]
 
 Antes de proponer cambios:
 1. revisa `STYLE.md`,
-2. revisa ejemplos aplicables en `firmware/style-examples/`,
-3. verifica si `CHANGELOG.md` aporta contexto útil.
+2. revisa ejemplos aplicables en `style-examples/`,
+3. verifica si `CHANGELOG.md` aporta contexto útil,
+4. verifica si `AGENTS.md` impone reglas de trabajo relevantes.
 
 Restricciones:
 - no tocar archivos fuera del alcance,
 - no mover responsabilidades sin justificarlo,
 - no mezclar este cambio con otros refactors,
 - mantener comportamiento actual salvo indicación explícita,
-- usar `firmware/style-examples/` solo como referencia de forma mínima,
+- usar `style-examples/` solo como referencia de forma mínima,
 - no asumir naming de archivos sin verificar.
 
 Primero:
 1. resume qué entendiste,
 2. explica por qué esta responsabilidad vive en esa carpeta,
-3. explica qué ejemplo de `firmware/style-examples/` tomás como referencia de forma,
+3. explica qué ejemplo de `style-examples/` tomás como referencia de forma,
 4. explica qué vas a cambiar y por qué.
 
 Después:
@@ -123,14 +127,14 @@ Necesito:
 1. identificar responsabilidades actuales,
 2. decir cuáles pertenecen realmente a la carpeta actual,
 3. señalar cuáles parecen estar fuera de lugar,
-4. contrastar la forma del módulo con `STYLE.md` y con ejemplos de `firmware/style-examples/`,
+4. contrastar la forma del módulo con `STYLE.md` y con ejemplos de `style-examples/`,
 5. proponer una separación mínima razonable,
 6. aplicar solo el primer paso del refactor.
 
 Restricciones:
 - no reescribir todo,
 - preservar compatibilidad funcional,
-- no usar `firmware/style-examples/` como arquitectura final,
+- no usar `style-examples/` como arquitectura final,
 - mantener el cambio listo para revisión humana.
 
 ---
@@ -142,12 +146,13 @@ Contexto:
 [describir problema]
 
 Carpeta objetivo:
-[`firmware/port/` / `firmware/bsp/` / `firmware/services/` / `firmware/app/`]
+[`app/` / `bsp/` / `port/` / `services/`]
 
 Antes de diseñar:
 - revisa `STYLE.md`,
-- busca ejemplos parecidos en `firmware/style-examples/`,
-- toma en cuenta `CHANGELOG.md` si aplica.
+- busca ejemplos parecidos en `style-examples/`,
+- toma en cuenta `CHANGELOG.md` si aplica,
+- considera `AGENTS.md` si el cambio será delegado.
 
 Restricciones:
 - mantener la interfaz pequeña,
@@ -161,7 +166,7 @@ Salida:
 - responsabilidades incluidas,
 - responsabilidades excluidas,
 - justificación de por qué vive en esa carpeta,
-- referencia de estilo mínima tomada de `firmware/style-examples/`.
+- referencia de estilo mínima tomada de `style-examples/`.
 
 ---
 
@@ -171,7 +176,7 @@ Antes de proponer cambios finales, revisa críticamente tu propia propuesta.
 Verifica:
 - si la responsabilidad quedó en la carpeta correcta,
 - si respetaste `STYLE.md`,
-- si usaste `firmware/style-examples/` como referencia mínima y no como arquitectura,
+- si usaste `style-examples/` como referencia mínima y no como arquitectura,
 - si ignoraste algo relevante de `CHANGELOG.md`,
 - si tocaste más de lo necesario,
 - si mezclaste capas,
@@ -181,3 +186,39 @@ Después:
 - resume riesgos,
 - indica dudas,
 - presenta el diff final.
+
+---
+
+## 7. Cambio compatible con CubeMX
+Necesito trabajar en una zona del firmware que convive con código generado por STM32CubeMX.
+
+Objetivo:
+[describir]
+
+Carpeta objetivo:
+[`cube/` o interacción con `bsp/`, `services/`, `app/`]
+
+Restricciones:
+- no colocar lógica de aplicación dentro de zonas generadas,
+- respetar límites entre código regenerable y código manual,
+- mantener la separación de capas del repo,
+- revisar `STYLE.md` y `style-examples/`.
+
+Tarea:
+Proponer una forma de integrar este cambio respetando esa separación, con impacto mínimo.
+
+---
+
+## 8. No ejecutar, solo plan técnico
+No quiero cambios todavía.
+
+Quiero que:
+1. inspecciones el código relevante,
+2. revises `STYLE.md`,
+3. identifiques ejemplos útiles en `style-examples/`,
+4. uses `CHANGELOG.md` si aporta contexto,
+5. uses `AGENTS.md` si afecta la forma de ejecución,
+6. describas estado actual,
+7. propongas plan técnico paso a paso,
+8. señales qué carpeta debería contener cada responsabilidad,
+9. esperes al siguiente prompt antes de modificar nada.

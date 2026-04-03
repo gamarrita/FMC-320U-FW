@@ -1,5 +1,5 @@
 # Workflow operativo con IA para refactor de firmware embebido
-Versión: v0.4
+Versión: v0.5
 
 ## Propósito
 Usar ChatGPT y Codex de forma consistente durante el refactor del firmware, manteniendo foco, contexto y control técnico, con baja fricción y respetando las referencias del repositorio.
@@ -11,6 +11,20 @@ Su objetivo es mejorar la calidad de las interacciones con IA para:
 - revisar trabajos de Codex,
 - mantener coherencia entre sesiones,
 - reducir refactors mal delimitados.
+
+---
+
+## Orden de uso
+Este conjunto de documentos se usa en este orden:
+
+1. `01_workflow.md`
+   - guía general de trabajo
+2. `02_chatgpt.md`
+   - prompts y patrones para ChatGPT
+3. `03_codex.md`
+   - prompts y patrones para Codex
+4. `04_context.md`
+   - estado vivo del trabajo actual
 
 ---
 
@@ -33,7 +47,11 @@ Debe usarse para:
 - revisar decisiones o cambios ya incorporados,
 - evitar contradicciones con el camino de refactor ya tomado.
 
-### `firmware/style-examples/`
+### `AGENTS.md`
+Referencia operativa para trabajo con agentes.
+Debe usarse cuando la tarea implique interacción repetida, delegación de trabajo o expectativas de comportamiento del agente.
+
+### `style-examples/`
 Referencia práctica de ejemplos mínimos de estilo.
 
 No debe tomarse como arquitectura final del producto.
@@ -45,13 +63,12 @@ Debe usarse como referencia de:
 - ejemplos mínimos por contexto baremetal / RTOS / ISR / drivers.
 
 Ejemplos disponibles:
-- `firmware/style-examples/baremetal/fm_main_simple.c/.h`
-- `firmware/style-examples/baremetal/fm_gpio.poll.c`
-- `firmware/style-examples/baremetal/fm_gpio_poll.h`
-- `firmware/style-examples/rtos/fmx_kernel_basic.c/.h`
-- `firmware/style-examples/rtos/fm_task_simple.c/.h`
-- `firmware/style-examples/interrupts/fm_exti_flag.c/.h`
-- `firmware/style-examples/drivers/fm_adc_basic.c/.h`
+- `style-examples/baremetal/fm_main_simple.c/.h`
+- `style-examples/baremetal/fm_gpio_poll.c/.h`
+- `style-examples/rtos/fm_kernel_basic.c/.h`
+- `style-examples/rtos/fm_task_simple.c/.h`
+- `style-examples/interrupts/fm_exti_flag.c/.h`
+- `style-examples/drivers/fm_adc_basic.c/.h`
 
 ---
 
@@ -68,19 +85,19 @@ Antes de abrir ChatGPT o Codex, responder:
 
 ## La estructura del repo como marco de diseño
 
-La estructura de carpetas dentro de `firmware/` debe usarse como separador de responsabilidades:
+La estructura de carpetas dentro de este directorio debe usarse como separador de responsabilidades:
 
-- `firmware/port/`
-- `firmware/bsp/`
-- `firmware/services/`
-- `firmware/app/`
-- `firmware/cube/`
+- `port/`
+- `bsp/`
+- `services/`
+- `app/`
+- `cube/`
 
 Toda tarea debería intentar responder:
 - ¿en qué carpeta debería vivir esta responsabilidad?
 - ¿qué carpetas no deberían absorberla?
 - ¿qué dependencias son razonables?
-- ¿qué ejemplo de `firmware/style-examples/` se parece en forma, aunque no necesariamente en función?
+- ¿qué ejemplo de `style-examples/` se parece en forma, aunque no necesariamente en función?
 
 ---
 
@@ -90,14 +107,19 @@ Toda tarea debería intentar responder:
 - antes de escribir código nuevo,
 - antes de aceptar una propuesta de Codex,
 - cuando haya dudas sobre naming, estructura o forma de módulo,
-- cuando se proponga crear archivos nuevos.
+- cuando se proponga crear o renombrar archivos.
 
 ### Cuándo usar `CHANGELOG.md`
 - cuando una tarea continúe un refactor previo,
 - cuando una propuesta toque convenciones o estructura general,
 - cuando haya que entender si una dirección ya fue tomada.
 
-### Cuándo usar `firmware/style-examples/`
+### Cuándo usar `AGENTS.md`
+- cuando se delegue una tarea larga al agente,
+- cuando haya que fijar reglas de comportamiento del agente,
+- cuando se quiera alinear expectativas de ejecución.
+
+### Cuándo usar `style-examples/`
 - cuando se necesite un ejemplo mínimo de forma,
 - cuando Codex necesite una referencia de módulo simple `.c/.h`,
 - cuando haya duda sobre separación pública/privada,
@@ -110,7 +132,7 @@ No asumir naming por intuición.
 
 Antes de proponer archivos nuevos o renombrar módulos:
 1. revisar `STYLE.md`,
-2. contrastar con nombres reales en `firmware/style-examples/`,
+2. contrastar con nombres reales en `style-examples/`,
 3. no “corregir” naming de ejemplos por cuenta propia,
 4. explicitar cualquier inconsistencia observada en vez de ocultarla.
 
@@ -130,7 +152,8 @@ Definir:
 Antes de pedir ayuda a la IA, decidir si hace falta consultar:
 - `STYLE.md`
 - `CHANGELOG.md`
-- `firmware/style-examples/`
+- `AGENTS.md`
+- `style-examples/`
 
 ### Paso 3. Usar ChatGPT para pensar
 Usar ChatGPT para:
@@ -146,14 +169,15 @@ Usar Codex para:
 - resumir estado actual,
 - proponer cambios localizados,
 - implementar un primer paso,
-- contrastar propuesta con `STYLE.md`, `CHANGELOG.md` y `firmware/style-examples/`.
+- contrastar propuesta con `STYLE.md`, `CHANGELOG.md`, `AGENTS.md` y `style-examples/`.
 
 ### Paso 5. Revisar el resultado
 Toda revisión debe comprobar:
 - si el cambio vive en la carpeta correcta,
 - si respeta `STYLE.md`,
-- si usa `firmware/style-examples/` como referencia de forma y simplicidad,
-- si contradice o ignora contexto relevante de `CHANGELOG.md`.
+- si usa `style-examples/` como referencia de forma y simplicidad,
+- si contradice o ignora contexto relevante de `CHANGELOG.md`,
+- si contradice expectativas operativas de `AGENTS.md`.
 
 ### Paso 6. Cerrar contexto
 Al final dejar claro:
@@ -181,6 +205,10 @@ Al final dejar claro:
 - ¿Hay algo en `CHANGELOG.md` que debería haberse considerado?
 - ¿El cambio sigue la dirección del refactor o la contradice?
 
+### Sobre operación con agentes
+- ¿El cambio o la forma de trabajo contradice `AGENTS.md`?
+- ¿La tarea fue suficientemente delimitada para un agente?
+
 ### Sobre alcance
 - ¿Tocó más de lo necesario?
 - ¿Rediseñó demasiado para una tarea chica?
@@ -193,5 +221,6 @@ Antes de aceptar una propuesta, responder explícitamente:
 1. ¿Qué responsabilidad se está tocando?
 2. ¿En qué carpeta debería vivir?
 3. ¿Qué regla de `STYLE.md` aplica?
-4. ¿Qué ejemplo de `firmware/style-examples/` se parece al caso?
+4. ¿Qué ejemplo de `style-examples/` se parece al caso?
 5. ¿Qué contexto de `CHANGELOG.md` conviene preservar?
+6. ¿Qué expectativa de `AGENTS.md` conviene respetar?
