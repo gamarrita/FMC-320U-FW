@@ -1,5 +1,236 @@
-# Workflow operativo con IA para refactor de firmware embebido
-Versión: v0.5
+# Operational Workflow with AI for Embedded Firmware Refactoring
+Version: v0.5
+
+[Go to Spanish version](#spanish-version)
+
+
+## Purpose
+Use ChatGPT and Codex consistently during firmware refactoring, maintaining focus, context, and technical control, with low friction and respecting repository references.
+
+This workflow does not replace technical judgment or code review.
+Its goal is to improve the quality of interactions with AI to:
+- analyze code,
+- propose changes,
+- review Codex work,
+- maintain coherence across sessions,
+- reduce poorly scoped refactors.
+
+---
+
+## Usage Order
+This set of documents is used in the following order:
+
+1. `01_workflow.md`
+   - general working guide
+2. `02_chatgpt.md`
+   - prompts and patterns for ChatGPT
+3. `03_codex.md`
+   - prompts and patterns for Codex
+4. `04_context.md`
+   - live state of current work
+
+---
+
+## Repository References
+
+### `STYLE.md`
+Primary normative document for:
+- style conventions,
+- module organization,
+- naming,
+- file structure,
+- repository consistency expectations.
+
+All implementation or refactoring proposals must be checked against `STYLE.md`.
+
+### `CHANGELOG.md`
+Technical continuity reference.
+Should be used to:
+- understand recent direction of the repo,
+- review decisions or changes already incorporated,
+- avoid contradictions with the refactor path already taken.
+
+### `AGENTS.md`
+Operational reference for working with agents.
+Should be used when tasks involve repeated interaction, delegation, or expectations about agent behavior.
+
+### `style-examples/`
+Practical reference of minimal style examples.
+
+Should not be treated as final product architecture.
+Should be used as reference for:
+- file structure,
+- naming,
+- public/private API separation,
+- implementation simplicity,
+- minimal examples per context: baremetal / RTOS / ISR / drivers.
+
+Available examples:
+- `style-examples/baremetal/fm_main_simple.c/.h`
+- `style-examples/baremetal/fm_gpio_poll.c/.h`
+- `style-examples/rtos/fm_kernel_basic.c/.h`
+- `style-examples/rtos/fm_task_simple.c/.h`
+- `style-examples/interrupts/fm_exti_flag.c/.h`
+- `style-examples/drivers/fm_adc_basic.c/.h`
+
+---
+
+## Main Rule
+Each interaction with AI must target a small, concrete, and verifiable task.
+
+Before opening ChatGPT or Codex, answer:
+1. what I want to solve,
+2. where that responsibility should live,
+3. which repo references apply,
+4. what verifiable output I expect.
+
+---
+
+## Repository Structure as Design Framework
+
+The folder structure within this directory should be used to separate responsibilities:
+
+- `port/`
+- `bsp/`
+- `services/`
+- `app/`
+- `cube/`
+
+Every task should attempt to answer:
+- In which folder should this responsibility live?
+- Which folders should not absorb it?
+- What dependencies are reasonable?
+- Which `style-examples/` example is structurally similar, even if not functionally?
+
+---
+
+## Proper Use of References
+
+### When to use `STYLE.md`
+- before writing new code,
+- before accepting a Codex proposal,
+- when there are doubts about naming, structure, or module form,
+- when proposing creation or renaming of files.
+
+### When to use `CHANGELOG.md`
+- when continuing a previous refactor,
+- when a proposal touches conventions or overall structure,
+- when understanding whether a direction has already been taken.
+
+### When to use `AGENTS.md`
+- when delegating a long task to an agent,
+- when defining agent behavior rules,
+- when aligning execution expectations.
+
+### When to use `style-examples/`
+- when a minimal form example is needed,
+- when Codex needs a simple `.c/.h` module reference,
+- when there is doubt about public/private separation,
+- when comparing simplicity of the proposed solution.
+
+---
+
+## Special Rule on Naming and File Structure
+Do not assume naming by intuition.
+
+Before proposing new files or renaming modules:
+1. review `STYLE.md`,
+2. compare with real names in `style-examples/`,
+3. do not “correct” example naming on your own,
+4. explicitly state any inconsistencies instead of hiding them.
+
+---
+
+## Minimal Task Flow
+
+### Step 1. Define the micro-task
+Define:
+- concrete objective,
+- task type,
+- probable folder,
+- involved files,
+- expected result.
+
+### Step 2. Identify repo references
+Before asking AI for help, decide whether to consult:
+- `STYLE.md`
+- `CHANGELOG.md`
+- `AGENTS.md`
+- `style-examples/`
+
+### Step 3. Use ChatGPT for reasoning
+Use ChatGPT to:
+- scope the task,
+- decide where it should live,
+- detect responsibility conflicts,
+- interpret how to use repo references,
+- prepare a prompt for Codex.
+
+### Step 4. Use Codex to inspect or execute
+Use Codex to:
+- inspect files,
+- summarize current state,
+- propose localized changes,
+- implement a first step,
+- validate proposals against `STYLE.md`, `CHANGELOG.md`, `AGENTS.md`, and `style-examples/`.
+
+### Step 5. Review the result
+Every review must verify:
+- whether the change lives in the correct folder,
+- whether it respects `STYLE.md`,
+- whether it uses `style-examples/` as a reference for form and simplicity,
+- whether it contradicts or ignores relevant context from `CHANGELOG.md`,
+- whether it contradicts operational expectations from `AGENTS.md`.
+
+### Step 6. Close context
+At the end, clearly state:
+- what was resolved,
+- where the responsibility now lives,
+- which repo reference was key,
+- what the next micro-task is.
+
+---
+
+## Checklist for Reviewing Codex Changes
+
+### Structure
+- Is the responsibility in the correct folder?
+- Is application logic mixed with hardware or generated code?
+- Were examples used as form references and not as full architecture?
+
+### Consistency
+- Does it follow `STYLE.md`?
+- Is naming consistent with the repo?
+- Does the module resemble comparable minimal examples?
+- Is the implementation still simple and reviewable?
+
+### Continuity
+- Is there anything in `CHANGELOG.md` that should have been considered?
+- Does the change follow the refactor direction or contradict it?
+
+### Agent operation
+- Does the change or workflow contradict `AGENTS.md`?
+- Was the task sufficiently scoped for an agent?
+
+### Scope
+- Did it touch more than necessary?
+- Did it over-redesign for a small task?
+- Does it facilitate the next step?
+
+---
+
+## Golden Operational Rule
+Before accepting a proposal, explicitly answer:
+1. What responsibility is being modified?
+2. In which folder should it live?
+3. Which `STYLE.md` rule applies?
+4. Which `style-examples/` example resembles the case?
+5. What `CHANGELOG.md` context should be preserved?
+6. What `AGENTS.md` expectation should be respected?
+
+---
+
+## Spanish Version
 
 ## Propósito
 Usar ChatGPT y Codex de forma consistente durante el refactor del firmware, manteniendo foco, contexto y control técnico, con baja fricción y respetando las referencias del repositorio.
