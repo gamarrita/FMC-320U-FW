@@ -7,7 +7,6 @@ All notable changes to firmware.
 ### Added
 
 ### Changed
-- Route the STM32U575 scratch hello world through `firmware/app` and `firmware/port` while keeping Cube as the hardware-init target.
 
 ### Fixed
 

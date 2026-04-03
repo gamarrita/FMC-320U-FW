@@ -24,8 +24,6 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "fm_app_hello_world.h"
-#include "fm_port_platform.h"
 
 /* USER CODE END Includes */
 
@@ -92,8 +90,6 @@ int main(void)
   MX_GPIO_Init();
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
-  FM_PORT_PLATFORM_Init();
-  FM_APP_HELLO_WORLD_Init();
 
   /* USER CODE END 2 */
 
@@ -101,7 +97,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    FM_APP_HELLO_WORLD_Process();
+    HAL_GPIO_TogglePin(LED_ERROR_GPIO_Port, LED_ERROR_Pin);
+    HAL_Delay(250);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
