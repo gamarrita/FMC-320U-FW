@@ -1,0 +1,183 @@
+# Plantillas operativas para Codex
+Versión: v0.4
+
+## Regla general
+Para cualquier análisis o cambio dentro del repo:
+- revisar `STYLE.md`,
+- revisar `CHANGELOG.md` si la tarea depende de continuidad,
+- usar `firmware/style-examples/` como referencia mínima de estilo y forma,
+- respetar la separación entre:
+  - `firmware/port/`
+  - `firmware/bsp/`
+  - `firmware/services/`
+  - `firmware/app/`
+  - `firmware/cube/`
+
+Importante:
+No uses `firmware/style-examples/` como arquitectura objetivo.
+Úsalo como referencia mínima de naming, forma de módulo, separación pública/privada y simplicidad.
+
+No asumas naming de archivos o prefijos por intuición.
+Si detectas inconsistencias o dudas, explícalas antes de proponer cambios.
+
+---
+
+## 1. Inspección de módulo con foco en capa y estilo
+Inspecciona este módulo del proyecto y genera un resumen técnico estructurado.
+
+Alcance:
+[ruta o archivos]
+
+Antes de resumir:
+1. revisa `STYLE.md`,
+2. identifica ejemplos relevantes en `firmware/style-examples/`,
+3. considera `CHANGELOG.md` si aporta continuidad.
+
+Necesito:
+- funciones públicas y privadas,
+- dependencias,
+- variables de estado relevantes,
+- acceso a hardware,
+- responsabilidad principal del módulo,
+- evaluación de si está en la carpeta correcta,
+- ejemplos mínimos de `firmware/style-examples/` que se parezcan en forma.
+
+Restricciones:
+- no propongas cambios todavía,
+- no asumas arquitectura ideal,
+- basate en lo observado.
+
+---
+
+## 2. Buscar impacto de un cambio
+Quiero evaluar el impacto de cambiar [función / interfaz / módulo].
+
+Tarea:
+Inspecciona el código y detecta:
+- dónde se usa,
+- qué módulos dependen de esto,
+- qué carpeta parece ser responsable,
+- qué riesgos habría al cambiarlo o moverlo.
+
+Referencias:
+- `STYLE.md`
+- `CHANGELOG.md`
+- `firmware/style-examples/`
+
+Restricciones:
+- no modifiques código,
+- no rediseñes todavía,
+- prioriza trazabilidad real.
+
+Salida:
+Mapa de impacto, riesgos y observaciones sobre ubicación por capa.
+
+---
+
+## 3. Proponer cambio acotado en una carpeta específica
+Necesito una propuesta de cambio localizada.
+
+Objetivo:
+[describir objetivo]
+
+Carpeta objetivo:
+[`firmware/port/` / `firmware/bsp/` / `firmware/services/` / `firmware/app/` / `firmware/cube/`]
+
+Alcance permitido:
+[archivos]
+
+Antes de proponer cambios:
+1. revisa `STYLE.md`,
+2. revisa ejemplos aplicables en `firmware/style-examples/`,
+3. verifica si `CHANGELOG.md` aporta contexto útil.
+
+Restricciones:
+- no tocar archivos fuera del alcance,
+- no mover responsabilidades sin justificarlo,
+- no mezclar este cambio con otros refactors,
+- mantener comportamiento actual salvo indicación explícita,
+- usar `firmware/style-examples/` solo como referencia de forma mínima,
+- no asumir naming de archivos sin verificar.
+
+Primero:
+1. resume qué entendiste,
+2. explica por qué esta responsabilidad vive en esa carpeta,
+3. explica qué ejemplo de `firmware/style-examples/` tomás como referencia de forma,
+4. explica qué vas a cambiar y por qué.
+
+Después:
+5. propone el cambio.
+
+---
+
+## 4. Refactor incremental respetando la estructura del repo
+Quiero refactorizar esta parte del código de forma incremental.
+
+Objetivo:
+[describir]
+
+Alcance:
+[archivos / módulo]
+
+Necesito:
+1. identificar responsabilidades actuales,
+2. decir cuáles pertenecen realmente a la carpeta actual,
+3. señalar cuáles parecen estar fuera de lugar,
+4. contrastar la forma del módulo con `STYLE.md` y con ejemplos de `firmware/style-examples/`,
+5. proponer una separación mínima razonable,
+6. aplicar solo el primer paso del refactor.
+
+Restricciones:
+- no reescribir todo,
+- preservar compatibilidad funcional,
+- no usar `firmware/style-examples/` como arquitectura final,
+- mantener el cambio listo para revisión humana.
+
+---
+
+## 5. Crear borrador de interfaz alineado con el repo
+Necesito un borrador de interfaz para [módulo / servicio / driver].
+
+Contexto:
+[describir problema]
+
+Carpeta objetivo:
+[`firmware/port/` / `firmware/bsp/` / `firmware/services/` / `firmware/app/`]
+
+Antes de diseñar:
+- revisa `STYLE.md`,
+- busca ejemplos parecidos en `firmware/style-examples/`,
+- toma en cuenta `CHANGELOG.md` si aplica.
+
+Restricciones:
+- mantener la interfaz pequeña,
+- no mezclar hardware con lógica de aplicación,
+- pensar en migración incremental,
+- evitar cambios masivos,
+- verificar naming antes de proponer archivos nuevos.
+
+Salida:
+- propuesta de `.h`,
+- responsabilidades incluidas,
+- responsabilidades excluidas,
+- justificación de por qué vive en esa carpeta,
+- referencia de estilo mínima tomada de `firmware/style-examples/`.
+
+---
+
+## 6. Revisar tu propia propuesta antes de mostrarla
+Antes de proponer cambios finales, revisa críticamente tu propia propuesta.
+
+Verifica:
+- si la responsabilidad quedó en la carpeta correcta,
+- si respetaste `STYLE.md`,
+- si usaste `firmware/style-examples/` como referencia mínima y no como arquitectura,
+- si ignoraste algo relevante de `CHANGELOG.md`,
+- si tocaste más de lo necesario,
+- si mezclaste capas,
+- si asumiste naming sin comprobarlo.
+
+Después:
+- resume riesgos,
+- indica dudas,
+- presenta el diff final.

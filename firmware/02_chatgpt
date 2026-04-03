@@ -1,0 +1,151 @@
+# Plantillas operativas para ChatGPT
+Versión: v0.4
+
+## Regla general
+En todas estas plantillas, usar como referencia:
+- `STYLE.md` como documento normativo,
+- `CHANGELOG.md` como contexto de continuidad,
+- `firmware/style-examples/` como ejemplos mínimos de estilo y forma.
+
+Importante:
+No usar `firmware/style-examples/` como arquitectura objetivo del firmware.
+Usarlo como referencia de estructura, naming, separación pública/privada y simplicidad.
+
+También:
+No asumir naming de archivos o prefijos por intuición.
+Si hay duda, contrastar contra `STYLE.md` y ejemplos reales.
+
+---
+
+## 1. Delimitar tarea y ubicarla en la carpeta correcta
+Estoy trabajando en el refactor de un firmware embebido dentro de este repo.
+
+Contexto:
+- Deben respetarse `STYLE.md`, `CHANGELOG.md` y `firmware/style-examples/`
+- El firmware se organiza en `firmware/port/`, `firmware/bsp/`, `firmware/services/`, `firmware/app/`, `firmware/cube/`
+- `firmware/style-examples/` debe usarse como referencia mínima de estilo y forma, no como arquitectura final
+
+Tarea inicial:
+[describir problema]
+
+Necesito:
+1. recortar la tarea a una unidad pequeña y verificable,
+2. identificar el tipo de tarea,
+3. proponer la carpeta correcta,
+4. indicar qué carpetas no deberían absorber esta responsabilidad,
+5. decir qué referencia del repo conviene consultar,
+6. proponer el siguiente prompt para Codex.
+
+Separá:
+- hechos,
+- inferencias,
+- recomendaciones.
+
+---
+
+## 2. Analizar un módulo y evaluar su ubicación
+Estoy en fase de comprensión.
+
+Objetivo:
+Entender este módulo y verificar si su responsabilidad actual está ubicada en la carpeta correcta del repo.
+
+Alcance:
+[ruta, código o módulo]
+
+Referencias obligatorias:
+- `STYLE.md`
+- `CHANGELOG.md`
+- `firmware/style-examples/`
+
+Necesito:
+1. resumen técnico del módulo,
+2. responsabilidades actuales,
+3. dependencias,
+4. señales de acoplamiento,
+5. evaluación de si está en la carpeta correcta,
+6. qué ejemplo(s) de `firmware/style-examples/` podrían servir de referencia de forma,
+7. siguiente micro-tarea.
+
+---
+
+## 3. Diseñar una interfaz alineada con el repo
+Estoy en fase de diseño.
+
+Objetivo:
+Proponer una interfaz para [módulo / servicio / driver] respetando la separación de responsabilidades del repo.
+
+Contexto:
+[describir problema]
+
+Restricciones:
+- respetar `STYLE.md`,
+- usar `firmware/style-examples/` solo como referencia de forma y simplicidad,
+- mantener continuidad con `CHANGELOG.md` si aplica,
+- no mezclar lógica de aplicación con hardware o código generado,
+- no asumir naming sin verificar.
+
+Necesito:
+1. qué responsabilidad debería tener la interfaz,
+2. en qué carpeta debería vivir,
+3. qué carpetas no deberían contener esta lógica,
+4. propuesta de API mínima,
+5. estrategia de migración incremental,
+6. riesgos.
+
+---
+
+## 4. Revisar trabajo de Codex contra referencias del repo
+Estoy en fase de verificación.
+
+Te paso una propuesta o diff generado por Codex.
+
+Objetivo:
+Revisarlo contra la estructura del repo y sus referencias.
+
+Responsabilidad esperada en:
+[carpeta]
+
+Referencias obligatorias:
+- `STYLE.md`
+- `CHANGELOG.md`
+- `firmware/style-examples/`
+
+Contenido:
+[pegar diff o código]
+
+Necesito:
+1. validar si responde al objetivo,
+2. validar si está en la carpeta correcta,
+3. detectar conflictos con `STYLE.md`,
+4. verificar si el uso de `firmware/style-examples/` es correcto,
+5. señalar si ignoró algo relevante de `CHANGELOG.md`,
+6. proponer correcciones.
+
+---
+
+## 5. Generar prompt para Codex
+Necesito que conviertas esta tarea en un prompt operativo para Codex.
+
+Contexto:
+[describir tarea]
+
+Objetivo:
+[resultado esperado]
+
+Carpeta objetivo:
+[`firmware/port/` / `firmware/bsp/` / `firmware/services/` / `firmware/app/` / `firmware/cube/`]
+
+Restricciones:
+- respetar `STYLE.md`,
+- usar `firmware/style-examples/` como referencia mínima de estilo,
+- tomar `CHANGELOG.md` en cuenta si la tarea continúa cambios previos,
+- no tocar capas innecesarias,
+- mantener el cambio acotado y revisable,
+- no asumir naming sin verificar contra repo.
+
+Quiero un prompt que:
+1. limite alcance,
+2. haga referencia explícita a los documentos del repo,
+3. pida justificar por qué la responsabilidad vive en esa carpeta,
+4. pida una salida verificable,
+5. desaliente rediseño innecesario.
