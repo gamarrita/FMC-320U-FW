@@ -15,6 +15,7 @@
 #include "fm_main.h"
 #include "fm_debug.h"
 #include "fm_board.h"
+#include "fm_port_time.h"
 
 
 /* =========================== Private Defines ============================== */
@@ -63,7 +64,7 @@ void FM_MAIN_Main(void)
         FM_DEBUG_UartMsg(msg, sizeof(msg) - 1U);
 
         // Sleep
-        HAL_Delay(2000);
+        FM_PORT_TIME_SleepMs(200U);
 
         // Flush any pending debug events (ISR-safe logging is deferred until flush).
         FM_DEBUG_Flush();

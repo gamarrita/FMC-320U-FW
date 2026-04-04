@@ -85,6 +85,12 @@
 },
 {
   "directory": "D:/githubs/FMC-320U-FW/firmware/build/Debug",
+  "command": "C:\\Users\\dhs\\AppData\\Local\\stm32cube\\bundles\\gnu-tools-for-stm32\\14.3.1+st.2\\bin\\arm-none-eabi-gcc.exe -DDEBUG -DSTM32U575xx -DUSE_HAL_DRIVER -ID:/githubs/FMC-320U-FW/firmware/01_app -ID:/githubs/FMC-320U-FW/firmware/libs -ID:/githubs/FMC-320U-FW/firmware/bsp -ID:/githubs/FMC-320U-FW/firmware/port -ID:/githubs/FMC-320U-FW/firmware/cmake/stm32cubemx/../../Core/Inc -ID:/githubs/FMC-320U-FW/firmware/cmake/stm32cubemx/../../Drivers/STM32U5xx_HAL_Driver/Inc -ID:/githubs/FMC-320U-FW/firmware/cmake/stm32cubemx/../../Drivers/STM32U5xx_HAL_Driver/Inc/Legacy -ID:/githubs/FMC-320U-FW/firmware/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32U5xx/Include -ID:/githubs/FMC-320U-FW/firmware/cmake/stm32cubemx/../../Drivers/CMSIS/Include  -mcpu=cortex-m33 -mfpu=fpv5-sp-d16 -mfloat-abi=hard  -Wall -fdata-sections -ffunction-sections -fstack-usage -O0 -g3 -std=gnu11 -o CMakeFiles\\fmc-320u-v2.dir\\port\\fm_port_time.c.obj -c D:\\githubs\\FMC-320U-FW\\firmware\\port\\fm_port_time.c",
+  "file": "D:/githubs/FMC-320U-FW/firmware/port/fm_port_time.c",
+  "output": "D:/githubs/FMC-320U-FW/firmware/build/Debug/CMakeFiles/fmc-320u-v2.dir/port/fm_port_time.c.obj"
+},
+{
+  "directory": "D:/githubs/FMC-320U-FW/firmware/build/Debug",
   "command": "C:\\Users\\dhs\\AppData\\Local\\stm32cube\\bundles\\gnu-tools-for-stm32\\14.3.1+st.2\\bin\\arm-none-eabi-gcc.exe -DDEBUG -DSTM32U575xx -DUSE_HAL_DRIVER -ID:/githubs/FMC-320U-FW/firmware/01_app -ID:/githubs/FMC-320U-FW/firmware/libs -ID:/githubs/FMC-320U-FW/firmware/bsp -ID:/githubs/FMC-320U-FW/firmware/port -ID:/githubs/FMC-320U-FW/firmware/cmake/stm32cubemx/../../Core/Inc -ID:/githubs/FMC-320U-FW/firmware/cmake/stm32cubemx/../../Drivers/STM32U5xx_HAL_Driver/Inc -ID:/githubs/FMC-320U-FW/firmware/cmake/stm32cubemx/../../Drivers/STM32U5xx_HAL_Driver/Inc/Legacy -ID:/githubs/FMC-320U-FW/firmware/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32U5xx/Include -ID:/githubs/FMC-320U-FW/firmware/cmake/stm32cubemx/../../Drivers/CMSIS/Include  -mcpu=cortex-m33 -mfpu=fpv5-sp-d16 -mfloat-abi=hard  -Wall -fdata-sections -ffunction-sections -fstack-usage -O0 -g3 -std=gnu11 -o CMakeFiles\\fmc-320u-v2.dir\\port\\fm_port_uart.c.obj -c D:\\githubs\\FMC-320U-FW\\firmware\\port\\fm_port_uart.c",
   "file": "D:/githubs/FMC-320U-FW/firmware/port/fm_port_uart.c",
   "output": "D:/githubs/FMC-320U-FW/firmware/build/Debug/CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj"
