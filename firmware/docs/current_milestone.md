@@ -1,32 +1,26 @@
-# Current Milestone
+# current_milestone.md — Hito activo (fuente de verdad)
 
-## Purpose
-Source of truth for the active milestone scope.
+## Título
+[Nombre del hito]
 
-## Goal
-- [main milestone goal]
+## Objetivo
+[Breve objetivo medible]
 
-## In Scope
-- [deliverable]
-- [deliverable]
+## Alcance
+- archivos/carpetas incluidos
+- límites explícitos
 
-## Out Of Scope
-- [explicitly excluded work]
+## Criterios de aceptación
+- lista de criterios verificables
 
-## Target Areas
-- `01_app/`: [expected responsibility]
-- `bsp/`: [expected responsibility]
-- `port/`: [expected responsibility]
-- `services/`: [expected responsibility]
+## Referencias
+- `firmware/STYLE.md`
+- `firmware/CHANGELOG.md`
+- `firmware/AGENTS.md`
 
-## Constraints
-- [constraint]
-- [constraint]
+## Decisiones y alternativas
+- decisión 1: motivo
+- alternativas rechazadas: motivo
 
-## Verification
-- [required build or check]
-- [observable result]
-
-## Done Criteria
-- [done condition]
-- [done condition]
+## Próximos pasos
+- micro-tareas priorizadas

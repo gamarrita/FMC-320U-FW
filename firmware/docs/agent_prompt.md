@@ -1,74 +1,52 @@
-# Codex Agent Prompt
+# agent_prompt.md — Entrada canónica para agentes
+Versión: v1.0
 
-## Purpose
-This file is the single entrypoint for Codex execution prompts in this repository.
+## Propósito
+Condicionar la ejecución de agentes (Codex o ChatGPT que actúe como ejecutor) sobre reglas de programación, estilo y separación de responsabilidades del repo FMC-320U.
 
-When preparing a new Codex task, reference only this file plus the task-specific request.
+## Lectura obligatoria (antes de actuar)
+1. `firmware/STYLE.md`
+2. `firmware/CHANGELOG.md`
+3. `firmware/AGENTS.md`
+4. `firmware/style-examples/`
 
-## Mandatory Instruction Chain
-Codex must follow this order:
-1. Read `AGENTS.md` for persistent repository rules.
-2. Read `docs/current_milestone.md` for active scope and done criteria.
-3. Read `STYLE.md` before proposing or editing code.
-4. Read `CHANGELOG.md` when continuity or release impact may matter.
-5. Use `style-examples/` only as minimal shape and naming references.
-6. Use `docs/milestone_design.md` only when milestone reasoning or tradeoffs are needed.
+## Reglas estrictas
+- **Micro-scope**: actuar solo en una micro-tarea acotada. Si la petición supera 3 archivos o un módulo grande, pedir reducción de scope.
+- **Carpeta y justificación**: antes de crear/mover archivos, justificar en 1–2 líneas por qué la responsabilidad pertenece a la carpeta elegida (`app/`, `bsp/`, `cube/`, `port/`, `services/`).
+- **Naming & visibilidad**: respetar `STYLE.md` (p. ej. `FM_MODULE_Action()` para API pública; `static void fm_module_action_()` para privados).
+- **No modificar `cube/`** salvo en puntos de integración permitidos.
+- **No autocorregir naming**: si hay inconsistencias, informar y proponer alternativas justificadas.
+- **Salida verificable**: git patch/diff + checklist de validación + plan de smoke-test.
 
-## Repository Layout To Respect
-- `01_app/`: application behavior and top-level orchestration.
-- `bsp/`: board-specific details and hardware composition.
-- `port/`: MCU or peripheral adaptation.
-- `services/`: reusable services and intermediate logic.
-- `libs/`: small shared utilities.
-- `Core/`, `Drivers/`, `cmake/stm32cubemx/`: generated or vendor integration. Do not move manual app logic into these areas.
+## Formato de salida requerido
+1. **Resumen** (1–3 líneas): qué se hizo y por qué.  
+2. **Justificación de carpeta** (1–2 líneas).  
+3. **Lista de archivos** creados/modificados/renombrados.  
+4. **Patch git** (o PR) aplicable.  
+5. **Checklist** (marcado) con:
+   - [ ] Vive en la carpeta correcta (justificación)
+   - [ ] Respeta `STYLE.md` (enumerar reglas clave aplicadas)
+   - [ ] No toca zonas regeneradas `cube/`
+   - [ ] Cambios acotados, listos para revisión humana
+6. **Comandos de verificación**: build / tests / pasos de smoke-test
 
-## Execution Rules
-- Keep scope narrow and reviewable.
-- Inspect code before editing.
-- Do not assume naming or module placement without checking real repository usage.
-- Justify why the responsibility belongs in the chosen folder.
-- Preserve existing behavior unless the task explicitly asks to change it.
-- When working near CubeMX-generated code, keep manual logic outside regenerable sections.
+## Comportamiento operacional
+- Si no puedes justificar la carpeta o el scope, **no procedas**: pide clarificación.
+- Si detectas riesgo de regresión (API pública, ISR, seguridad), señalarlo y detener ejecución propuesta.
+- Documentar cualquier excepción al estilo con referencia a `STYLE.md`.
 
-## Build Tools And Commands
-- Primary build system: CMake presets with Ninja.
-- Standard configure: `cmake --preset Debug`
-- Standard build: `cmake --build --preset Debug`
-- Release build: `cmake --preset Release` and `cmake --build --preset Release`
-- Build artifacts are expected under `build/Debug` or `build/Release`.
-- If `cmake` is not on `PATH`, use the executable already resolved by the local environment or read `build/Debug/CMakeCache.txt` to locate the STM32Cube bundle binaries.
-- If the toolchain is not on `PATH`, expect it under the STM32Cube bundle directory referenced by `CMakeCache.txt`.
+## Ejemplo mínimo de prompt para Codex (usar como plantilla)
 
-## Changelog Rule
-Update `CHANGELOG.md` when the accepted change affects:
-- runtime behavior,
-- public or integration-facing interfaces,
-- safety-relevant handling,
-- developer-visible build or usage workflow.
+You are Codex. Task: {una frase muy corta con objetivo}.
+Scope: only files under {ruta(s)}.
+Before changing, read: firmware/STYLE.md, firmware/CHANGELOG.md, firmware/AGENTS.md, firmware/style-examples/.
+Produce:
 
-Do not add changelog entries for discarded ideas, exploration notes, or prompt-only drafts.
+One-paragraph justification of why the responsibility belongs in {carpeta}.
+A git patch implementing the minimal first-step change (only files in scope).
+A checklist of validations and a short smoke-test plan.
+Do not touch files outside the scope. Reference file: firmware/docs/agent_prompt.md
 
-## Expected Response Style
-- State what was inspected.
-- State the intended change and why it stays in scope.
-- State whether the code was built or otherwise verified.
-- State whether `CHANGELOG.md` was updated or why it was not needed.
 
-## Minimal Prompt Template
-Use this as the human-facing task wrapper:
-
-```text
-Usa `docs/agent_prompt.md` como instruccion operativa principal.
-
-Tarea:
-[describir objetivo concreto]
-
-Alcance:
-[archivos o modulos permitidos]
-
-Restricciones:
-[compatibilidad, capas a no tocar, validaciones requeridas]
-
-Resultado verificable esperado:
-[build, diff, interfaz, analisis, plan, etc.]
-```
+## Nota final
+Siempre devolver la salida en el formato requerido. No completes cambios que no puedas justificar frente a las referencias obligatorias.

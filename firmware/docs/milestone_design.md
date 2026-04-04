@@ -1,25 +1,17 @@
-# Milestone Design
+# milestone_design.md — Diseño conciso y alternativas
 
-## Purpose
-This file is the design workspace for the active milestone.
+## Resumen corto
+(2–4 líneas)
 
-It is used to summarize technical reasoning discussed between the human and ChatGPT before work is consolidated into the milestone definition or converted into an execution prompt.
+## Opciones consideradas
+- Opción A: descripción + pros/cons
+- Opción B: descripción + pros/cons
 
-## Rules
-- This file is not the source of truth for milestone scope.
-- This file may contain alternatives, tradeoffs, and rejected options.
-- This file must stay concise and decision-oriented.
-- This file must not become a raw conversation log.
+## Elección y justificación
+- elegida: motivo técnico
 
-## Current Design Focus
-Define the workflow between:
-- human discussion,
-- ChatGPT reasoning,
-- repository documents,
-- Codex execution.
+## Riesgos y mitigaciones
+- riesgo 1 -> mitigación
 
-## Current Decisions
-- `docs/current_milestone.md` is the source of truth for the active milestone.
-- `docs/agent_prompt.md` is the execution input for Codex.
-- `AGENTS.md` provides persistent instructions for agents.
-- `docs/milestone_design.md` stores concise reasoning and alternatives.
+## Outputs esperados
+- archivos/diffs o interfaces a entregar
