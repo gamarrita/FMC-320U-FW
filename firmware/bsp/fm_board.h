@@ -43,5 +43,8 @@ bool FM_BOARD_DwtInit(void);
 /** @brief Read the current DWT cycle count (0 if unavailable). */
 uint32_t FM_BOARD_DwtGetCycles(void);
 
+/** @brief Handle a board-level RTC wakeup IRQ event. */
+void FM_BOARD_OnRtcWakeupIrq(void);
+
 #endif /* FM_BOARD_H */
 

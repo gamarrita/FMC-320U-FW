@@ -12,6 +12,7 @@
 #include <fm_port_dwt.h>
 #include <fm_port_gpio.h>
 #include <fm_port_uart.h>
+#include "fm_debug.h"
 #include "fm_board.h"
 
 /* Private Defines */
@@ -104,6 +105,12 @@ bool FM_BOARD_DwtInit(void)
 uint32_t FM_BOARD_DwtGetCycles(void)
 {
     return FM_PORT_DWT_GetCycles();
+}
+
+void FM_BOARD_OnRtcWakeupIrq(void)
+{
+    /* Non-blocking ISR log: event will be flushed later by foreground code. */
+    FM_DEBUG_LogConstISR("Wakeup event");
 }
 
 /* Interrupts */

@@ -74,20 +74,4 @@ void FM_MAIN_Main(void)
 
 /* =========================== Interrupts =================================== */
 
-
-void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc)
-{
-    UNUSED(hrtc);
-
-    {
-        UNUSED(hrtc);
-        /* Non-blocking ISR log: event will be flushed later by foreground code. */
-        FM_DEBUG_LogConstISR("Wakeup event");
-    }
-}
-
-
-
-
-
 /*** end of file ***/

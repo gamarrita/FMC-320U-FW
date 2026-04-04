@@ -31,11 +31,6 @@ void FM_MAIN_Init(void);
  */
 void FM_MAIN_Main(void);
 
-/**
- * @brief  Callback invoked by board layer on RTC WakeUp event.
- */
-void FM_MAIN_OnRtcWakeup(void);
-
 #endif /* FM_MAIN_H_ */
 
 /*** end of file ***/
