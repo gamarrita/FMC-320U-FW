@@ -43,3 +43,4 @@ Recommended format:
 - Clarified that style and naming rules live in `STYLE.md`.
 - Clarified that live session continuity belongs in `05_working_context.md`.
 - Added `style-examples/README.md` as the index for example usage.
+- Renamed `port/fm_hw_*` modules and public APIs to `fm_port_*` / `FM_PORT_*` for clearer platform-layer ownership.

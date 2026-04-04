@@ -4521,7 +4521,7 @@ Discarded input sections
  .text          0x00000000        0x0 CMakeFiles/fmc-320u-v2.dir/bsp/fm_board.c.obj
  .data          0x00000000        0x0 CMakeFiles/fmc-320u-v2.dir/bsp/fm_board.c.obj
  .bss           0x00000000        0x0 CMakeFiles/fmc-320u-v2.dir/bsp/fm_board.c.obj
- .text.FM_HW_DWT_GetCycles
+ .text.FM_PORT_DWT_GetCycles
                 0x00000000       0x18 CMakeFiles/fmc-320u-v2.dir/bsp/fm_board.c.obj
  .text.FM_BOARD_LedErrorOn
                 0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/bsp/fm_board.c.obj
@@ -4583,351 +4583,355 @@ Discarded input sections
  .debug_macro   0x00000000      0x1c0 CMakeFiles/fmc-320u-v2.dir/bsp/fm_board.c.obj
  .debug_macro   0x00000000      0x361 CMakeFiles/fmc-320u-v2.dir/bsp/fm_board.c.obj
  .debug_macro   0x00000000       0x40 CMakeFiles/fmc-320u-v2.dir/bsp/fm_board.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .text          0x00000000        0x0 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .data          0x00000000        0x0 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .bss           0x00000000        0x0 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .text.FM_HW_DWT_GetCpuHz
-                0x00000000       0x18 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .text.FM_HW_DWT_CyclesPerUs
-                0x00000000       0x1c CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .text.FM_HW_DWT_UsToCycles
-                0x00000000       0x50 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .text.FM_HW_DWT_CyclesToUs
-                0x00000000       0x28 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000      0xade CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0x22 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0x22 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0x8e CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0x51 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000      0x103 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0x6a CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000      0x1df CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000      0x1fb CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0x2e CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0x42 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0x1c CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0x29 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0xfb CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000     0x1685 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0x5e CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000    0x227a9 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0x6d CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000     0x393e CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000      0x190 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0x74 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0x2a CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0x3c CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0x34 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000      0x364 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0x16 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0x4a CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0x34 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0x10 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0x58 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000      0x1de CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000      0x19b CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0x5d CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000     0x1ae5 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000      0x7dc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000      0x166 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000      0x2aa CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000      0x5a5 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000      0x439 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0xd6 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000      0x1cd CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000      0x432 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0x95 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000      0x11c CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000      0x525 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000      0x4bf CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000      0x328 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000      0x916 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0xe4 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000      0x677 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000      0x1a1 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000      0x1c0 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000      0x361 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x00000000       0x40 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .text          0x00000000        0x0 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .data          0x00000000        0x0 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .bss           0x00000000        0x0 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .text.FM_HW_GPIO_LedErrorOn
-                0x00000000       0x18 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .text.FM_HW_GPIO_LedRunOn
-                0x00000000       0x18 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000      0xade CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0x22 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0x22 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0x8e CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0x51 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000      0x103 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0x6a CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000      0x1df CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000      0x1fb CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0x2e CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0x42 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0x1c CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0x29 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0xfb CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000     0x1685 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0x5e CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000    0x227a9 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0x6d CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000     0x393e CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000      0x190 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0x74 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0x2a CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0x3c CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0x34 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000      0x364 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0x16 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0x4a CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0x34 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0x10 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0x58 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000      0x1de CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000      0x19b CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0x5d CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000     0x1ae5 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000      0x7dc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000      0x166 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000      0x2aa CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000      0x5a5 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000      0x439 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0xd6 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000      0x1cd CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000      0x432 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0x95 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000      0x11c CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000      0x525 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000      0x4bf CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000      0x328 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000      0x916 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0xe4 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000      0x677 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000      0x1a1 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000      0x1c0 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000      0x361 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00000000       0x40 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .text          0x00000000        0x0 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .data          0x00000000        0x0 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .bss           0x00000000        0x0 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000      0xade CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0x22 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0x22 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0x8e CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0x51 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000      0x103 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0x6a CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000      0x1df CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000      0x1fb CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0x2e CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0x42 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0x1c CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0x29 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0xfb CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000     0x1685 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0x5e CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000    0x227a9 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0x6d CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000     0x393e CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000      0x190 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0x74 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0x2a CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0x3c CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0x34 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000      0x364 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0x16 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0x4a CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0x34 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0x10 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0x58 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000      0x1de CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000      0x19b CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0x5d CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000     0x1ae5 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000      0x7dc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000      0x166 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000      0x2aa CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000      0x5a5 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000      0x439 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0xd6 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000      0x1cd CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000      0x432 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0x95 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000      0x11c CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000      0x525 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000      0x4bf CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000      0x328 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000      0x916 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0xe4 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000      0x677 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000      0x1a1 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000      0x1c0 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000      0x361 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_macro   0x00000000       0x40 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .text          0x00000000        0x0 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .data          0x00000000        0x0 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .bss           0x00000000        0x0 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .text.FM_PORT_DWT_GetCycles
+                0x00000000       0x18 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .text.FM_PORT_DWT_GetCpuHz
+                0x00000000       0x18 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .text.FM_PORT_DWT_CyclesPerUs
+                0x00000000       0x1c CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .text.FM_PORT_DWT_UsToCycles
+                0x00000000       0x50 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .text.FM_PORT_DWT_CyclesToUs
+                0x00000000       0x28 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .text.FM_PORT_DWT_DelayUs
+                0x00000000       0x38 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000      0xade CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0x22 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0x22 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0x8e CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0x51 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000      0x103 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0x6a CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000      0x1df CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000      0x1fb CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0x2e CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0x42 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0x1c CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0x29 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0xfb CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000     0x1685 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0x5e CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000    0x227a9 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0x6d CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000     0x393e CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000      0x190 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0x74 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0x2a CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0x3c CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0x34 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000      0x364 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0x16 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0x4a CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0x34 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0x10 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0x58 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000      0x1de CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000      0x19b CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0x5d CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000     0x1ae5 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000      0x7dc CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000      0x166 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000      0x2aa CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000      0x5a5 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000      0x439 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0xd6 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000      0x1cd CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000      0x432 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0x95 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000      0x11c CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000      0x525 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000      0x4bf CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000      0x328 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000      0x916 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0xe4 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000      0x677 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000      0x1a1 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000      0x1c0 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000      0x361 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x00000000       0x40 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .text          0x00000000        0x0 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .data          0x00000000        0x0 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .bss           0x00000000        0x0 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .text.FM_PORT_GPIO_LedErrorOn
+                0x00000000       0x18 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .text.FM_PORT_GPIO_LedRunOn
+                0x00000000       0x18 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000      0xade CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0x22 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0x22 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0x8e CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0x51 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000      0x103 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0x6a CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000      0x1df CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000      0x1fb CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0x2e CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0x42 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0x1c CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0x29 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0xfb CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000     0x1685 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0x5e CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000    0x227a9 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0x6d CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000     0x393e CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000      0x190 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0x74 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0x2a CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0x3c CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0x34 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000      0x364 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0x16 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0x4a CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0x34 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0x10 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0x58 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000      0x1de CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000      0x19b CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0x5d CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000     0x1ae5 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000      0x7dc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000      0x166 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000      0x2aa CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000      0x5a5 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000      0x439 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0xd6 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000      0x1cd CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000      0x432 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0x95 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000      0x11c CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000      0x525 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000      0x4bf CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000      0x328 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000      0x916 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0xe4 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000      0x677 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000      0x1a1 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000      0x1c0 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000      0x361 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00000000       0x40 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .group         0x00000000        0xc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .text          0x00000000        0x0 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .data          0x00000000        0x0 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .bss           0x00000000        0x0 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000      0xade CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0x22 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0x22 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0x8e CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0x51 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000      0x103 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0x6a CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000      0x1df CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000      0x1fb CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0x2e CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0x42 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0x1c CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0x29 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0xfb CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000     0x1685 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0x5e CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000    0x227a9 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0x6d CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000     0x393e CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000      0x190 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0x74 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0x2a CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0x3c CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0x34 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000      0x364 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0x16 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0x4a CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0x34 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0x10 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0x58 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000      0x1de CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000      0x19b CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0x5d CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000     0x1ae5 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000      0x7dc CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000      0x166 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000      0x2aa CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000      0x5a5 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000      0x439 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0xd6 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000      0x1cd CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000      0x432 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0x95 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000      0x11c CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000      0x525 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000      0x4bf CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000      0x328 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000      0x916 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0xe4 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000      0x677 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000      0x1a1 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000      0x1c0 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000      0x361 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_macro   0x00000000       0x40 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
  .text          0x00000000      0x378 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/thumb/v8-m.main+fp/hard\libgcc.a(_arm_addsubdf3.o)
  .data          0x00000000        0x0 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/thumb/v8-m.main+fp/hard\libgcc.a(_arm_addsubdf3.o)
  .bss           0x00000000        0x0 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/thumb/v8-m.main+fp/hard\libgcc.a(_arm_addsubdf3.o)
@@ -5274,9 +5278,9 @@ LOAD CMakeFiles/fmc-320u-v2.dir/startup_stm32u575xx.s.obj
 LOAD CMakeFiles/fmc-320u-v2.dir/01_app/fm_main.c.obj
 LOAD CMakeFiles/fmc-320u-v2.dir/libs/fm_debug.c.obj
 LOAD CMakeFiles/fmc-320u-v2.dir/bsp/fm_board.c.obj
-LOAD CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
-LOAD CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
-LOAD CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
+LOAD CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+LOAD CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+LOAD CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
 LOAD C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libm.a
 START GROUP
 LOAD C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/thumb/v8-m.main+fp/hard\libgcc.a
@@ -5671,43 +5675,43 @@ LOAD C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.
  .text.FM_BOARD_DwtInit
                 0x080060d6        0xe CMakeFiles/fmc-320u-v2.dir/bsp/fm_board.c.obj
                 0x080060d6                FM_BOARD_DwtInit
- .text.FM_HW_DWT_Init
-                0x080060e4       0x38 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
-                0x080060e4                FM_HW_DWT_Init
- .text.FM_HW_GPIO_EnableClock
-                0x0800611c      0x178 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .text.FM_HW_GPIO_ReadJumper
-                0x08006294       0x72 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
+ .text.FM_PORT_DWT_Init
+                0x080060e4       0x38 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+                0x080060e4                FM_PORT_DWT_Init
+ .text.fm_port_gpio_enable_clock_
+                0x0800611c      0x178 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .text.fm_port_gpio_read_jumper_
+                0x08006294       0x72 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
  *fill*         0x08006306        0x2 
- .text.FM_HW_GPIO_Init
-                0x08006308       0xbc CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
-                0x08006308                FM_HW_GPIO_Init
- .text.FM_HW_GPIO_IsDbgLedEnabled
-                0x080063c4       0x18 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
-                0x080063c4                FM_HW_GPIO_IsDbgLedEnabled
- .text.FM_HW_GPIO_IsDbgMsgEnabled
-                0x080063dc       0x18 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
-                0x080063dc                FM_HW_GPIO_IsDbgMsgEnabled
- .text.FM_HW_GPIO_LedErrorOff
-                0x080063f4       0x18 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
-                0x080063f4                FM_HW_GPIO_LedErrorOff
- .text.FM_HW_GPIO_LedRunOff
-                0x0800640c       0x18 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
-                0x0800640c                FM_HW_GPIO_LedRunOff
- .text.FM_HW_GPIO_LedSignalOn
-                0x08006424       0x18 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
-                0x08006424                FM_HW_GPIO_LedSignalOn
- .text.FM_HW_GPIO_LedSignalOff
-                0x0800643c       0x18 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
-                0x0800643c                FM_HW_GPIO_LedSignalOff
- .text.FM_HW_UART_HandleGet
-                0x08006454       0x14 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .text.FM_HW_UART_Init
-                0x08006468       0xa0 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
-                0x08006468                FM_HW_UART_Init
- .text.FM_HW_UART_Transmit
-                0x08006508       0x40 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
-                0x08006508                FM_HW_UART_Transmit
+ .text.FM_PORT_GPIO_Init
+                0x08006308       0xbc CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+                0x08006308                FM_PORT_GPIO_Init
+ .text.FM_PORT_GPIO_IsDbgLedEnabled
+                0x080063c4       0x18 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+                0x080063c4                FM_PORT_GPIO_IsDbgLedEnabled
+ .text.FM_PORT_GPIO_IsDbgMsgEnabled
+                0x080063dc       0x18 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+                0x080063dc                FM_PORT_GPIO_IsDbgMsgEnabled
+ .text.FM_PORT_GPIO_LedErrorOff
+                0x080063f4       0x18 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+                0x080063f4                FM_PORT_GPIO_LedErrorOff
+ .text.FM_PORT_GPIO_LedRunOff
+                0x0800640c       0x18 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+                0x0800640c                FM_PORT_GPIO_LedRunOff
+ .text.FM_PORT_GPIO_LedSignalOn
+                0x08006424       0x18 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+                0x08006424                FM_PORT_GPIO_LedSignalOn
+ .text.FM_PORT_GPIO_LedSignalOff
+                0x0800643c       0x18 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+                0x0800643c                FM_PORT_GPIO_LedSignalOff
+ .text.fm_port_uart_handle_get_
+                0x08006454       0x14 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .text.FM_PORT_UART_Init
+                0x08006468       0xa0 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+                0x08006468                FM_PORT_UART_Init
+ .text.FM_PORT_UART_Transmit
+                0x08006508       0x40 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+                0x08006508                FM_PORT_UART_Transmit
  .text.snprintf
                 0x08006548       0x6c C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-snprintf.o)
                 0x08006548                sniprintf
@@ -5966,7 +5970,7 @@ LOAD C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.
  *fill*         0x200001d1        0x3 
  .bss.err_param
                 0x200001d4       0x14 CMakeFiles/fmc-320u-v2.dir/libs/fm_debug.c.obj
- .bss.huart1    0x200001e8       0x94 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
+ .bss.huart1    0x200001e8       0x94 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
  .bss.__sf      0x2000027c      0x138 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-findfp.o)
                 0x2000027c                __sf
  .bss.errno     0x200003b4        0x4 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reent.o)
@@ -6054,11 +6058,11 @@ LOAD C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.
  .ARM.attributes
                 0x0000045c       0x3a CMakeFiles/fmc-320u-v2.dir/bsp/fm_board.c.obj
  .ARM.attributes
-                0x00000496       0x3a CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
+                0x00000496       0x3a CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
  .ARM.attributes
-                0x000004d0       0x3a CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
+                0x000004d0       0x3a CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
  .ARM.attributes
-                0x0000050a       0x3a CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
+                0x0000050a       0x3a CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
  .ARM.attributes
                 0x00000544       0x26 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/thumb/v8-m.main+fp/hard\libgcc.a(_aeabi_uldivmod.o)
  .ARM.attributes
@@ -6108,7 +6112,7 @@ LOAD C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.
 OUTPUT(fmc-320u-v2.elf elf32-littlearm)
 LOAD linker stubs
 
-.debug_info     0x00000000    0x19ce7
+.debug_info     0x00000000    0x19d3b
  .debug_info    0x00000000      0x929 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Core/Src/system_stm32u5xx.c.obj
  .debug_info    0x00000929     0x1639 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_cortex.c.obj
  .debug_info    0x00001f62     0x11ec cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal.c.obj
@@ -6128,30 +6132,30 @@ LOAD linker stubs
  .debug_info    0x0000eb6a      0x460 CMakeFiles/fmc-320u-v2.dir/01_app/fm_main.c.obj
  .debug_info    0x0000efca      0x91d CMakeFiles/fmc-320u-v2.dir/libs/fm_debug.c.obj
  .debug_info    0x0000f8e7      0x64e CMakeFiles/fmc-320u-v2.dir/bsp/fm_board.c.obj
- .debug_info    0x0000ff35      0x5dd CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_info    0x00010512      0x792 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_info    0x00010ca4      0x9f4 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_info    0x00011698      0xfb2 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-findfp.o)
- .debug_info    0x0001264a      0x8b9 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-snprintf.o)
- .debug_info    0x00012f03       0xe0 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memset.o)
- .debug_info    0x00012fe3      0x8a1 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reent.o)
- .debug_info    0x00013884      0x715 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-impure.o)
- .debug_info    0x00013f99      0x6fb C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-errno.o)
- .debug_info    0x00014694      0x10b C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-init.o)
- .debug_info    0x0001479f      0x218 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-lock.o)
- .debug_info    0x000149b7      0x851 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-freer.o)
- .debug_info    0x00015208      0x9bc C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mallocr.o)
- .debug_info    0x00015bc4      0x76b C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mlock.o)
- .debug_info    0x0001632f     0x10b3 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-svfprintf.o)
- .debug_info    0x000173e2      0xde2 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-vfprintf_i.o)
- .debug_info    0x000181c4      0x10f C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memmove.o)
- .debug_info    0x000182d3      0x782 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-sbrkr.o)
- .debug_info    0x00018a55      0x110 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memchr-stub.o)
- .debug_info    0x00018b65      0x121 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memcpy-stub.o)
- .debug_info    0x00018c86      0x8cd C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reallocr.o)
- .debug_info    0x00019553      0x794 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-msizer.o)
+ .debug_info    0x0000ff35      0x631 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_info    0x00010566      0x792 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_info    0x00010cf8      0x9f4 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_info    0x000116ec      0xfb2 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-findfp.o)
+ .debug_info    0x0001269e      0x8b9 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-snprintf.o)
+ .debug_info    0x00012f57       0xe0 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memset.o)
+ .debug_info    0x00013037      0x8a1 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reent.o)
+ .debug_info    0x000138d8      0x715 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-impure.o)
+ .debug_info    0x00013fed      0x6fb C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-errno.o)
+ .debug_info    0x000146e8      0x10b C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-init.o)
+ .debug_info    0x000147f3      0x218 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-lock.o)
+ .debug_info    0x00014a0b      0x851 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-freer.o)
+ .debug_info    0x0001525c      0x9bc C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mallocr.o)
+ .debug_info    0x00015c18      0x76b C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mlock.o)
+ .debug_info    0x00016383     0x10b3 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-svfprintf.o)
+ .debug_info    0x00017436      0xde2 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-vfprintf_i.o)
+ .debug_info    0x00018218      0x10f C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memmove.o)
+ .debug_info    0x00018327      0x782 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-sbrkr.o)
+ .debug_info    0x00018aa9      0x110 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memchr-stub.o)
+ .debug_info    0x00018bb9      0x121 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memcpy-stub.o)
+ .debug_info    0x00018cda      0x8cd C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reallocr.o)
+ .debug_info    0x000195a7      0x794 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-msizer.o)
 
-.debug_abbrev   0x00000000     0x4ac9
+.debug_abbrev   0x00000000     0x4afe
  .debug_abbrev  0x00000000      0x129 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Core/Src/system_stm32u5xx.c.obj
  .debug_abbrev  0x00000129      0x327 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_cortex.c.obj
  .debug_abbrev  0x00000450      0x2a5 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal.c.obj
@@ -6171,30 +6175,30 @@ LOAD linker stubs
  .debug_abbrev  0x00001eb0      0x1b2 CMakeFiles/fmc-320u-v2.dir/01_app/fm_main.c.obj
  .debug_abbrev  0x00002062      0x270 CMakeFiles/fmc-320u-v2.dir/libs/fm_debug.c.obj
  .debug_abbrev  0x000022d2      0x1ad CMakeFiles/fmc-320u-v2.dir/bsp/fm_board.c.obj
- .debug_abbrev  0x0000247f      0x167 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_abbrev  0x000025e6      0x21f CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_abbrev  0x00002805      0x1c5 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_abbrev  0x000029ca      0x424 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-findfp.o)
- .debug_abbrev  0x00002dee      0x231 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-snprintf.o)
- .debug_abbrev  0x0000301f       0x9e C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memset.o)
- .debug_abbrev  0x000030bd      0x1f7 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reent.o)
- .debug_abbrev  0x000032b4      0x149 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-impure.o)
- .debug_abbrev  0x000033fd      0x15e C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-errno.o)
- .debug_abbrev  0x0000355b       0xc9 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-init.o)
- .debug_abbrev  0x00003624      0x115 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-lock.o)
- .debug_abbrev  0x00003739      0x236 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-freer.o)
- .debug_abbrev  0x0000396f      0x24a C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mallocr.o)
- .debug_abbrev  0x00003bb9      0x1bf C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mlock.o)
- .debug_abbrev  0x00003d78      0x31e C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-svfprintf.o)
- .debug_abbrev  0x00004096      0x28e C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-vfprintf_i.o)
- .debug_abbrev  0x00004324       0xac C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memmove.o)
- .debug_abbrev  0x000043d0      0x1da C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-sbrkr.o)
- .debug_abbrev  0x000045aa       0xb1 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memchr-stub.o)
- .debug_abbrev  0x0000465b       0xc1 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memcpy-stub.o)
- .debug_abbrev  0x0000471c      0x217 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reallocr.o)
- .debug_abbrev  0x00004933      0x196 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-msizer.o)
+ .debug_abbrev  0x0000247f      0x19c CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_abbrev  0x0000261b      0x21f CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_abbrev  0x0000283a      0x1c5 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_abbrev  0x000029ff      0x424 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-findfp.o)
+ .debug_abbrev  0x00002e23      0x231 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-snprintf.o)
+ .debug_abbrev  0x00003054       0x9e C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memset.o)
+ .debug_abbrev  0x000030f2      0x1f7 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reent.o)
+ .debug_abbrev  0x000032e9      0x149 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-impure.o)
+ .debug_abbrev  0x00003432      0x15e C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-errno.o)
+ .debug_abbrev  0x00003590       0xc9 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-init.o)
+ .debug_abbrev  0x00003659      0x115 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-lock.o)
+ .debug_abbrev  0x0000376e      0x236 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-freer.o)
+ .debug_abbrev  0x000039a4      0x24a C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mallocr.o)
+ .debug_abbrev  0x00003bee      0x1bf C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mlock.o)
+ .debug_abbrev  0x00003dad      0x31e C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-svfprintf.o)
+ .debug_abbrev  0x000040cb      0x28e C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-vfprintf_i.o)
+ .debug_abbrev  0x00004359       0xac C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memmove.o)
+ .debug_abbrev  0x00004405      0x1da C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-sbrkr.o)
+ .debug_abbrev  0x000045df       0xb1 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memchr-stub.o)
+ .debug_abbrev  0x00004690       0xc1 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memcpy-stub.o)
+ .debug_abbrev  0x00004751      0x217 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reallocr.o)
+ .debug_abbrev  0x00004968      0x196 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-msizer.o)
 
-.debug_aranges  0x00000000     0x11c8
+.debug_aranges  0x00000000     0x11d8
  .debug_aranges
                 0x00000000       0x28 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Core/Src/system_stm32u5xx.c.obj
  .debug_aranges
@@ -6234,52 +6238,52 @@ LOAD linker stubs
  .debug_aranges
                 0x00000d40       0x80 CMakeFiles/fmc-320u-v2.dir/bsp/fm_board.c.obj
  .debug_aranges
-                0x00000dc0       0x40 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
+                0x00000dc0       0x50 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
  .debug_aranges
-                0x00000e00       0x70 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
+                0x00000e10       0x70 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
  .debug_aranges
-                0x00000e70       0x30 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
+                0x00000e80       0x30 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
  .debug_aranges
-                0x00000ea0       0x78 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-findfp.o)
+                0x00000eb0       0x78 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-findfp.o)
  .debug_aranges
-                0x00000f18       0x28 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-snprintf.o)
+                0x00000f28       0x28 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-snprintf.o)
  .debug_aranges
-                0x00000f40       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memset.o)
+                0x00000f50       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memset.o)
  .debug_aranges
-                0x00000f60       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reent.o)
+                0x00000f70       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reent.o)
  .debug_aranges
-                0x00000f80       0x18 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-impure.o)
+                0x00000f90       0x18 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-impure.o)
  .debug_aranges
-                0x00000f98       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-errno.o)
+                0x00000fa8       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-errno.o)
  .debug_aranges
-                0x00000fb8       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-init.o)
+                0x00000fc8       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-init.o)
  .debug_aranges
-                0x00000fd8       0x68 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-lock.o)
+                0x00000fe8       0x68 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-lock.o)
  .debug_aranges
-                0x00001040       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-freer.o)
+                0x00001050       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-freer.o)
  .debug_aranges
-                0x00001060       0x28 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mallocr.o)
+                0x00001070       0x28 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mallocr.o)
  .debug_aranges
-                0x00001088       0x28 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mlock.o)
+                0x00001098       0x28 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mlock.o)
  .debug_aranges
-                0x000010b0       0x30 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-svfprintf.o)
+                0x000010c0       0x30 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-svfprintf.o)
  .debug_aranges
-                0x000010e0       0x28 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-vfprintf_i.o)
+                0x000010f0       0x28 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-vfprintf_i.o)
  .debug_aranges
-                0x00001108       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memmove.o)
+                0x00001118       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memmove.o)
  .debug_aranges
-                0x00001128       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-sbrkr.o)
+                0x00001138       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-sbrkr.o)
  .debug_aranges
-                0x00001148       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memchr-stub.o)
+                0x00001158       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memchr-stub.o)
  .debug_aranges
-                0x00001168       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memcpy-stub.o)
+                0x00001178       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memcpy-stub.o)
  .debug_aranges
-                0x00001188       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reallocr.o)
+                0x00001198       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reallocr.o)
  .debug_aranges
-                0x000011a8       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-msizer.o)
+                0x000011b8       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-msizer.o)
 
 .debug_rnglists
-                0x00000000      0xddd
+                0x00000000      0xde9
  .debug_rnglists
                 0x00000000       0x1a cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Core/Src/system_stm32u5xx.c.obj
  .debug_rnglists
@@ -6319,47 +6323,47 @@ LOAD linker stubs
  .debug_rnglists
                 0x00000a25       0x5b CMakeFiles/fmc-320u-v2.dir/bsp/fm_board.c.obj
  .debug_rnglists
-                0x00000a80       0x2b CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
+                0x00000a80       0x37 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
  .debug_rnglists
-                0x00000aab       0x51 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
+                0x00000ab7       0x51 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
  .debug_rnglists
-                0x00000afc       0x20 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
+                0x00000b08       0x20 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
  .debug_rnglists
-                0x00000b1c       0x7d C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-findfp.o)
+                0x00000b28       0x7d C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-findfp.o)
  .debug_rnglists
-                0x00000b99       0x19 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-snprintf.o)
+                0x00000ba5       0x19 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-snprintf.o)
  .debug_rnglists
-                0x00000bb2       0x13 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memset.o)
+                0x00000bbe       0x13 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memset.o)
  .debug_rnglists
-                0x00000bc5       0x2c C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reent.o)
+                0x00000bd1       0x2c C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reent.o)
  .debug_rnglists
-                0x00000bf1       0x13 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-errno.o)
+                0x00000bfd       0x13 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-errno.o)
  .debug_rnglists
-                0x00000c04       0x13 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-init.o)
+                0x00000c10       0x13 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-init.o)
  .debug_rnglists
-                0x00000c17       0x49 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-lock.o)
+                0x00000c23       0x49 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-lock.o)
  .debug_rnglists
-                0x00000c60       0x14 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-freer.o)
+                0x00000c6c       0x14 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-freer.o)
  .debug_rnglists
-                0x00000c74       0x2c C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mallocr.o)
+                0x00000c80       0x2c C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mallocr.o)
  .debug_rnglists
-                0x00000ca0       0x19 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mlock.o)
+                0x00000cac       0x19 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mlock.o)
  .debug_rnglists
-                0x00000cb9       0x4a C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-svfprintf.o)
+                0x00000cc5       0x4a C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-svfprintf.o)
  .debug_rnglists
-                0x00000d03       0x68 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-vfprintf_i.o)
+                0x00000d0f       0x68 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-vfprintf_i.o)
  .debug_rnglists
-                0x00000d6b       0x13 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memmove.o)
+                0x00000d77       0x13 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memmove.o)
  .debug_rnglists
-                0x00000d7e       0x13 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-sbrkr.o)
+                0x00000d8a       0x13 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-sbrkr.o)
  .debug_rnglists
-                0x00000d91       0x13 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memchr-stub.o)
+                0x00000d9d       0x13 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memchr-stub.o)
  .debug_rnglists
-                0x00000da4       0x13 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memcpy-stub.o)
+                0x00000db0       0x13 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memcpy-stub.o)
  .debug_rnglists
-                0x00000db7       0x13 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reallocr.o)
+                0x00000dc3       0x13 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reallocr.o)
  .debug_rnglists
-                0x00000dca       0x13 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-msizer.o)
+                0x00000dd6       0x13 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-msizer.o)
 
 .debug_macro    0x00000000    0x32dc2
  .debug_macro   0x00000000      0x26a cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Core/Src/system_stm32u5xx.c.obj
@@ -6445,11 +6449,11 @@ LOAD linker stubs
  .debug_macro   0x0003234e       0x16 CMakeFiles/fmc-320u-v2.dir/libs/fm_debug.c.obj
  .debug_macro   0x00032364       0x20 CMakeFiles/fmc-320u-v2.dir/libs/fm_debug.c.obj
  .debug_macro   0x00032384      0x2a9 CMakeFiles/fmc-320u-v2.dir/bsp/fm_board.c.obj
- .debug_macro   0x0003262d      0x28b CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_macro   0x000328b8      0x285 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_macro   0x00032b3d      0x285 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
+ .debug_macro   0x0003262d      0x28b CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_macro   0x000328b8      0x285 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_macro   0x00032b3d      0x285 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
 
-.debug_line     0x00000000    0x15b74
+.debug_line     0x00000000    0x15bdd
  .debug_line    0x00000000      0x8c4 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Core/Src/system_stm32u5xx.c.obj
  .debug_line    0x000008c4      0xe13 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_cortex.c.obj
  .debug_line    0x000016d7      0xc69 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal.c.obj
@@ -6468,73 +6472,73 @@ LOAD linker stubs
  .debug_line    0x0000ec68       0x79 CMakeFiles/fmc-320u-v2.dir/startup_stm32u575xx.s.obj
  .debug_line    0x0000ece1      0x879 CMakeFiles/fmc-320u-v2.dir/01_app/fm_main.c.obj
  .debug_line    0x0000f55a      0x8ff CMakeFiles/fmc-320u-v2.dir/libs/fm_debug.c.obj
- .debug_line    0x0000fe59      0x94e CMakeFiles/fmc-320u-v2.dir/bsp/fm_board.c.obj
- .debug_line    0x000107a7      0x860 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_line    0x00011007      0x971 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_line    0x00011978      0x865 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_line    0x000121dd      0x5e3 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-findfp.o)
- .debug_line    0x000127c0      0x356 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-snprintf.o)
- .debug_line    0x00012b16      0x17e C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memset.o)
- .debug_line    0x00012c94      0x2f5 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reent.o)
- .debug_line    0x00012f89      0x163 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-impure.o)
- .debug_line    0x000130ec      0x185 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-errno.o)
- .debug_line    0x00013271      0x173 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-init.o)
- .debug_line    0x000133e4      0x19b C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-lock.o)
- .debug_line    0x0001357f      0x30c C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-freer.o)
- .debug_line    0x0001388b      0x4e7 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mallocr.o)
- .debug_line    0x00013d72      0x1ed C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mlock.o)
- .debug_line    0x00013f5f      0x899 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-svfprintf.o)
- .debug_line    0x000147f8      0x71c C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-vfprintf_i.o)
- .debug_line    0x00014f14      0x1bb C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memmove.o)
- .debug_line    0x000150cf      0x21f C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-sbrkr.o)
- .debug_line    0x000152ee      0x201 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memchr-stub.o)
- .debug_line    0x000154ef      0x207 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memcpy-stub.o)
- .debug_line    0x000156f6      0x279 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reallocr.o)
- .debug_line    0x0001596f      0x205 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-msizer.o)
+ .debug_line    0x0000fe59      0x955 CMakeFiles/fmc-320u-v2.dir/bsp/fm_board.c.obj
+ .debug_line    0x000107ae      0x8b8 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_line    0x00011066      0x975 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_line    0x000119db      0x86b CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_line    0x00012246      0x5e3 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-findfp.o)
+ .debug_line    0x00012829      0x356 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-snprintf.o)
+ .debug_line    0x00012b7f      0x17e C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memset.o)
+ .debug_line    0x00012cfd      0x2f5 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reent.o)
+ .debug_line    0x00012ff2      0x163 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-impure.o)
+ .debug_line    0x00013155      0x185 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-errno.o)
+ .debug_line    0x000132da      0x173 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-init.o)
+ .debug_line    0x0001344d      0x19b C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-lock.o)
+ .debug_line    0x000135e8      0x30c C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-freer.o)
+ .debug_line    0x000138f4      0x4e7 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mallocr.o)
+ .debug_line    0x00013ddb      0x1ed C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mlock.o)
+ .debug_line    0x00013fc8      0x899 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-svfprintf.o)
+ .debug_line    0x00014861      0x71c C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-vfprintf_i.o)
+ .debug_line    0x00014f7d      0x1bb C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memmove.o)
+ .debug_line    0x00015138      0x21f C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-sbrkr.o)
+ .debug_line    0x00015357      0x201 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memchr-stub.o)
+ .debug_line    0x00015558      0x207 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memcpy-stub.o)
+ .debug_line    0x0001575f      0x279 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reallocr.o)
+ .debug_line    0x000159d8      0x205 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-msizer.o)
 
-.debug_str      0x00000000   0x13cea7
- .debug_str     0x00000000   0x13cea7 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Core/Src/system_stm32u5xx.c.obj
+.debug_str      0x00000000   0x13cf19
+ .debug_str     0x00000000   0x13cf19 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Core/Src/system_stm32u5xx.c.obj
                              0x1337ac (size before relaxing)
- .debug_str     0x0013cea7   0x1343f1 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_cortex.c.obj
- .debug_str     0x0013cea7   0x134622 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal.c.obj
- .debug_str     0x0013cea7   0x134ea1 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_rcc.c.obj
- .debug_str     0x0013cea7   0x136104 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_rcc_ex.c.obj
- .debug_str     0x0013cea7   0x1337d1 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_gpio.c.obj
- .debug_str     0x0013cea7   0x133940 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_pwr.c.obj
- .debug_str     0x0013cea7   0x133eec cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_pwr_ex.c.obj
- .debug_str     0x0013cea7   0x134473 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_uart.c.obj
- .debug_str     0x0013cea7   0x133f25 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_uart_ex.c.obj
- .debug_str     0x0013cea7   0x133979 CMakeFiles/fmc-320u-v2.dir/Core/Src/main.c.obj
- .debug_str     0x0013cea7   0x1341f7 CMakeFiles/fmc-320u-v2.dir/Core/Src/usart.c.obj
- .debug_str     0x0013cea7   0x13355d CMakeFiles/fmc-320u-v2.dir/Core/Src/stm32u5xx_it.c.obj
- .debug_str     0x0013cea7   0x133710 CMakeFiles/fmc-320u-v2.dir/Core/Src/stm32u5xx_hal_msp.c.obj
- .debug_str     0x0013cea7     0x70e7 CMakeFiles/fmc-320u-v2.dir/Core/Src/sysmem.c.obj
- .debug_str     0x0013cea7       0x7e CMakeFiles/fmc-320u-v2.dir/startup_stm32u575xx.s.obj
- .debug_str     0x0013cea7   0x133803 CMakeFiles/fmc-320u-v2.dir/01_app/fm_main.c.obj
- .debug_str     0x0013cea7     0x7a3e CMakeFiles/fmc-320u-v2.dir/libs/fm_debug.c.obj
- .debug_str     0x0013cea7   0x133a3d CMakeFiles/fmc-320u-v2.dir/bsp/fm_board.c.obj
- .debug_str     0x0013cea7   0x1338d0 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_str     0x0013cea7   0x13393a CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_str     0x0013cea7   0x133c66 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_str     0x0013cea7      0x7bc C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-findfp.o)
- .debug_str     0x0013cea7      0x587 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-snprintf.o)
- .debug_str     0x0013cea7      0x219 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memset.o)
- .debug_str     0x0013cea7      0x558 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reent.o)
- .debug_str     0x0013cea7      0x539 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-impure.o)
- .debug_str     0x0013cea7      0x533 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-errno.o)
- .debug_str     0x0013cea7      0x27a C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-init.o)
- .debug_str     0x0013cea7      0x3b0 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-lock.o)
- .debug_str     0x0013cea7      0x5b9 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-freer.o)
- .debug_str     0x0013cea7      0x61a C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mallocr.o)
- .debug_str     0x0013cea7      0x5bb C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mlock.o)
- .debug_str     0x0013cea7      0x882 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-svfprintf.o)
- .debug_str     0x0013cea7      0x818 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-vfprintf_i.o)
- .debug_str     0x0013cea7      0x234 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memmove.o)
- .debug_str     0x0013cea7      0x542 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-sbrkr.o)
- .debug_str     0x0013cea7      0x233 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memchr-stub.o)
- .debug_str     0x0013cea7      0x237 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memcpy-stub.o)
- .debug_str     0x0013cea7      0x5af C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reallocr.o)
- .debug_str     0x0013cea7      0x582 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-msizer.o)
+ .debug_str     0x0013cf19   0x1343f1 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_cortex.c.obj
+ .debug_str     0x0013cf19   0x134622 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal.c.obj
+ .debug_str     0x0013cf19   0x134ea1 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_rcc.c.obj
+ .debug_str     0x0013cf19   0x136104 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_rcc_ex.c.obj
+ .debug_str     0x0013cf19   0x1337d1 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_gpio.c.obj
+ .debug_str     0x0013cf19   0x133940 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_pwr.c.obj
+ .debug_str     0x0013cf19   0x133eec cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_pwr_ex.c.obj
+ .debug_str     0x0013cf19   0x134473 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_uart.c.obj
+ .debug_str     0x0013cf19   0x133f25 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_uart_ex.c.obj
+ .debug_str     0x0013cf19   0x133979 CMakeFiles/fmc-320u-v2.dir/Core/Src/main.c.obj
+ .debug_str     0x0013cf19   0x1341f7 CMakeFiles/fmc-320u-v2.dir/Core/Src/usart.c.obj
+ .debug_str     0x0013cf19   0x13355d CMakeFiles/fmc-320u-v2.dir/Core/Src/stm32u5xx_it.c.obj
+ .debug_str     0x0013cf19   0x133710 CMakeFiles/fmc-320u-v2.dir/Core/Src/stm32u5xx_hal_msp.c.obj
+ .debug_str     0x0013cf19     0x70e7 CMakeFiles/fmc-320u-v2.dir/Core/Src/sysmem.c.obj
+ .debug_str     0x0013cf19       0x7e CMakeFiles/fmc-320u-v2.dir/startup_stm32u575xx.s.obj
+ .debug_str     0x0013cf19   0x133803 CMakeFiles/fmc-320u-v2.dir/01_app/fm_main.c.obj
+ .debug_str     0x0013cf19     0x7a3e CMakeFiles/fmc-320u-v2.dir/libs/fm_debug.c.obj
+ .debug_str     0x0013cf19   0x133a5f CMakeFiles/fmc-320u-v2.dir/bsp/fm_board.c.obj
+ .debug_str     0x0013cf19   0x13392c CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_str     0x0013cf19   0x133958 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_str     0x0013cf19   0x133c72 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_str     0x0013cf19      0x7bc C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-findfp.o)
+ .debug_str     0x0013cf19      0x587 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-snprintf.o)
+ .debug_str     0x0013cf19      0x219 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memset.o)
+ .debug_str     0x0013cf19      0x558 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reent.o)
+ .debug_str     0x0013cf19      0x539 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-impure.o)
+ .debug_str     0x0013cf19      0x533 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-errno.o)
+ .debug_str     0x0013cf19      0x27a C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-init.o)
+ .debug_str     0x0013cf19      0x3b0 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-lock.o)
+ .debug_str     0x0013cf19      0x5b9 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-freer.o)
+ .debug_str     0x0013cf19      0x61a C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mallocr.o)
+ .debug_str     0x0013cf19      0x5bb C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mlock.o)
+ .debug_str     0x0013cf19      0x882 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-svfprintf.o)
+ .debug_str     0x0013cf19      0x818 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-vfprintf_i.o)
+ .debug_str     0x0013cf19      0x234 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memmove.o)
+ .debug_str     0x0013cf19      0x542 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-sbrkr.o)
+ .debug_str     0x0013cf19      0x233 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memchr-stub.o)
+ .debug_str     0x0013cf19      0x237 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memcpy-stub.o)
+ .debug_str     0x0013cf19      0x5af C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reallocr.o)
+ .debug_str     0x0013cf19      0x582 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-msizer.o)
 
 .comment        0x00000000       0x43
  .comment       0x00000000       0x43 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Core/Src/system_stm32u5xx.c.obj
@@ -6556,9 +6560,9 @@ LOAD linker stubs
  .comment       0x00000043       0x44 CMakeFiles/fmc-320u-v2.dir/01_app/fm_main.c.obj
  .comment       0x00000043       0x44 CMakeFiles/fmc-320u-v2.dir/libs/fm_debug.c.obj
  .comment       0x00000043       0x44 CMakeFiles/fmc-320u-v2.dir/bsp/fm_board.c.obj
- .comment       0x00000043       0x44 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .comment       0x00000043       0x44 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .comment       0x00000043       0x44 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
+ .comment       0x00000043       0x44 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .comment       0x00000043       0x44 CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .comment       0x00000043       0x44 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
  .comment       0x00000043       0x44 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-findfp.o)
  .comment       0x00000043       0x44 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-snprintf.o)
  .comment       0x00000043       0x44 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memset.o)
@@ -6579,7 +6583,7 @@ LOAD linker stubs
  .comment       0x00000043       0x44 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reallocr.o)
  .comment       0x00000043       0x44 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-msizer.o)
 
-.debug_frame    0x00000000     0x3b24
+.debug_frame    0x00000000     0x3b64
  .debug_frame   0x00000000       0x50 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Core/Src/system_stm32u5xx.c.obj
  .debug_frame   0x00000050      0x508 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_cortex.c.obj
  .debug_frame   0x00000558      0x480 cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal.c.obj
@@ -6598,29 +6602,29 @@ LOAD linker stubs
  .debug_frame   0x00002c8c       0x74 CMakeFiles/fmc-320u-v2.dir/01_app/fm_main.c.obj
  .debug_frame   0x00002d00      0x3f0 CMakeFiles/fmc-320u-v2.dir/libs/fm_debug.c.obj
  .debug_frame   0x000030f0      0x18c CMakeFiles/fmc-320u-v2.dir/bsp/fm_board.c.obj
- .debug_frame   0x0000327c       0xb8 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_dwt.c.obj
- .debug_frame   0x00003334      0x15c CMakeFiles/fmc-320u-v2.dir/port/fm_hw_gpio.c.obj
- .debug_frame   0x00003490       0x74 CMakeFiles/fmc-320u-v2.dir/port/fm_hw_uart.c.obj
- .debug_frame   0x00003504       0x2c C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/thumb/v8-m.main+fp/hard\libgcc.a(_aeabi_uldivmod.o)
- .debug_frame   0x00003530       0x38 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/thumb/v8-m.main+fp/hard\libgcc.a(_udivmoddi4.o)
- .debug_frame   0x00003568      0x144 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-findfp.o)
- .debug_frame   0x000036ac       0x7c C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-snprintf.o)
- .debug_frame   0x00003728       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memset.o)
- .debug_frame   0x00003748       0x38 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reent.o)
- .debug_frame   0x00003780       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-errno.o)
- .debug_frame   0x000037a0       0x2c C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-init.o)
- .debug_frame   0x000037cc       0xb0 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-lock.o)
- .debug_frame   0x0000387c       0x38 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-freer.o)
- .debug_frame   0x000038b4       0x50 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mallocr.o)
- .debug_frame   0x00003904       0x30 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mlock.o)
- .debug_frame   0x00003934       0x90 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-svfprintf.o)
- .debug_frame   0x000039c4       0x60 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-vfprintf_i.o)
- .debug_frame   0x00003a24       0x28 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memmove.o)
- .debug_frame   0x00003a4c       0x2c C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-sbrkr.o)
- .debug_frame   0x00003a78       0x28 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memchr-stub.o)
- .debug_frame   0x00003aa0       0x28 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memcpy-stub.o)
- .debug_frame   0x00003ac8       0x3c C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reallocr.o)
- .debug_frame   0x00003b04       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-msizer.o)
+ .debug_frame   0x0000327c       0xf8 CMakeFiles/fmc-320u-v2.dir/port/fm_port_dwt.c.obj
+ .debug_frame   0x00003374      0x15c CMakeFiles/fmc-320u-v2.dir/port/fm_port_gpio.c.obj
+ .debug_frame   0x000034d0       0x74 CMakeFiles/fmc-320u-v2.dir/port/fm_port_uart.c.obj
+ .debug_frame   0x00003544       0x2c C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/thumb/v8-m.main+fp/hard\libgcc.a(_aeabi_uldivmod.o)
+ .debug_frame   0x00003570       0x38 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/thumb/v8-m.main+fp/hard\libgcc.a(_udivmoddi4.o)
+ .debug_frame   0x000035a8      0x144 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-findfp.o)
+ .debug_frame   0x000036ec       0x7c C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-snprintf.o)
+ .debug_frame   0x00003768       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memset.o)
+ .debug_frame   0x00003788       0x38 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reent.o)
+ .debug_frame   0x000037c0       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-errno.o)
+ .debug_frame   0x000037e0       0x2c C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-init.o)
+ .debug_frame   0x0000380c       0xb0 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-lock.o)
+ .debug_frame   0x000038bc       0x38 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-freer.o)
+ .debug_frame   0x000038f4       0x50 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mallocr.o)
+ .debug_frame   0x00003944       0x30 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-mlock.o)
+ .debug_frame   0x00003974       0x90 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-svfprintf.o)
+ .debug_frame   0x00003a04       0x60 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-nano-vfprintf_i.o)
+ .debug_frame   0x00003a64       0x28 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memmove.o)
+ .debug_frame   0x00003a8c       0x2c C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-sbrkr.o)
+ .debug_frame   0x00003ab8       0x28 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memchr-stub.o)
+ .debug_frame   0x00003ae0       0x28 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-memcpy-stub.o)
+ .debug_frame   0x00003b08       0x3c C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-reallocr.o)
+ .debug_frame   0x00003b44       0x20 C:/Users/dhs/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard\libg_nano.a(libc_a-msizer.o)
 
 .debug_line_str
                 0x00000000       0x62

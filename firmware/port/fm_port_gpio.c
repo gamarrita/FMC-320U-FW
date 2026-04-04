@@ -1,12 +1,17 @@
-#include <fm_hw_gpio.h>
+/**
+ * @file    fm_port_gpio.c
+ * @brief   Platform GPIO helpers for LEDs and debug jumpers.
+ */
+
+#include <fm_port_gpio.h>
 #include "main.h"
 
 /* Private Prototypes */
-static void FM_HW_GPIO_EnableClock(GPIO_TypeDef *port);
-static bool FM_HW_GPIO_ReadJumper(GPIO_TypeDef *port, uint16_t pin);
+static void fm_port_gpio_enable_clock_(GPIO_TypeDef *port);
+static bool fm_port_gpio_read_jumper_(GPIO_TypeDef *port, uint16_t pin);
 
 /* Private Bodies */
-static void FM_HW_GPIO_EnableClock(GPIO_TypeDef *port)
+static void fm_port_gpio_enable_clock_(GPIO_TypeDef *port)
 {
     if (port == GPIOA)
     {
@@ -43,12 +48,12 @@ static void FM_HW_GPIO_EnableClock(GPIO_TypeDef *port)
 }
 
 /* Temporarily enable pull-up to sample a jumper, then return the pin to analog to keep leakage low. */
-static bool FM_HW_GPIO_ReadJumper(GPIO_TypeDef *port, uint16_t pin)
+static bool fm_port_gpio_read_jumper_(GPIO_TypeDef *port, uint16_t pin)
 {
     GPIO_InitTypeDef GPIO_InitStruct = { 0 };
     bool enabled;
 
-    FM_HW_GPIO_EnableClock(port);
+    fm_port_gpio_enable_clock_(port);
 
     GPIO_InitStruct.Pin = pin;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
@@ -68,15 +73,15 @@ static bool FM_HW_GPIO_ReadJumper(GPIO_TypeDef *port, uint16_t pin)
 /* Public Bodies */
 
 /* Manual GPIO bring-up: LEDs as push-pull outputs low, jumpers left analog until sampled. */
-void FM_HW_GPIO_Init(void)
+void FM_PORT_GPIO_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct = { 0 };
 
-    FM_HW_GPIO_EnableClock(LED_ERROR_GPIO_Port);
-    FM_HW_GPIO_EnableClock(LED_ACTIVE_GPIO_Port);
-    FM_HW_GPIO_EnableClock(LED_SIGNAL_GPIO_Port);
-    FM_HW_GPIO_EnableClock(DBG_MSG_EN_GPIO_Port);
-    FM_HW_GPIO_EnableClock(DBG_LED_EN_GPIO_Port);
+    fm_port_gpio_enable_clock_(LED_ERROR_GPIO_Port);
+    fm_port_gpio_enable_clock_(LED_ACTIVE_GPIO_Port);
+    fm_port_gpio_enable_clock_(LED_SIGNAL_GPIO_Port);
+    fm_port_gpio_enable_clock_(DBG_MSG_EN_GPIO_Port);
+    fm_port_gpio_enable_clock_(DBG_LED_EN_GPIO_Port);
 
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -105,43 +110,43 @@ void FM_HW_GPIO_Init(void)
 }
 
 /* Sample LED enable jumper (true when floating/high). */
-bool FM_HW_GPIO_IsDbgLedEnabled(void)
+bool FM_PORT_GPIO_IsDbgLedEnabled(void)
 {
-    return FM_HW_GPIO_ReadJumper(DBG_LED_EN_GPIO_Port, DBG_LED_EN_Pin);
+    return fm_port_gpio_read_jumper_(DBG_LED_EN_GPIO_Port, DBG_LED_EN_Pin);
 }
 
 /* Sample UART message enable jumper (true when floating/high). */
-bool FM_HW_GPIO_IsDbgMsgEnabled(void)
+bool FM_PORT_GPIO_IsDbgMsgEnabled(void)
 {
-    return FM_HW_GPIO_ReadJumper(DBG_MSG_EN_GPIO_Port, DBG_MSG_EN_Pin);
+    return fm_port_gpio_read_jumper_(DBG_MSG_EN_GPIO_Port, DBG_MSG_EN_Pin);
 }
 
-void FM_HW_GPIO_LedErrorOn(void)
+void FM_PORT_GPIO_LedErrorOn(void)
 {
     HAL_GPIO_WritePin(LED_ERROR_GPIO_Port, LED_ERROR_Pin, GPIO_PIN_SET);
 }
 
-void FM_HW_GPIO_LedErrorOff(void)
+void FM_PORT_GPIO_LedErrorOff(void)
 {
     HAL_GPIO_WritePin(LED_ERROR_GPIO_Port, LED_ERROR_Pin, GPIO_PIN_RESET);
 }
 
-void FM_HW_GPIO_LedRunOn(void)
+void FM_PORT_GPIO_LedRunOn(void)
 {
     HAL_GPIO_WritePin(LED_ACTIVE_GPIO_Port, LED_ACTIVE_Pin, GPIO_PIN_SET);
 }
 
-void FM_HW_GPIO_LedRunOff(void)
+void FM_PORT_GPIO_LedRunOff(void)
 {
     HAL_GPIO_WritePin(LED_ACTIVE_GPIO_Port, LED_ACTIVE_Pin, GPIO_PIN_RESET);
 }
 
-void FM_HW_GPIO_LedSignalOn(void)
+void FM_PORT_GPIO_LedSignalOn(void)
 {
     HAL_GPIO_WritePin(LED_SIGNAL_GPIO_Port, LED_SIGNAL_Pin, GPIO_PIN_SET);
 }
 
-void FM_HW_GPIO_LedSignalOff(void)
+void FM_PORT_GPIO_LedSignalOff(void)
 {
     HAL_GPIO_WritePin(LED_SIGNAL_GPIO_Port, LED_SIGNAL_Pin, GPIO_PIN_RESET);
 }

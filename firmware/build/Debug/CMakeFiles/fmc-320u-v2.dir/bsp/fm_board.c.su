@@ -1,4 +1,4 @@
-D:/githubs/FMC-320U-FW/firmware/port/fm_hw_dwt.h:21:24:FM_HW_DWT_GetCycles	4	static
+D:/githubs/FMC-320U-FW/firmware/port/fm_port_dwt.h:70:24:FM_PORT_DWT_GetCycles	4	static
 D:/githubs/FMC-320U-FW/firmware/bsp/fm_board.c:34:6:FM_BOARD_Init	8	static
 D:/githubs/FMC-320U-FW/firmware/bsp/fm_board.c:42:6:FM_BOARD_DebugMsgEnabled	8	static
 D:/githubs/FMC-320U-FW/firmware/bsp/fm_board.c:47:6:FM_BOARD_DebugLedsEnabled	16	static

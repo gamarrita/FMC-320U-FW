@@ -47,9 +47,9 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/01_app/fm_main.c
     ${CMAKE_CURRENT_SOURCE_DIR}/libs/fm_debug.c
     ${CMAKE_CURRENT_SOURCE_DIR}/bsp/fm_board.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_hw_dwt.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_hw_gpio.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_hw_uart.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_dwt.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_gpio.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_uart.c
 )
 
 # Add include paths
