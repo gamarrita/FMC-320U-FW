@@ -1,29 +1,45 @@
 # CHANGELOG.md
 
-All notable changes to firmware.
+## Purpose
 
-## [Unreleased]
+This file records meaningful firmware-level changes, milestones, and notable decisions.
 
-### Added
+It is a historical record.
+It is not a source of truth for current style, naming, or workflow rules.
 
-### Changed
+For stable rules, see:
 
-### Fixed
-
-### Removed
+- `AGENT_ENTRY.md`
+- `01_quickstart.md`
+- `02_workflow.md`
+- `STYLE.md`
+- `AGENTS.md`
 
 ---
 
-## Rules
+## Format
 
-- One line per change.
-- Focus on technical impact.
-- Skip process narration.
-- Update when behavior, interfaces, or safety-relevant handling changes.
+Use concise entries that capture:
 
-Example:
+- what changed
+- why it mattered
+- any important boundary or decision
 
-```md
-### Fixed
-- Prevent repeated EXTI event counting caused by unstable input edge.
+Recommended format:
+
+```text
+## YYYY-MM-DD
+- <change summary>
+- <impact or rationale>
 ```
+
+---
+
+## Entries
+
+## 2026-04-04
+- Reorganized firmware documentation structure around a single agent entrypoint.
+- Separated quickstart, full workflow, prompt libraries, style guide, and working context.
+- Clarified that style and naming rules live in `STYLE.md`.
+- Clarified that live session continuity belongs in `05_working_context.md`.
+- Added `style-examples/README.md` as the index for example usage.

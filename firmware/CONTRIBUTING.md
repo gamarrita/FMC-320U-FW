@@ -1,116 +1,109 @@
 # CONTRIBUTING.md
 
-## Branches
+## Purpose
 
-Use:
+This file explains how to contribute changes under `firmware/`.
 
-- `feat/`
-- `fix/`
-- `refactor/`
-- `perf/`
-- `docs/`
-- `test/`
+It focuses on change quality, scope control, and documentation alignment.
 
-Format:
-
-```text
-<type>/<short-description>
-```
-
-Examples:
-
-```text
-feat/pulse-filter
-fix/exti-debounce
-refactor/adc-basic-example
-```
+For workflow details, see `02_workflow.md`.
+For style and naming, see `STYLE.md`.
+For agent-oriented entry guidance, see `AGENT_ENTRY.md`.
 
 ---
 
-## Commits
+## Contribution principles
 
-Format:
+Contributions should be:
 
-```text
-[AREA] type: message
-```
+- small when possible
+- clearly scoped
+- consistent with repository conventions
+- easy to review
+- aligned with existing folder responsibilities
 
-Examples:
-
-```text
-[FIRMWARE] fix: prevent repeated pulse count on unstable edge
-[FIRMWARE] refactor: align example private function naming
-[DOCS] docs: simplify style examples and naming rules
-```
-
-Rules:
-- imperative mood
-- short and specific
-- separate behavior changes from pure style changes when practical
+Avoid mixing unrelated improvements into one change.
 
 ---
 
-## Pull Requests
+## Before modifying code
 
-Include:
-- what changed
-- why it changed
-- how it was checked
+Before making a code change:
 
-Keep PRs focused.
-Do not mix unrelated cleanup with functional change unless justified.
+1. define the exact task
+2. identify the target folder and module
+3. review `STYLE.md`
+4. inspect the closest relevant example in `style-examples/`
+5. confirm what is explicitly out of scope
 
----
-
-## Style and tooling
-
-Before commit:
-- run formatter
-- check naming consistency
-- keep public vs private naming aligned with `STYLE.md`
-- avoid introducing new naming variants without updating the style doc
+If the task is broad, split it before implementation.
 
 ---
 
-## Safety mindset
+## Preferred change types
 
-- prefer explicit behavior
-- avoid hidden assumptions
-- keep interrupt code minimal
-- validate inputs at module boundaries
-- keep state transitions easy to audit
+Preferred contribution size:
+
+- one bug fix
+- one local refactor
+- one new small module
+- one API naming correction
+- one documentation cleanup
+- one responsibility split with clear ownership
+
+Less preferred:
+
+- large mixed refactors
+- broad folder reorganization without prior design agreement
+- naming sweeps mixed with behavior changes
+- speculative cleanup outside the task boundary
 
 ---
 
-# examples/README.md
+## Documentation expectations
 
-```md
-# Examples
+When changing documentation:
 
-This directory contains small style examples for FMC-320U.
-Each example focuses on one case only.
+- keep one topic per file
+- keep one source of truth per rule
+- do not store stable rules in working-context files
+- do not embed one document inside another when it should be a real file
+- keep prompt libraries separate from normative documentation
 
-## Content
+---
 
-- `baremetal/fm_main_simple.h/.c`
-  - Minimal baremetal app with `Init()` and `Main()`.
-- `baremetal/fm_gpio_poll.h/.c`
-  - Simple polling-based input module.
-- `rtos/fmx_kernel_basic.h/.c`
-  - Minimal ThreadX integration.
-- `rtos/fm_task_simple.h/.c`
-  - Simple periodic task.
-- `interrupts/fm_exti_flag.h/.c`
-  - Minimal interrupt event handling.
-- `drivers/fm_adc_basic.h/.c`
-  - Simple ADC driver example.
+## Code expectations
 
-## Naming model used in examples
+Code contributions should:
 
-- Public functions:
-  - `FM_MODULE_Action()`
-  - `FMX_MODULE_Action()`
-- Private static functions:
-  - `static void fm_module_action_(void);`
-- Required external callbacks keep vendor/RTOS names.
-```
+- follow `STYLE.md`
+- keep public APIs minimal
+- keep private helpers local
+- respect module ownership
+- avoid unnecessary abstraction
+- match repository patterns where valid
+
+---
+
+## Review checklist
+
+Before considering a contribution ready:
+
+- [ ] task scope is clear
+- [ ] target ownership is justified
+- [ ] naming matches `STYLE.md`
+- [ ] no unrelated edits were introduced
+- [ ] documentation was updated if a stable rule changed
+- [ ] examples were consulted if relevant
+- [ ] patch is reasonably easy to review
+
+---
+
+## Related documents
+
+- Agent entry: `AGENT_ENTRY.md`
+- Quick start: `01_quickstart.md`
+- Workflow: `02_workflow.md`
+- Style and naming: `STYLE.md`
+- Agent behavior: `AGENTS.md`
+- Examples index: `style-examples/README.md`
