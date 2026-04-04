@@ -9,5 +9,6 @@ Objetivo inicial:
 - primer milestone: hello world en VSCode para STM32U575
 
 Guias operativas:
-- `01_workflow.md`
+- `docs/agent_prompt.md`
+- `docs/current_milestone.md`
 - `05_multi_root_workspace.md`

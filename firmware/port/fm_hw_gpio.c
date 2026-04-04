@@ -73,7 +73,7 @@ void FM_HW_GPIO_Init(void)
     GPIO_InitTypeDef GPIO_InitStruct = { 0 };
 
     FM_HW_GPIO_EnableClock(LED_ERROR_GPIO_Port);
-    FM_HW_GPIO_EnableClock(LED_RUN_GPIO_Port);
+    FM_HW_GPIO_EnableClock(LED_ACTIVE_GPIO_Port);
     FM_HW_GPIO_EnableClock(LED_SIGNAL_GPIO_Port);
     FM_HW_GPIO_EnableClock(DBG_MSG_EN_GPIO_Port);
     FM_HW_GPIO_EnableClock(DBG_LED_EN_GPIO_Port);
@@ -86,9 +86,9 @@ void FM_HW_GPIO_Init(void)
     HAL_GPIO_Init(LED_ERROR_GPIO_Port, &GPIO_InitStruct);
     HAL_GPIO_WritePin(LED_ERROR_GPIO_Port, LED_ERROR_Pin, GPIO_PIN_RESET);
 
-    GPIO_InitStruct.Pin = LED_RUN_Pin;
-    HAL_GPIO_Init(LED_RUN_GPIO_Port, &GPIO_InitStruct);
-    HAL_GPIO_WritePin(LED_RUN_GPIO_Port, LED_RUN_Pin, GPIO_PIN_RESET);
+    GPIO_InitStruct.Pin = LED_ACTIVE_Pin;
+    HAL_GPIO_Init(LED_ACTIVE_GPIO_Port, &GPIO_InitStruct);
+    HAL_GPIO_WritePin(LED_ACTIVE_GPIO_Port, LED_ACTIVE_Pin, GPIO_PIN_RESET);
 
     GPIO_InitStruct.Pin = LED_SIGNAL_Pin;
     HAL_GPIO_Init(LED_SIGNAL_GPIO_Port, &GPIO_InitStruct);
@@ -128,12 +128,12 @@ void FM_HW_GPIO_LedErrorOff(void)
 
 void FM_HW_GPIO_LedRunOn(void)
 {
-    HAL_GPIO_WritePin(LED_RUN_GPIO_Port, LED_RUN_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(LED_ACTIVE_GPIO_Port, LED_ACTIVE_Pin, GPIO_PIN_SET);
 }
 
 void FM_HW_GPIO_LedRunOff(void)
 {
-    HAL_GPIO_WritePin(LED_RUN_GPIO_Port, LED_RUN_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(LED_ACTIVE_GPIO_Port, LED_ACTIVE_Pin, GPIO_PIN_RESET);
 }
 
 void FM_HW_GPIO_LedSignalOn(void)
