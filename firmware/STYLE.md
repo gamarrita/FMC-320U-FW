@@ -1,280 +1,490 @@
 # STYLE.md
 
-## Scope
-Applies to all new code and modified code.
-Goal: consistent, readable, safe embedded C.
+## Purpose
 
-Priority:
-1. External APIs and required callback names (`HAL_*`, `tx_*`, `TX_*` types)
-2. This document
-3. `.clang-format`
+This file defines the coding style, naming rules, and file structure conventions
+for `firmware/`.
+
+This is the source of truth for:
+
+- naming
+- public and private split
+- callbacks and wrappers
+- `.h` and `.c` responsibility split
+- minimal module structure
+
+If another document conflicts with this one on code style or naming,
+this file wins.
 
 ---
 
-## Function naming
+## General principles
 
-### Public functions
-Use:
+- Prefer consistency over novelty.
+- Keep code simple and readable.
+- Keep responsibilities separated.
+- Keep public APIs minimal.
+- Keep private implementation details local.
+- Avoid decorative abstraction.
+- Use existing repository patterns when available.
+
+---
+
+## Naming overview
+
+### Public symbols
+
+Public symbols should use a module-prefixed, explicit style.
+
+Recommended form:
 
 ```c
-FM_MODULE_Action()
-FMX_MODULE_Action()
+FM_Module_Action(void);
 ```
-
-Rules:
-- Prefix with module name.
-- Public API uses uppercase module prefix and uppercase module token.
-- Action name uses `CamelCase`.
-- Public names must be grep-friendly and unambiguous.
 
 Examples:
 
 ```c
-void FM_MAIN_SIMPLE_Init(void);
-void FM_GPIO_POLL_UpdateSample(fm_gpio_poll_context_t *context, bool pin_high);
-void FM_ADC_BASIC_ReadRaw(fm_adc_basic_context_t *context, uint16_t *raw_value);
-void FMX_KERNEL_BASIC_Init(fmx_kernel_basic_objs_t *objs,
-                           void (*entry_main)(ULONG),
-                           void *stack_ptr,
-                           ULONG stack_size,
-                           UINT priority);
+void FM_Uart_Init(void);
+void FM_App_Start(void);
+void FM_Service_Process(void);
 ```
 
-### Private static functions
-Use:
+Use PascalCase after the module prefix for public functions.
+
+Public names should:
+- be explicit
+- reflect responsibility
+- remain stable if part of a reusable module API
+
+---
+
+### Private functions
+
+Private functions should remain local to the `.c` file and use `static`.
+
+Recommended form:
 
 ```c
 static void fm_module_action_(void);
 ```
 
-Rules:
-- Always lowercase.
-- Always snake_case.
-- Always prefixed with full module name.
-- Never use `CamelCase` for private functions.
-- Never use generic prefixes like `app_`, `process_`, `helper_` without module prefix.
-
 Examples:
 
 ```c
-static void fm_main_simple_init_services_(void);
-static void fm_main_simple_service_heartbeat_(void);
-static void fm_gpio_poll_update_sample_(fm_gpio_poll_context_t *context,
-                                        bool pin_high);
-static uint16_t fm_adc_basic_read_hw_raw_(void);
-static void fmx_kernel_basic_create_objects_(fmx_kernel_basic_objs_t *objs,
-                                             void (*entry_main)(ULONG),
-                                             void *stack_ptr,
-                                             ULONG stack_size,
-                                             UINT priority);
+static void fm_uart_configure_(void);
+static void fm_app_run_state_(void);
+static void fm_service_update_(void);
 ```
 
-### When to use trailing underscore `_`
-Use trailing underscore only for private static functions that are local to one `.c` file.
+Use lowercase with underscores for private functions.
 
-Use `_` at the end when:
-- the function is `static`
-- the function is implementation-only
-- the name is not part of a public header
+---
 
-Do not use `_` at the end for:
-- public API
-- HAL callbacks
-- RTOS callbacks required by external API
-- function pointers exposed in headers
-- test hooks intentionally exposed as public API
+## Final underscore rule
+
+Use a trailing underscore only for private internal functions and private internal helpers
+that are local to the implementation file.
+
+Use trailing `_` for:
+
+- static helper functions
+- static internal state handlers
+- static local orchestration helpers
+- static internal conversion or translation helpers
+
+Do not use trailing `_` for:
+
+- public APIs
+- exported functions
+- types
+- macros
+- enum values
+- public callbacks exposed as API
+- filenames
 
 Examples:
 
 ```c
-void FM_ADC_BASIC_Init(fm_adc_basic_context_t *context);
-static void fm_adc_basic_init_context_(fm_adc_basic_context_t *context);
-void HAL_GPIO_EXTI_Callback(uint16_t gpio_pin);
-void FM_ADC_BASIC_OnConversionComplete(uint16_t raw_value);
+void FM_Module_Init(void);
+static void fm_module_init_hw_(void);
+static bool fm_module_is_ready_(void);
 ```
 
-### HAL callbacks vs wrappers
+---
 
-#### HAL / RTOS required callbacks
-Keep exact external name.
-Do not rename them.
+## Public versus private rule
 
-Examples:
+### Public functions
+
+Make a function public only if another module must call it.
+
+A public function should:
+- belong in the module header
+- have a stable and intentional name
+- expose a real module capability
+
+### Private functions
+
+Make a function private if it is:
+
+- only used inside one `.c` file
+- only part of local sequencing
+- only part of internal state progression
+- only an implementation detail
+
+Do not expose internal helpers just for convenience.
+
+---
+
+## Header and source split
+
+### Header file should contain
+
+- include guard or `#pragma once` according to project convention
+- required public includes only
+- public types
+- public constants if truly needed
+- public function declarations
+- minimal API comments if the project uses them consistently
+
+### Header file should not contain
+
+- internal static helper declarations
+- private macros unrelated to API
+- internal sequencing details
+- unnecessary includes
+- implementation-only state
+
+### Source file should contain
+
+- module includes
+- required private includes
+- private macros
+- private types
+- private state
+- private helper declarations
+- public function definitions
+- private function definitions
+
+---
+
+## File organization pattern
+
+Recommended source file structure:
 
 ```c
-void HAL_GPIO_EXTI_Callback(uint16_t gpio_pin);
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc);
-void tx_application_define(void *first_unused_memory);
-```
+#include "fm_module.h"
 
-#### Internal wrappers called from callbacks
-Use normal private naming.
+#include <stdbool.h>
+#include <stdint.h>
 
-Examples:
+#include "dependency_a.h"
+#include "dependency_b.h"
 
-```c
-void HAL_GPIO_EXTI_Callback(uint16_t gpio_pin)
+/* Private macros */
+
+/* Private types */
+
+/* Private constants */
+
+/* Private variables */
+
+/* Private function declarations */
+
+static void fm_module_prepare_(void);
+static void fm_module_update_state_(void);
+
+/* Public function definitions */
+
+void FM_Module_Init(void)
 {
-    fm_exti_flag_on_gpio_interrupt_(gpio_pin);
+    fm_module_prepare_();
 }
 
-static void fm_exti_flag_on_gpio_interrupt_(uint16_t gpio_pin);
+/* Private function definitions */
+
+static void fm_module_prepare_(void)
+{
+    /* ... */
+}
+
+static void fm_module_update_state_(void)
+{
+    /* ... */
+}
+```
+
+Keep ordering consistent across modules.
+
+---
+
+## Module naming
+
+Use the filename and the exported API as the naming anchor.
+
+If the module is `fm_uart.c` and `fm_uart.h`, expected names are:
+
+```c
+void FM_Uart_Init(void);
+void FM_Uart_Process(void);
+
+static void fm_uart_configure_(void);
+static void fm_uart_flush_rx_(void);
+```
+
+Avoid mixing unrelated prefixes in the same module.
+
+---
+
+## Callback naming
+
+### HAL or framework callbacks
+
+Use the expected external callback name exactly when the framework or HAL requires it.
+
+Do not rename required callback entry points arbitrarily.
+
+If project-local logic is needed, keep the required callback thin and forward to a local helper.
+
+Example:
+
+```c
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+    fm_uart_handle_rx_complete_(huart);
+}
+
+static void fm_uart_handle_rx_complete_(UART_HandleTypeDef *huart)
+{
+    /* project logic */
+}
 ```
 
 Rule:
-- callback keeps vendor/RTOS name
-- real module logic lives in `fm_module_action_()` or public wrapper `FM_MODULE_Action()`
-- callback should stay short
-- heavy work must be deferred
+- required HAL or framework callback keeps required external name
+- project logic moves to a private helper with local naming convention
 
-### Semi-public functions
-A semi-public function is callable from other project files, but not intended as the main user-facing API of the module. This is common in drivers, ISR handoff, scheduler integration, or lifecycle hooks.
+---
 
-Use normal public naming, but reserve specific action patterns:
+## Wrapper naming
+
+Use wrappers when adapting an external API to repository-local semantics.
+
+Recommended form for public wrappers:
 
 ```c
-FM_MODULE_Init()
-FM_MODULE_Deinit()
-FM_MODULE_Process()
-FM_MODULE_Task()
-FM_MODULE_OnInterrupt()
-FM_MODULE_OnTick()
-FM_MODULE_OnEvent()
-FM_MODULE_ReadRaw()
-FM_MODULE_WriteRaw()
+void FM_Uart_StartRx(void);
+void FM_Gpio_Write(void);
+uint32_t FM_Time_GetMs(void);
 ```
+
+Recommended form for private wrappers:
+
+```c
+static void fm_uart_start_rx_hw_(void);
+static void fm_gpio_write_pin_(void);
+```
+
+Wrapper names should describe the repository-facing action,
+not repeat vendor names unnecessarily unless that distinction matters.
+
+---
+
+## Semi-public functions inside a module family
+
+Sometimes a function is not globally public but is still shared inside one module family
+or subdomain.
+
+Rule:
+
+- if it is used across translation units, it is public to that boundary and must be declared in a header
+- if it is only local to one `.c`, keep it private and static
+- do not create "kind of public" functions without an explicit header boundary
+
+Recommended approach:
+
+- use a dedicated internal header only when a real multi-file internal module boundary exists
+- keep internal headers rare and intentional
+
+Examples:
+
+Good:
+- `fm_uart.h` exposes stable UART module APIs
+- `fm_uart_internal.h` exists only if multiple UART implementation units truly need shared internals
+
+Bad:
+- exposing helpers in the public header just because another file happened to need them once
+
+---
+
+## Variable naming
+
+Keep variable names clear and proportional to scope.
 
 Guidelines:
-- If another `.c` file needs it, it is public and must go in the header.
-- Do not invent a third visibility class with special punctuation.
-- Distinguish by purpose and header grouping, not by inconsistent naming.
-
-Recommended header grouping:
-
-```c
-/* Public API */
-void FM_ADC_BASIC_Init(fm_adc_basic_context_t *context);
-uint16_t FM_ADC_BASIC_ReadRaw(fm_adc_basic_context_t *context);
-
-/* Integration Hooks */
-void FM_ADC_BASIC_OnConversionComplete(uint16_t raw_value);
-void FM_ADC_BASIC_Process(void);
-```
-
-Meaning:
-- `Init`, `Read`, `Write`, `Get`, `Set` -> normal API
-- `OnInterrupt`, `OnTick`, `OnEvent`, `Process`, `Task` -> integration hooks / semi-public
-- keep same naming convention as other public functions
-- avoid private-looking names in headers
-
----
-
-## Types
-
-- Public types: `fm_module_name_t`, `fmx_module_name_t`
-- Use `stdint.h` fixed-width integers
-- Keep ownership explicit
+- short names for tight local scope are acceptable
+- broader scope requires more explicit names
+- booleans should read as booleans
+- avoid cryptic abbreviations unless already established in the domain
 
 Examples:
 
 ```c
-typedef struct
+bool is_ready;
+uint32_t timeout_ms;
+size_t rx_count;
+```
+
+---
+
+## Macro naming
+
+Use uppercase with module prefix for public or file-level constants or macros that behave as constants.
+
+Examples:
+
+```c
+#define FM_UART_RX_BUFFER_SIZE    128U
+#define FM_APP_TASK_PERIOD_MS     10U
+```
+
+Avoid function-like macros unless there is a strong reason.
+
+Prefer `static inline` or real functions when appropriate.
+
+---
+
+## Enum and type naming
+
+Use repository-consistent, module-scoped names.
+
+Examples:
+
+```c
+typedef enum
 {
-    uint16_t last_raw;
-    bool initialized_flag;
-} fm_adc_basic_context_t;
+    FM_UART_STATE_IDLE = 0,
+    FM_UART_STATE_BUSY,
+    FM_UART_STATE_ERROR
+} FM_UartState_t;
 ```
+
+Type names should be:
+- explicit
+- module-scoped
+- not overly abbreviated
 
 ---
 
-## Macros and constants
+## Includes
 
-- Macros: `FM_MODULE_NAME_VALUE`
-- Use suffixes for units when useful: `_MS`, `_SEC`, `_BYTES`
-- Replace repeated magic numbers with named constants
+Guidelines:
 
-Examples:
+- include the module's own header first
+- then standard headers
+- then project dependencies
+- avoid unused includes
+- do not rely on indirect includes
 
-```c
-#define FM_MAIN_SIMPLE_LOOP_PERIOD_MS      (10u)
-#define FM_ADC_BASIC_MAX_RAW               (4095u)
-#define FMX_KERNEL_BASIC_QUEUE_DEPTH       (8u)
-```
-
----
-
-## File structure
-
-Use fixed sections when relevant:
+Example:
 
 ```c
-/* Includes */
-/* Public Macros */
-/* Public Types */
-/* Public API */
+#include "fm_uart.h"
+
+#include <stdbool.h>
+#include <stdint.h>
+
+#include "fm_time.h"
+#include "stm32f4xx_hal_uart.h"
 ```
-
-In `.c` files:
-
-```c
-/* Includes */
-/* Private Defines */
-/* Private Types */
-/* Private Data */
-/* Private Prototypes */
-/* Private Bodies */
-/* Public Bodies */
-/* Interrupts */
-```
-
-Rules:
-- One module per file pair.
-- Header exposes only what other files need.
-- Private helpers stay in `.c`.
 
 ---
 
 ## Comments
 
-- Comment intent, assumptions, and safety-relevant behavior.
-- Do not comment obvious code.
-- Public functions may use short Doxygen-style comments when useful.
-- Internal functions use short regular comments only when they add value.
+Comment to clarify intent, assumptions, or non-obvious behavior.
 
-Bad:
+Do not comment what the code already says clearly.
 
-```c
-/* Increment counter */
-counter++;
-```
+Good comment targets:
 
-Good:
+- why a sequence matters
+- hardware-specific caveat
+- ordering dependency
+- protocol assumption
+- temporary limitation with justification
 
-```c
-/* Ignore repeated edge until input remains stable for N samples. */
-```
+Avoid noisy comments.
 
 ---
 
-## Embedded C safety rules
+## Error handling
 
-- Validate pointers at module boundaries.
-- Initialize persistent context explicitly.
-- Avoid hidden shared state unless clearly justified.
-- Keep ISR work minimal.
-- No blocking inside ISR.
-- No dynamic allocation in examples.
-- Use explicit status returns where failure matters.
-- Keep functions small and deterministic.
+Use simple, explicit error handling.
+Match existing repository style where it already exists.
+
+Do not introduce complex error frameworks unless the repository already uses one.
+
+When reporting or propagating errors:
+
+- keep behavior predictable
+- keep naming explicit
+- keep ownership of recovery clear
 
 ---
 
-## Exceptions
+## Responsibilities and boundaries
 
-Allowed only when required by:
-- vendor API
-- RTOS API
-- generated code interface
-- legacy compatibility explicitly accepted by the project
+Do not mix these casually in one file:
 
-Document the reason near the code when non-obvious.
+- app orchestration
+- board-specific control
+- vendor init details
+- reusable service logic
+- hardware adaptation glue
+
+If a file already mixes concerns, prefer containment first,
+then split only when the task justifies it.
+
+---
+
+## Examples are reference, not law
+
+`style-examples/` exists to show how conventions look in code.
+
+Use it for:
+
+- layout
+- naming
+- public and private split
+- callback forwarding style
+- wrapper shape
+
+Do not use it as a reason to copy architecture blindly.
+
+---
+
+## Decision rule when unsure
+
+When unsure between two acceptable options:
+
+1. choose the option closer to existing repository code
+2. choose the option with smaller API exposure
+3. choose the option with clearer ownership
+4. choose the option with less future cleanup cost
+
+---
+
+## Summary
+
+Use these defaults unless a stronger repository-local pattern already exists:
+
+- Public functions: `FM_Module_Action(void)`
+- Private functions: `static void fm_module_action_(void);`
+- HAL or framework callbacks: keep required external name, forward to private helper
+- Wrappers: name by repository-facing behavior
+- Public API: minimal
+- Private helpers: local and static
+- Headers: public surface only
+- Source files: implementation details stay local
