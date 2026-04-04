@@ -1,0 +1,6 @@
+D:/githubs/FMC-320U-FW/firmware/build/Debug/CMakeFiles/fmc-320u-v2.dir
+D:/githubs/FMC-320U-FW/firmware/build/Debug/CMakeFiles/edit_cache.dir
+D:/githubs/FMC-320U-FW/firmware/build/Debug/CMakeFiles/rebuild_cache.dir
+D:/githubs/FMC-320U-FW/firmware/build/Debug/cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir
+D:/githubs/FMC-320U-FW/firmware/build/Debug/cmake/stm32cubemx/CMakeFiles/edit_cache.dir
+D:/githubs/FMC-320U-FW/firmware/build/Debug/cmake/stm32cubemx/CMakeFiles/rebuild_cache.dir

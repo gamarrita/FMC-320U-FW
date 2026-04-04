@@ -1,0 +1,3 @@
+D:/githubs/FMC-320U-FW/firmware/01_app/fm_main.c:37:6:FM_MAIN_Init	8	static
+D:/githubs/FMC-320U-FW/firmware/01_app/fm_main.c:48:6:FM_MAIN_Main	48	static
+D:/githubs/FMC-320U-FW/firmware/01_app/fm_main.c:77:6:HAL_RTCEx_WakeUpTimerEventCallback	16	static

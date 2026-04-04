@@ -1,0 +1,11 @@
+D:/githubs/FMC-320U-FW/firmware/port/fm_hw_gpio.c:9:13:FM_HW_GPIO_EnableClock	48	static
+D:/githubs/FMC-320U-FW/firmware/port/fm_hw_gpio.c:46:13:FM_HW_GPIO_ReadJumper	40	static
+D:/githubs/FMC-320U-FW/firmware/port/fm_hw_gpio.c:71:6:FM_HW_GPIO_Init	32	static
+D:/githubs/FMC-320U-FW/firmware/port/fm_hw_gpio.c:108:6:FM_HW_GPIO_IsDbgLedEnabled	8	static
+D:/githubs/FMC-320U-FW/firmware/port/fm_hw_gpio.c:114:6:FM_HW_GPIO_IsDbgMsgEnabled	8	static
+D:/githubs/FMC-320U-FW/firmware/port/fm_hw_gpio.c:119:6:FM_HW_GPIO_LedErrorOn	8	static
+D:/githubs/FMC-320U-FW/firmware/port/fm_hw_gpio.c:124:6:FM_HW_GPIO_LedErrorOff	8	static
+D:/githubs/FMC-320U-FW/firmware/port/fm_hw_gpio.c:129:6:FM_HW_GPIO_LedRunOn	8	static
+D:/githubs/FMC-320U-FW/firmware/port/fm_hw_gpio.c:134:6:FM_HW_GPIO_LedRunOff	8	static
+D:/githubs/FMC-320U-FW/firmware/port/fm_hw_gpio.c:139:6:FM_HW_GPIO_LedSignalOn	8	static
+D:/githubs/FMC-320U-FW/firmware/port/fm_hw_gpio.c:144:6:FM_HW_GPIO_LedSignalOff	8	static
