@@ -1,5 +1,7 @@
 # From “It Builds in the IDE” to a Canonical Firmware Build: Enabling Real AI-Assisted Development
 
+[Ir a la versión en español](#version-en-espanol)
+
 ## Executive summary (promotional)
 
 Most embedded firmware projects unknowingly depend on an invisible assumption: *“if it builds in the IDE, the system is correct.”*
@@ -347,3 +349,357 @@ When that layer is added:
 * it will **validate, diagnose, and evolve it reliably**
 
 That is the real end state.
+
+---
+
+## Version en espanol
+
+# De “Compila en el IDE” a un Build Canonico de Firmware: habilitando desarrollo real asistido por IA
+
+## Resumen ejecutivo (promocional)
+
+Muchos proyectos de firmware embedded dependen sin notarlo de un supuesto invisible: *“si compila en el IDE, el sistema esta correcto.”*
+Ese supuesto se rompe de inmediato cuando se introduce automatizacion, CI o agentes de IA.
+
+Al hacer el build STM32 **explicito, reproducible y canonico fuera del IDE**, este proyecto elimina esa dependencia oculta y habilita una nueva capacidad:
+
+> El firmware ahora puede ser **entendido, modificado, compilado y validado de forma consistente tanto por personas como por agentes de IA**.
+
+Esto no es solo una mejora de tooling.
+Es un **cambio en el contrato de desarrollo** del firmware.
+
+---
+
+# 1. El problema real: builds dependientes del IDE
+
+En entornos STM32 + VS Code, el pipeline de build no es completamente visible:
+
+* `cube`, `cube-cmake`, toolchains y bundles se resuelven implicitamente
+* variables de entorno son inyectadas por la extension
+* los paths estan versionados y no se exportan a la shell
+
+Como resultado:
+
+* El proyecto compila dentro de VS Code
+* El mismo proyecto **falla desde una terminal limpia**
+* Un agente de IA **no puede reproducir el build**
+
+Esto no es un problema de `cmake` faltante.
+Es un **problema de entorno oculto**.
+
+---
+
+# 2. Por que esto importa para desarrollo asistido por IA
+
+Sin un build reproducible, un agente solo puede:
+
+* sugerir codigo
+* refactorizar estructura
+* aplicar reglas de naming
+* generar implementaciones plausibles
+
+Pero **no puede**:
+
+* verificar compilacion
+* distinguir fallas de entorno vs fallas de codigo
+* iterar con seguridad
+* cerrar el loop de ingenieria
+
+Eso crea una limitacion fundamental:
+
+> El agente opera en **modo especulativo**, no en **modo ingenieria**.
+
+---
+
+# 3. Que se implemento: build canonico + bootstrap
+
+## 3.1 Bootstrap explicito del entorno STM32
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\tools\stm32cube-env.ps1
+```
+
+Este script:
+
+* descubre dinamicamente las extensiones STM32
+* resuelve el entorno via `cube`
+* exporta variables del toolchain y del build
+* reconstruye `PATH` de forma deterministica
+
+Propiedad clave:
+
+> El entorno se **descubre, no se asume**.
+
+---
+
+## 3.2 Entrada canonica del build
+
+```powershell
+cube-cmake --preset Debug
+cube-cmake --build --preset Debug
+```
+
+Seleccionada en base a:
+
+* mismo generator
+* mismo toolchain
+* mismo cache
+* mismo artefacto
+
+---
+
+## 3.3 Flujo consciente de agentes
+
+```powershell
+where.exe cube
+echo $env:CUBE_BUNDLE_PATH
+
+.\tools\stm32cube-env.ps1
+
+cube-cmake --preset Debug
+cube-cmake --build --preset Debug
+```
+
+---
+
+# 4. Impacto: de asistencia a capacidad operativa
+
+Antes:
+
+* Sin verificacion de build
+* Sin introspeccion de entorno
+* Sin iteracion confiable
+
+Despues:
+
+* Build deterministico
+* Contrato compartido entre humanos y agentes
+* Loop de ingenieria cerrado
+
+> De **IA sugiriendo codigo** a **IA participando del desarrollo**
+
+---
+
+# 5. Por que el bootstrap es la pieza central
+
+Elimina:
+
+* dependencia del IDE
+* ambiguedad del entorno
+* opacidad del toolchain
+* fragilidad por versionado
+
+Sin eso:
+
+> El sistema no es reproducible y el agente no es confiable
+
+---
+
+# 6. Que esto *no* resuelve
+
+El build canonico es necesario, pero no suficiente.
+
+Capas que aun faltan:
+
+* validacion funcional
+* verificacion runtime
+* confianza de integracion
+
+---
+
+# 7. Que queda por resolver
+
+Esta es la siguiente fase critica.
+
+## 7.1 Contrato de validacion post-build
+
+Hoy:
+
+> “el build termino bien” es el unico criterio de exito
+
+Eso es insuficiente.
+
+Siguiente paso requerido:
+
+* definir **checks post-build canonicos**, por ejemplo:
+
+  * presencia del `.elf` y rango de tamano
+  * secciones / simbolos esperados
+  * sanidad del linker map
+  * restricciones de uso de memoria
+
+Sin eso:
+
+> El agente puede producir **firmware que compila pero esta roto**
+
+---
+
+## 7.2 Validacion runtime minima / de bring-up
+
+Que el build sea correcto no implica que el sistema lo sea.
+
+Falta:
+
+* sanidad de startup (vector table, reset handler)
+* expectativas de init de perifericos
+* senal minima de “sistema vivo” (por ejemplo log o toggle GPIO)
+
+Recomendado:
+
+* definir un **contrato runtime base**:
+
+  * que debe poder observarse luego del boot
+  * que define “firmware vivo”
+
+---
+
+## 7.3 Patrones de validacion por tipo de tarea
+
+Hoy las tareas estan bien acotadas, pero la validacion es implicita.
+
+Siguiente paso:
+
+* cada tipo de tarea deberia definir:
+
+  * que debe compilar
+  * que no debe romperse
+  * que debe verificarse
+
+Ejemplo:
+
+* “nuevo modulo de servicio” -> compila + no introduce dependencias hacia arriba
+* “wrapper HAL” -> compila + no filtra tipos HAL
+
+---
+
+## 7.4 Enforcements de invariantes estructurales
+
+El repo define:
+
+* ownership por carpeta
+* reglas de layering
+
+Pero el enforcement hoy es manual.
+
+Falta:
+
+* checks livianos:
+
+  * includes prohibidos (por ejemplo `app` incluyendo `cube`)
+  * validacion de direccion de dependencias
+  * restricciones de API publica/privada
+
+Sin eso:
+
+> El agente puede degradar lentamente la arquitectura aunque el build siga pasando
+
+---
+
+## 7.5 CI o verificacion automatizada
+
+El flujo actual es local.
+
+Siguiente paso logico:
+
+* pipeline minimo de CI que:
+
+  * bootstrappee el entorno
+  * ejecute el build canonico
+  * corra checks post-build
+
+Esto:
+
+* valida reproducibilidad
+* previene regresiones
+* vuelve confiable la salida del agente a escala
+
+---
+
+## 7.6 Claridad en clasificacion de fallas
+
+Hay una brecha sutil pero importante:
+
+El sistema aun depende de interpretacion cuando el build falla.
+
+Hace falta:
+
+* clasificacion clara de fallas:
+
+  * entorno no cargado
+  * toolchain incorrecto
+  * error de codigo
+  * error de configuracion
+
+Esto mejora:
+
+* diagnostico del agente
+* velocidad de debug
+* calidad de prompts
+
+---
+
+## 7.7 Reduccion de “correccion implicita”
+
+Aun con build canonico, algunas cosas siguen siendo implicitas:
+
+* seleccion correcta del preset
+* configuracion correcta de board
+* alineacion correcta del startup code
+
+Mejora futura:
+
+* volver eso explicito en documentacion o checks
+
+---
+
+# 8. Insight clave
+
+El mayor logro no es el script.
+
+Es esto:
+
+> El build ahora forma parte del **contrato explicito del repositorio**
+
+Lo que falta:
+
+> Extender ese contrato mas alla del build, hacia **validacion y correccion**
+
+---
+
+# 9. Resumen del roadmap
+
+Estado actual:
+
+* entorno reproducible
+* build canonico
+* flujo compatible con agentes
+
+Siguiente fase:
+
+1. validacion post-build
+2. checks runtime basicos
+3. enforcement estructural
+4. integracion con CI
+5. clasificacion de fallas
+
+---
+
+# 10. Conclusion
+
+Este proyecto resolvio el problema inicial mas dificil:
+
+> Hacer que el firmware compile de forma reproducible fuera del IDE
+
+Eso por si solo transforma la utilidad de la IA.
+
+Pero la transformacion completa requiere un paso mas:
+
+> Convertir “compila” en “es correcto”
+
+Cuando esa capa exista:
+
+* el agente no solo compilara firmware
+* lo **validara, diagnosticara y evolucionara de forma confiable**
+
+Ese es el estado final real.
