@@ -1,5 +1,7 @@
 # 02_workflow.md
 
+[Ir a la versión en español](#version-en-espanol)
+
 ## Purpose
 
 This document describes the working workflow for `firmware/`
@@ -236,3 +238,244 @@ Avoid these workflow failures:
 - ChatGPT prompts: `03_chatgpt_prompts.md`
 - Codex prompts: `04_codex_prompts.md`
 - Live context: `05_working_context.md`
+
+---
+
+## Version en espanol
+
+## Proposito
+
+Este documento describe el workflow de trabajo para `firmware/`
+cuando se colabora con asistentes de IA y agentes de codigo.
+
+Este es el documento completo del workflow.
+Es mas detallado que `01_quickstart.md`.
+
+Usa este archivo para entender roles, secuencias, forma de plantear tareas,
+limites de handoff y manejo de continuidad.
+
+---
+
+## Objetivos del workflow
+
+El workflow esta disenado para:
+
+- mantener las tareas pequenas y verificables
+- reducir deriva arquitectonica accidental
+- mejorar la consistencia del codigo generado
+- separar pensamiento de ejecucion
+- hacer que el progreso sea facil de revisar
+- preservar continuidad entre sesiones
+
+---
+
+## Roles principales del workflow
+
+### ChatGPT o asistente de planificacion
+
+Usar para:
+
+- aclarar el planteo del problema
+- comparar opciones
+- refinar naming o limites de modulos
+- revisar si un cambio pertenece a `app/`, `services/` u otra area
+- redactar prompts para agentes de ejecucion
+- revisar la estructura de la documentacion
+- convertir una tarea grande en tareas mas chicas
+
+Este rol deberia ayudar a pensar antes de editar.
+
+### Codex o agente orientado a ejecucion
+
+Usar para:
+
+- inspeccionar archivos objetivo
+- implementar cambios pequenos y acotados
+- generar codigo siguiendo el estilo del repositorio
+- ajustar estructura de archivos
+- realizar refactors estrechos
+- aplicar un conjunto de cambios claramente descrito
+
+Este rol deberia ejecutar sobre una tarea concreta.
+
+---
+
+## Ciclo estandar de una tarea
+
+### Paso 1: definir la tarea
+
+Describe la tarea de forma pequena y testeable.
+
+La tarea deberia identificar:
+
+- archivos o modulo objetivo
+- carpeta duena esperada
+- limites de lo que no deberia cambiar
+- documentos de referencia
+- si la tarea es de implementacion, limpieza, correccion de naming o split
+
+### Paso 2: identificar referencias del repositorio
+
+Antes de editar, identifica las referencias que gobiernan la tarea:
+
+- `STYLE.md` para naming y estructura
+- `AGENTS.md` para restricciones de agentes
+- `style-examples/` para el patron valido mas cercano
+- `CHANGELOG.md` si importa la continuidad con trabajo anterior
+- `05_working_context.md` si la sesion depende del estado vivo actual
+
+### Paso 3: inspeccionar el codigo actual
+
+Lee el codigo objetivo y los archivos cercanos.
+
+Confirma:
+
+- el estilo de naming actual
+- la division actual entre publico y privado
+- la direccion de dependencias
+- si el archivo ya contiene responsabilidades mezcladas
+- si un patron local existente deberia preservarse
+
+### Paso 4: realizar un unico cambio acotado
+
+Prefiere una de estas opciones por iteracion:
+
+- agregar una pieza faltante
+- renombrar una unica superficie de API
+- dividir una unica responsabilidad de modulo
+- crear un modulo pequeno
+- actualizar un unico par de archivos (`.h` y `.c`)
+- documentar una unica regla estable
+
+Evita iteraciones de proposito mezclado.
+
+### Paso 5: revisar el resultado
+
+Verifica:
+
+- consistencia de naming
+- correccion de ownership
+- limites del modulo
+- alcance minimo
+- similitud con patrones aceptados del repo
+
+### Paso 6: registrar continuidad si hace falta
+
+Si el trabajo esta incompleto o repartido entre sesiones:
+
+- actualiza `05_working_context.md`
+- actualiza `CHANGELOG.md` solo si el cambio forma parte de la historia significativa del proyecto
+- no pongas notas temporales de planificacion dentro de documentacion estable
+
+---
+
+## Roles recomendados para los documentos
+
+### Documentos estables
+
+Usa estos para reglas duraderas:
+
+- `AGENT_ENTRY.md`
+- `01_quickstart.md`
+- `02_workflow.md`
+- `STYLE.md`
+- `AGENTS.md`
+- `style-examples/README.md`
+
+### Librerias operativas de prompts
+
+Usa estos para prompting especifico de herramienta:
+
+- `03_chatgpt_prompts.md`
+- `04_codex_prompts.md`
+
+### Documento mutable de continuidad
+
+Usa este para estado vivo:
+
+- `05_working_context.md`
+
+### Registro historico
+
+Usa este para hitos significativos:
+
+- `CHANGELOG.md`
+
+---
+
+## Guia para dimensionar tareas
+
+Una tarea suele estar bien dimensionada si:
+
+- afecta un modulo o un comportamiento estrecho
+- puede revisarse sin reconstruir contexto no relacionado
+- los criterios de exito son obvios
+- los chequeos de estilo son locales y concretos
+
+Una tarea probablemente es demasiado grande si:
+
+- cambia varios limites de ownership a la vez
+- introduce un patron nuevo y refactoriza patrones viejos en la misma pasada
+- se extiende por carpetas no relacionadas
+- mezcla limpieza de naming con cambios de arquitectura
+
+Ante la duda, divide la tarea.
+
+---
+
+## Guia de handoff
+
+Cuando prepares un prompt de ejecucion para un agente, incluye:
+
+- el objetivo exacto
+- el ownership de carpeta esperado
+- las referencias que gobiernan la tarea
+- los limites de lo que no debe tocarse
+- la expectativa de cambio minimo
+
+Buen patron de handoff:
+
+> Actualiza `<objetivo>` para lograr `<resultado especifico>`.  
+> Sigue `AGENT_ENTRY.md` y `STYLE.md`.  
+> Usa el ejemplo mas cercano bajo `style-examples/`.  
+> Manten el patch minimo y no expandas el alcance mas alla de `<limite>`.
+
+---
+
+## Guia de continuidad
+
+Usa `05_working_context.md` solo para continuidad viva de la sesion.
+
+Puede incluir:
+
+- foco actual
+- supuestos actuales
+- siguiente paso conocido
+- tareas incompletas
+- decisiones temporales pendientes de confirmacion
+
+No debe convertirse en la fuente de verdad de estilo, arquitectura o workflow permanente.
+
+---
+
+## Anti-patrones
+
+Evita estos fallos de workflow:
+
+- pedirle al agente que "arregle todo"
+- saltearse `STYLE.md`
+- usar ejemplos como arquitectura en lugar de usarlos como guia de formato
+- depender de un archivo de contexto mutable como fuente principal de verdad
+- combinar planificacion, implementacion y limpieza en un solo prompt sobredimensionado
+- hacer excepciones de naming no documentadas dentro del codigo generado
+
+---
+
+## Documentos relacionados
+
+- Punto de entrada: `AGENT_ENTRY.md`
+- Inicio rapido: `01_quickstart.md`
+- Estilo y naming: `STYLE.md`
+- Prompts para ChatGPT: `03_chatgpt_prompts.md`
+- Prompts para Codex: `04_codex_prompts.md`
+- Contexto vivo: `05_working_context.md`

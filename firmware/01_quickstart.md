@@ -1,5 +1,7 @@
 # 01_quickstart.md
 
+[Ir a la versión en español](#version-en-espanol)
+
 ## Purpose
 
 This is the quick operational guide for working in `firmware/`.
@@ -173,3 +175,181 @@ Before finalizing:
 - Agent behavior: `AGENTS.md`
 - Examples index: `style-examples/README.md`
 - Live continuity: `05_working_context.md`
+
+---
+
+## Version en espanol
+
+## Proposito
+
+Esta es la guia operativa rapida para trabajar en `firmware/`.
+
+Lee este archivo primero al comenzar una tarea.
+Esta pensada tanto para humanos como para agentes.
+
+Este archivo explica como empezar correctamente, como mantener las tareas pequenas,
+que inspeccionar antes de cambiar codigo, y como decidir si un resultado es aceptable.
+
+Para el workflow detallado, consulta `02_workflow.md`.
+Para naming y estilo, consulta `STYLE.md`.
+
+---
+
+## Principio central
+
+Toda interaccion con un asistente de IA o un agente de codigo deberia plantearse como una tarea pequena,
+concreta y verificable.
+
+Las buenas tareas son lo bastante acotadas como para revisarse facilmente y lo bastante especificas como para validarse rapido.
+
+Ejemplos de buen alcance de tarea:
+
+- agregar una unica funcion de inicializacion faltante
+- dividir un unico modulo con responsabilidades mezcladas
+- renombrar una unica API publica para que coincida con las reglas de naming
+- crear un unico modulo de servicio siguiendo un ejemplo existente
+- revisar si un archivo pertenece a `app/` o a `services/`
+
+Ejemplos de mal alcance de tarea:
+
+- reescribir toda la arquitectura
+- limpiar toda la base de codigo
+- redisenar todo el naming
+- refactorizar todo lo relacionado con la inicializacion
+- reorganizar todas las carpetas en una sola pasada
+
+---
+
+## Secuencia de inicio
+
+Antes de pedirle a un agente que genere o modifique codigo:
+
+1. define la tarea exacta
+2. identifica la carpeta que deberia ser la dueña del cambio
+3. identifica el modulo o archivo afectado
+4. lee `STYLE.md`
+5. inspecciona el ejemplo mas cercano en `style-examples/`
+6. confirma si la tarea es aditiva, correctiva o solo refactor
+7. define que significa "terminado"
+
+Si alguno de estos puntos no esta claro, reduce el alcance antes de continuar.
+
+---
+
+## Como definir una buena tarea
+
+Una buena tarea deberia responder:
+
+- Que necesita cambiar?
+- Donde deberia cambiar?
+- Por que ese archivo o modulo es el dueño del cambio?
+- Que patron existente deberia seguirse?
+- Que deberia permanecer intacto?
+
+Formato recomendado para describir una tarea:
+
+> Actualiza `<archivo o modulo objetivo>` para `<cambio especifico>`, siguiendo `STYLE.md`
+> y el archivo mas cercano bajo `style-examples/`.
+> Manten el cambio minimo y no expandas el alcance mas alla de `<limite>`.
+
+---
+
+## Como elegir la carpeta duena
+
+Usa los limites de responsabilidad ya existentes en el repositorio.
+
+Regla practica tipica:
+
+- elige `app/` para orquestacion y comportamiento de producto
+- elige `bsp/` para integracion a nivel placa
+- elige `cube/` solo cuando este alineado con codigo generado por vendor o con startup/configuracion MCU de bajo nivel
+- elige `port/` para capas de adaptacion
+- elige `services/` para modulos internos reutilizables que no pertenezcan a `app/` ni a hardware especifico
+
+No ubiques codigo solo por conveniencia.
+Ubicalo donde el mantenimiento futuro resulte mas obvio.
+
+---
+
+## Que inspeccionar antes de editar
+
+Antes de generar cambios, inspecciona:
+
+- el archivo objetivo
+- los archivos vecinos del mismo modulo
+- las reglas de naming en `STYLE.md`
+- un ejemplo existente con una division similar entre publico y privado
+- si el cambio introduce una responsabilidad nueva en un archivo que ya tiene otro proposito
+
+Si un archivo ya mezcla responsabilidades, no expandas ese error automaticamente.
+Senalalo y manten el cambio lo mas contenido posible.
+
+---
+
+## Que tomar de `style-examples/`
+
+Usa los ejemplos para aprender:
+
+- organizacion del archivo
+- naming de funciones
+- separacion entre simbolos publicos y privados
+- orden de includes
+- ubicacion de helpers internos
+- naming de callbacks
+- naming de wrappers
+- estructura minima de un modulo
+
+No uses los ejemplos como plantillas finales de arquitectura.
+Son referencias de estilo y de forma de modulo, no disenos de producto.
+
+---
+
+## Que evitar
+
+Evita estos errores comunes:
+
+- crear estilos nuevos de naming
+- mezclar API publica y orquestacion interna sin estructura
+- exponer helpers que deberian seguir siendo privados
+- crear carpetas o capas sin precedente en el repositorio
+- agregar abstracciones "para mas adelante"
+- hacer limpieza amplia dentro de una tarea que deberia ser acotada
+- usar ejemplos mecanicamente sin revisar la estructura actual del repositorio
+
+---
+
+## Definicion de terminado
+
+Una tarea esta en buen estado cuando:
+
+- la carpeta objetivo esta justificada
+- la responsabilidad del modulo es clara
+- el naming coincide con `STYLE.md`
+- la division entre publico y privado es consistente
+- no se introdujo sin querer un cambio arquitectonico extra
+- el patch es facil de revisar
+- el resultado coincide, cuando es posible, con un patron existente del repositorio
+
+---
+
+## Checklist minima de cierre
+
+Antes de finalizar:
+
+- [ ] la tarea es concreta y acotada
+- [ ] la carpeta objetivo es correcta
+- [ ] el naming fue verificado
+- [ ] la division del archivo es coherente
+- [ ] se reviso el ejemplo mas cercano
+- [ ] no hubo expansion innecesaria del alcance
+- [ ] el resultado es revisable de forma aislada
+
+---
+
+## Documentos relacionados
+
+- Proceso completo: `02_workflow.md`
+- Estilo y naming: `STYLE.md`
+- Comportamiento de agentes: `AGENTS.md`
+- Indice de ejemplos: `style-examples/README.md`
+- Continuidad viva: `05_working_context.md`
