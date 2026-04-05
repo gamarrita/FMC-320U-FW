@@ -15,6 +15,8 @@
 #include "fm_main.h"
 #include "fm_debug.h"
 #include "fm_board.h"
+#include "fm_port_rcc.h"
+#include "fm_port_rtc.h"
 #include "fm_port_time.h"
 
 
@@ -37,6 +39,8 @@
 
 void FM_MAIN_Init(void)
 {
+    FM_PORT_RCC_Init();
+    FM_PORT_RTC_Init();
 	FM_BOARD_Init();
     FM_DEBUG_Init();
 }

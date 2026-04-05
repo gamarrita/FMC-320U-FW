@@ -11,4 +11,9 @@
  */
 void FM_PORT_RTC_OnWakeupIrq(void);
 
+/**
+ * @brief   Configure the RTC peripheral for the active platform.
+ */
+void FM_PORT_RTC_Init(void);
+
 #endif /* FM_PORT_RTC_H */
