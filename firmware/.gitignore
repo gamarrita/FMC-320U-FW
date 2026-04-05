@@ -1,3 +1,8 @@
-build
+# Generated build outputs and tool caches.
+build/
+
+# STM32CubeIDE scratch workspace data.
 mx.scratch
+
+# Keep shared workspace settings under version control.
 !.settings

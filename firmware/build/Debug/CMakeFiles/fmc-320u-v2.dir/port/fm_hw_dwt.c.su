@@ -1,5 +1,0 @@
-D:/githubs/FMC-320U-FW/firmware/port/fm_hw_dwt.c:3:6:FM_HW_DWT_Init	4	static
-D:/githubs/FMC-320U-FW/firmware/port/fm_hw_dwt.c:15:10:FM_HW_DWT_GetCpuHz	4	static
-D:/githubs/FMC-320U-FW/firmware/port/fm_hw_dwt.c:20:10:FM_HW_DWT_CyclesPerUs	8	static
-D:/githubs/FMC-320U-FW/firmware/port/fm_hw_dwt.c:25:10:FM_HW_DWT_UsToCycles	56	static
-D:/githubs/FMC-320U-FW/firmware/port/fm_hw_dwt.c:38:9:FM_HW_DWT_CyclesToUs	24	static

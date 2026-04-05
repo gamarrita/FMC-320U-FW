@@ -1,3 +1,0 @@
-D:/githubs/FMC-320U-FW/firmware/Core/Src/rtc.c:30:6:MX_RTC_Init	40	static
-D:/githubs/FMC-320U-FW/firmware/Core/Src/rtc.c:80:6:HAL_RTC_MspInit	216	static
-D:/githubs/FMC-320U-FW/firmware/Core/Src/rtc.c:109:6:HAL_RTC_MspDeInit	16	static

@@ -12,3 +12,6 @@ Guias operativas:
 - `docs/agent_prompt.md`
 - `docs/current_milestone.md`
 - `05_multi_root_workspace.md`
+
+Entorno de build STM32:
+- `docs/stm32cube-build-env.md`
