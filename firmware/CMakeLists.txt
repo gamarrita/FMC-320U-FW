@@ -31,6 +31,14 @@ message("Build type: " ${CMAKE_BUILD_TYPE})
 # Enable CMake support for ASM and C languages
 enable_language(C ASM)
 
+# Select active project
+## set(FM_ACTIVE_APP "main_app" CACHE STRING "Active firmware app")
+set(FM_ACTIVE_APP "main_app" CACHE STRING "Active firmware app")
+set(FM_APP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/apps/${FM_ACTIVE_APP}")
+
+# Execute child CMakeLists.txt of the active project
+add_subdirectory(${FM_APP_DIR})
+
 # Create an executable object type
 add_executable(${CMAKE_PROJECT_NAME})
 
@@ -44,7 +52,7 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/01_app/fm_main.c
+    ${FM_APP_SOURCES}
     ${CMAKE_CURRENT_SOURCE_DIR}/libs/fm_debug.c
     ${CMAKE_CURRENT_SOURCE_DIR}/bsp/fm_board.c
     ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_dwt.c
@@ -57,7 +65,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/01_app
+    ${FM_APP_INCLUDES}
     ${CMAKE_CURRENT_SOURCE_DIR}/libs
     ${CMAKE_CURRENT_SOURCE_DIR}/bsp
     ${CMAKE_CURRENT_SOURCE_DIR}/port

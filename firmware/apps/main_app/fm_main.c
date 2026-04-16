@@ -52,7 +52,7 @@ void FM_MAIN_Init(void)
  */
 void FM_MAIN_Main(void)
 {
-	char msg[] = "Go to simulated sleep 2sec!!!\n";
+	char msg[] = "Go to simulated sleep!!!\n";
 	FM_MAIN_Init();
 
 
@@ -68,7 +68,7 @@ void FM_MAIN_Main(void)
         FM_DEBUG_UartMsg(msg, sizeof(msg) - 1U);
 
         // Sleep
-        FM_PORT_TIME_SleepMs(200U);
+        FM_PORT_TIME_SleepMs(10U);
 
         // Flush any pending debug events (ISR-safe logging is deferred until flush).
         FM_DEBUG_Flush();
