@@ -1,5 +1,6 @@
 set(FM_APP_SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/app_entry.c
+    ${CMAKE_CURRENT_LIST_DIR}/fm_pcf8553_bringup.c
     PARENT_SCOPE
 )
 

@@ -31,10 +31,27 @@ message("Build type: " ${CMAKE_BUILD_TYPE})
 # Enable CMake support for ASM and C languages
 enable_language(C ASM)
 
-# Select active project
-## set(FM_ACTIVE_APP "main_app" CACHE STRING "Active firmware app")
-set(FM_ACTIVE_APP "main_app" CACHE STRING "Active firmware app")
+# Select active app
+# Example:
+#   cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=pcf8553_bringup
+set(FM_AVAILABLE_APPS
+    main
+    template
+    pcf8553_bringup
+)
+
+set(FM_ACTIVE_APP "main" CACHE STRING "Active firmware app. Available: ${FM_AVAILABLE_APPS}")
+set_property(CACHE FM_ACTIVE_APP PROPERTY STRINGS ${FM_AVAILABLE_APPS})
+
+if(NOT FM_ACTIVE_APP IN_LIST FM_AVAILABLE_APPS)
+    message(FATAL_ERROR
+        "Invalid FM_ACTIVE_APP='${FM_ACTIVE_APP}'. "
+        "Available apps: ${FM_AVAILABLE_APPS}"
+    )
+endif()
+
 set(FM_APP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/apps/${FM_ACTIVE_APP}")
+message(STATUS "Active app: ${FM_ACTIVE_APP}")
 
 # Execute child CMakeLists.txt of the active project
 add_subdirectory(${FM_APP_DIR})
