@@ -1,6 +1,15 @@
 /**
  * @file    fm_port_gpio.h
  * @brief   Platform GPIO helpers for LEDs and debug jumpers.
+ *
+ * @details
+ *  - This module lives in port because it owns MCU GPIO configuration and HAL
+ *    access for the current target.
+ *  - It intentionally keeps some board-facing signal names such as LEDs and
+ *    debug-enable jumpers.
+ *  - That is a conscious compromise: these GPIOs are tightly tied to the board
+ *    wiring, and making this API more generic would add indirection without
+ *    improving ownership or reuse at the current project stage.
  */
 
 #ifndef FM_PORT_GPIO_H

@@ -68,7 +68,7 @@ void FM_MAIN_Main(void)
         FM_DEBUG_UartMsg(msg, sizeof(msg) - 1U);
 
         // Sleep
-        FM_PORT_TIME_SleepMs(10U);
+        FM_PORT_TIME_SleepMs(100U);
 
         // Flush any pending debug events (ISR-safe logging is deferred until flush).
         FM_DEBUG_Flush();

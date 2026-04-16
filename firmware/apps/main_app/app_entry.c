@@ -5,6 +5,7 @@ void APP_ENTRY_Run(void)
 {
     while (1)
     {
+            FM_MAIN_Main();
     }
 }
 

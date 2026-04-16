@@ -60,7 +60,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_rcc.c
     ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_rtc.c
     ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_time.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_uart.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_usart1.c
 )
 
 # Add include paths

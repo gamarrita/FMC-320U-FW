@@ -1,6 +1,15 @@
 /**
  * @file    fm_port_gpio.c
  * @brief   Platform GPIO helpers for LEDs and debug jumpers.
+ *
+ * @details
+ *  - This module is part of port because it performs the MCU-specific GPIO
+ *    setup and HAL access required by the current target.
+ *  - Unlike a pure generic GPIO adapter, it also carries some board-level
+ *    signal naming for LEDs and debug jumpers.
+ *  - That deviation is intentional for now: these signals map directly to
+ *    fixed board wiring, and preserving those names keeps the relationship
+ *    between the board and the MCU pins easier to follow.
  */
 
 #include <fm_port_gpio.h>

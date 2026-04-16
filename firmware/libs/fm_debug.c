@@ -497,6 +497,11 @@ void FM_DEBUG_LedSignal(fm_debug_led_state_t state)
 /**
  * @brief Transmit a raw message buffer over UART when debug messages are enabled.
  *
+ * @details
+ *  - Uses the board debug UART channel exposed by FM_BOARD_DebugUartTransmit().
+ *  - On the current board, that channel reaches the host PC through the
+ *    ST-Link Virtual COM Port.
+ *
  * @note Legacy helper; not IRQ-safe. Length is clamped to the internal buffer size.
  *
  * @param p_msg Pointer to message buffer.
@@ -515,7 +520,7 @@ bool FM_DEBUG_UartMsg(const char *p_msg, uint32_t len)
         len = MSG_BUFFER_LENGTH;
     }
 
-    (void) FM_BOARD_UartTransmit((const uint8_t*) p_msg, len, UART_TIMEOUT_MS);
+    (void) FM_BOARD_DebugUartTransmit((const uint8_t*) p_msg, len, UART_TIMEOUT_MS);
 
     return true;
 }
@@ -743,6 +748,9 @@ uint32_t FM_DEBUG_HighWatermark(void)
  *
  * @details Performs snprintf and blocking UART transfers; intended for non-ISR context
  *          such as the main loop or a low-priority task.
+ *          The formatted output is sent through the board debug UART channel,
+ *          which on this hardware is exposed to the host PC through the
+ *          ST-Link Virtual COM Port.
  *
  * @note Flush frequently to minimize drops. Not ISR-safe.
  */
@@ -774,7 +782,7 @@ void FM_DEBUG_Flush(void)
                     len = (int) FM_DEBUG_FLUSH_TEXT_MAX;
                 }
 
-                (void) FM_BOARD_UartTransmit((const uint8_t *) flush_buffer,
+                (void) FM_BOARD_DebugUartTransmit((const uint8_t *) flush_buffer,
                         (uint32_t) len,
                         UART_TIMEOUT_MS);
             }
@@ -809,7 +817,7 @@ void FM_DEBUG_Flush(void)
             }
 
             /* Blocking UART transmit and snprintf live here, not in ISR. */
-            (void) FM_BOARD_UartTransmit((const uint8_t *) flush_buffer,
+            (void) FM_BOARD_DebugUartTransmit((const uint8_t *) flush_buffer,
                     (uint32_t) len,
                     UART_TIMEOUT_MS);
         }

@@ -4,5 +4,8 @@
 void APP_ENTRY_Run(void)
 {
     // Your code here
-    FM_MAIN_Main();
+    while(1)
+    {
+     
+    }
 }

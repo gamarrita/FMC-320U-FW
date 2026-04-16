@@ -3,15 +3,15 @@
  * @brief   Board-level facade for debug services on Nucleo-U575ZI-Q.
  *
  * @details
- *  - Wraps fm_port_gpio / fm_port_uart / fm_port_dwt so applications avoid HAL.
- *  - Owns bring-up order (GPIO → UART → DWT); no fm_port.c aggregator by design.
+ *  - Wraps fm_port_gpio / fm_port_usart1 / fm_port_dwt so applications avoid HAL.
+ *  - Owns bring-up order (GPIO → USART1 → DWT); no fm_port.c aggregator by design.
  *  - GPIO init is manual (CubeMX call generation disabled) to keep LED/jumper control.
  *  - Jumper sampling uses temporary pull-ups then returns pins to analog to minimize leakage.
  */
 
 #include <fm_port_dwt.h>
 #include <fm_port_gpio.h>
-#include <fm_port_uart.h>
+#include <fm_port_usart1.h>
 #include "fm_debug.h"
 #include "fm_board.h"
 
@@ -31,11 +31,11 @@
 /* (none) */
 
 /* Public Bodies */
-/* Debug bring-up sequence: GPIO (LEDs/jumpers) before UART uses those pins, DWT last after clock tree is stable. */
+/* Debug bring-up sequence: GPIO (LEDs/jumpers) before USART1 uses those pins, DWT last after clock tree is stable. */
 void FM_BOARD_Init(void)
 {
     FM_PORT_GPIO_Init();
-    FM_PORT_UART_Init();
+    FM_PORT_Usart1_Init();
     FM_PORT_DWT_Init();
 }
 
@@ -90,10 +90,10 @@ void FM_BOARD_LedSignalOff(void)
     FM_PORT_GPIO_LedSignalOff();
 }
 
-/* UART wrapper: blocks using HAL UART configured in fm_port_uart. */
-bool FM_BOARD_UartTransmit(const uint8_t *p_data, uint32_t len, uint32_t timeout_ms)
+/* Board debug UART wrapper: exposes the board debug channel, backend lives in the USART1 port module. */
+bool FM_BOARD_DebugUartTransmit(const uint8_t *p_data, uint32_t len, uint32_t timeout_ms)
 {
-    return FM_PORT_UART_Transmit(p_data, len, timeout_ms);
+    return FM_PORT_Usart1_Transmit(p_data, len, timeout_ms);
 }
 
 /* DWT wrappers: expose cycle counter when hardware supports CYCCNT (returns false/0 otherwise). */

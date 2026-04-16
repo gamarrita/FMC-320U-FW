@@ -57,6 +57,8 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define PCF8553_CE_Pin GPIO_PIN_4
+#define PCF8553_CE_GPIO_Port GPIOA
 #define DBG_LED_EN_Pin GPIO_PIN_1
 #define DBG_LED_EN_GPIO_Port GPIOD
 #define DBG_MSG_EN_Pin GPIO_PIN_2
