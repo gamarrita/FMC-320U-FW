@@ -4,11 +4,11 @@
 
 This file explains how to contribute changes under `firmware/`.
 
-It focuses on change quality, scope control, and documentation alignment.
+It focuses on change quality, scope control, and alignment with the staged workflow.
 
-For workflow details, see `02_workflow.md`.
+For workflow stages, see `workflows/README.md`.
 For style and naming, see `STYLE.md`.
-For agent-oriented entry guidance, see `AGENT_ENTRY.md`.
+For agent entry guidance, see `AGENT_ENTRY.md`.
 
 ---
 
@@ -23,6 +23,22 @@ Contributions should be:
 - aligned with existing folder responsibilities
 
 Avoid mixing unrelated improvements into one change.
+
+---
+
+## Workflow usage
+
+Contributions may be split into stages:
+
+- analysis
+- plan
+- implementation
+- comment pass
+- validation
+
+Not all tasks require all stages.
+
+Prefer explicit stage-based changes over mixed-purpose patches.
 
 ---
 
@@ -66,8 +82,7 @@ When changing documentation:
 
 - keep one topic per file
 - keep one source of truth per rule
-- do not store stable rules in working-context files
-- do not embed one document inside another when it should be a real file
+- do not duplicate workflow definitions
 - keep prompt libraries separate from normative documentation
 
 ---
@@ -102,8 +117,7 @@ Before considering a contribution ready:
 ## Related documents
 
 - Agent entry: `AGENT_ENTRY.md`
-- Quick start: `01_quickstart.md`
-- Workflow: `02_workflow.md`
+- Workflow model: `workflows/README.md`
+- Comment pass: `workflows/comment_pass.md`
 - Style and naming: `STYLE.md`
 - Agent behavior: `AGENTS.md`
-- Examples index: `style-examples/README.md`
