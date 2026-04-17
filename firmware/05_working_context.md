@@ -23,7 +23,7 @@ Those belong in stable documents such as:
 
 - `AGENT_ENTRY.md`
 - `01_quickstart.md`
-- `02_workflow.md`
+- `03_workflow.md`
 - `STYLE.md`
 - `AGENTS.md`
 

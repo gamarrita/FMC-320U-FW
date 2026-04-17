@@ -28,19 +28,7 @@
 
 /* Includes. */
 
-#include "main.h"
-
-/* Board signal macros currently used by the inherited driver. */
-
-/*
- * These definitions reflect fixed board signals connected to the PCF8553 on
- * the FMC-320U hardware. They are kept here temporarily while the inherited
- * driver is migrated toward the current repository conventions.
- */
-#define PCF8553_CE_PORT		GPIOA
-#define PCF8553_CE_PIN 		GPIO_PIN_4
-#define PCF8553_RESET_PORT	GPIOA
-#define PCF8553_RESET_PIN	GPIO_PIN_6
+#include <stdint.h>
 
 /* Typedef. */
 
@@ -60,9 +48,9 @@ typedef enum
  * de los segmentos, con 20 bytes se controlan 20 * 8 =  160 segmentos.
  *
  */
-#define PCF8553_RAM_SIZE   		20
-#define PCF8553_SEGMENTS_ON		0xFF   // Macro para escribir 1 en todos los segmentos
-#define PCF8553_SEGMENTS_OFF	0x00  // Macro para escribir 0 en todos los segmentos
+#define PCF8553_RAM_SIZE         20U
+#define PCF8553_SEGMENTS_ON      0xFFU
+#define PCF8553_SEGMENTS_OFF     0x00U
 
 /* Extern. */
 
@@ -70,21 +58,14 @@ extern uint8_t pcf8553_ram_map[PCF8553_RAM_SIZE];
 
 /* Public function prototypes. */
 
-void
-FM_PCF8553_Blink(blink_t mode);
-void
-FM_PCF8553_ClearBuffer();
-void
-FM_PCF8553_Init();
-void
-FM_PCF8553_Refresh();
-void
-FM_PCF8553_Reset();
-void
-FM_PCF8553_WriteAll(uint8_t data);
-void
-FM_PCF8553_WriteByte(uint8_t add, uint8_t data);
+void FM_PCF8553_Blink(blink_t mode);
+void FM_PCF8553_ClearBuffer();
+void FM_PCF8553_Init();
+void FM_PCF8553_Refresh();
+void FM_PCF8553_Reset();
+void FM_PCF8553_WriteAll(uint8_t data);
+void FM_PCF8553_WriteByte(uint8_t add, uint8_t data);
 
-#endif /* FM_FM_PCF8553_H_ */
+#endif /* FM_PCF8553_H_ */
 
 /*** end of file ***/

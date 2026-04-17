@@ -40,9 +40,12 @@ set(FM_AVAILABLE_APPS
     template
     panic_demo
     pcf8553_bringup
+    lcd_ll_bringup
 )
 
-set(FM_ACTIVE_APP "pcf8553_bringup")
+if(NOT DEFINED FM_ACTIVE_APP)
+    set(FM_ACTIVE_APP "lcd_ll_bringup")
+endif()
 
 if(NOT FM_ACTIVE_APP IN_LIST FM_AVAILABLE_APPS)
     message(FATAL_ERROR
@@ -73,6 +76,9 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${FM_APP_SOURCES}
     ${CMAKE_CURRENT_SOURCE_DIR}/libs/fm_debug.c
     ${CMAKE_CURRENT_SOURCE_DIR}/bsp/fm_board.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsp/devices/lcd/fm_lcd.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsp/devices/lcd/fm_lcd_ll.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsp/devices/lcd/pcf8553/fm_pcf8553.c
     ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_dwt.c
     ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_gpio.c
     ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_pcf8553_ctrl.c
