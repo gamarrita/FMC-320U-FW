@@ -38,6 +38,7 @@ enable_language(C ASM)
 set(FM_AVAILABLE_APPS
     main
     template
+    panic_demo
     pcf8553_bringup
 )
 

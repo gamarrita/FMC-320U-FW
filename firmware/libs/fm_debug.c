@@ -160,6 +160,8 @@ static const char *err_str[FM_DEBUG_ERR_COUNT] =
 /* Private Prototypes */
 static uint32_t timestamp_cycles(void);
 static bool enqueue_event(uint16_t code, uint16_t flags, int32_t param0, int32_t param1, const char *p_text);
+static void fm_debug_panic_send_(const char *p_msg);
+static void fm_debug_panic_loop_(bool flush_events);
 
 /* Private Bodies */
 /**
@@ -255,6 +257,64 @@ static bool enqueue_event(uint16_t code, uint16_t flags, int32_t param0, int32_t
     return true;
 }
 
+/**
+ * @brief Attempt a direct UART send for panic context text.
+ *
+ * @details
+ *  - Bypasses the normal message-enable gate because panic context should be
+ *    attempted even when foreground debug output is disabled.
+ *  - Uses the board debug UART directly so panic handling can reuse the same
+ *    host-visible ST-Link VCP channel as normal debug traffic.
+ *  - Appends a trailing newline when space permits and the string does not
+ *    already end with one.
+ *
+ * @param p_msg Optional panic context string. May be NULL.
+ */
+static void fm_debug_panic_send_(const char *p_msg)
+{
+    uint32_t len;
+
+    if (p_msg == NULL)
+    {
+        return;
+    }
+
+    len = (uint32_t) strlen(p_msg);
+
+    if (len > (MSG_BUFFER_LENGTH - 2U))
+    {
+        len = MSG_BUFFER_LENGTH - 2U;
+    }
+
+    memcpy(msg_buffer, p_msg, len);
+
+    if ((len == 0U) || (msg_buffer[len - 1U] != '\n'))
+    {
+        msg_buffer[len] = '\n';
+        len++;
+    }
+
+    msg_buffer[len] = '\0';
+
+    (void) FM_BOARD_DebugUartTransmit((const uint8_t *) msg_buffer, len, UART_TIMEOUT_MS);
+}
+
+/**
+ * @brief Non-returning panic loop used by fatal debug entry points.
+ *
+ * @param flush_events When true, continue draining queued debug events while stopped.
+ */
+static void fm_debug_panic_loop_(bool flush_events)
+{
+    for (;;)
+    {
+        if (flush_events)
+        {
+            FM_DEBUG_Flush();
+        }
+    }
+}
+
 /* Public Bodies */
 /**
  * @brief Initialize debug module state and board hooks.
@@ -274,6 +334,34 @@ void FM_DEBUG_Init(void)
 
     FM_DEBUG_ClearErrors();
     FM_DEBUG_RefreshJumpers();
+}
+
+/**
+ * @brief Enter the shared fatal debug stop point for project code.
+ *
+ * @param p_msg Optional panic context string. May be NULL.
+ *
+ * @note This function does not return.
+ */
+void FM_DEBUG_PanicMsg(const char *p_msg)
+{
+    fm_debug_panic_send_(p_msg);
+    FM_BOARD_LedErrorOn();
+    fm_debug_panic_loop_(true);
+}
+
+/**
+ * @brief Enter the shared fatal debug stop point for fault handlers.
+ *
+ * @param p_msg Optional fault context string. May be NULL.
+ *
+ * @note This function does not return.
+ */
+void FM_DEBUG_PanicFault(const char *p_msg)
+{
+    fm_debug_panic_send_(p_msg);
+    FM_BOARD_LedErrorOn();
+    fm_debug_panic_loop_(false);
 }
 
 /**

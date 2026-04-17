@@ -11,6 +11,8 @@ same firmware base.
   Product-oriented application path.
 - `template`
   Minimal copyable reference for creating a new app.
+- `panic_demo`
+  Minimal app used to validate the fatal stop path exposed by `fm_debug`.
 - `*_bringup`
   Focused app used to bring up or validate one device, bus, or subsystem.
 - `*_diag`
@@ -42,6 +44,7 @@ Use `FM_ACTIVE_APP` to choose which app folder is built.
 Examples:
 - `cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=main`
 - `cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=template`
+- `cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=panic_demo`
 - `cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=pcf8553_bringup`
 
 The default app is defined in the repository `CMakeLists.txt`.

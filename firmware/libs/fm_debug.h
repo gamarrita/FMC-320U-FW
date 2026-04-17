@@ -51,6 +51,36 @@ typedef struct
 /** @brief Initialize the debug subsystem (ring buffer, DWT, counters). Call once. */
 void FM_DEBUG_Init(void);
 
+/**
+ * @brief Enter a fatal debug loop with optional context text.
+ *
+ * @details
+ *  - Forces the error LED on through the board layer.
+ *  - Attempts a best-effort UART transmission of @p p_msg on the board debug channel.
+ *  - Enters a non-returning panic loop intended as the single stop point for
+ *    fatal errors detected by project code.
+ *  - Continues flushing queued debug events while stopped.
+ *
+ * @param p_msg Optional constant context string. May be NULL.
+ */
+void FM_DEBUG_PanicMsg(const char *p_msg);
+
+/**
+ * @brief Enter a fatal debug loop from a fault-handler context.
+ *
+ * @details
+ *  - Intended for HardFault-style handlers where the runtime state may already
+ *    be compromised.
+ *  - Attempts a best-effort UART transmission of @p p_msg on the board debug channel.
+ *  - Forces the error LED on and enters a non-returning panic loop.
+ *  - Keeps the fault path conservative by not flushing queued events in the loop.
+ *  - Future expansion can route MemManage, BusFault, and UsageFault through
+ *    this same API with fault-specific context strings.
+ *
+ * @param p_msg Optional constant context string. May be NULL.
+ */
+void FM_DEBUG_PanicFault(const char *p_msg);
+
 /** @brief Refresh jumper-controlled enables for messages and LEDs. */
 void FM_DEBUG_RefreshJumpers(void);
 
