@@ -44,7 +44,7 @@ For non-trivial tasks, agents should use:
 - the closest relevant example under `style-examples/`
 
 Use `02_workflow.md` when the task involves process or handoff questions.
-Use `05_working_context.md` only when current session continuity matters.
+Use `working_context.md` only when current session continuity matters.
 
 ---
 
