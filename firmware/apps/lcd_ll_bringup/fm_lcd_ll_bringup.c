@@ -1,5 +1,13 @@
+/**
+ * @file    fm_lcd_ll_bringup.c
+ * @brief   Staged bring-up flow for the low-level LCD driver.
+ */
+
+ /* ===========================     Includes    ============================== */
+
 #include "fm_lcd_ll_bringup.h"
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -9,11 +17,50 @@
 #include "fm_port_time.h"
 #include "devices/lcd/fm_lcd_ll.h"
 
-#define FM_LCD_LL_BRINGUP_IDLE_DELAY_MS    100U
 
+/* =========================== Private Defines ============================== */
+#define FM_LCD_LL_BRINGUP_IDLE_DELAY_MS           100U
+#define FM_LCD_LL_BRINGUP_STAGE_HOLD_MS          800U
+#define FM_LCD_LL_BRINGUP_EXPECTED_ROW_1_COLS      8U
+#define FM_LCD_LL_BRINGUP_EXPECTED_ROW_2_COLS      7U
+
+
+/* =========================== Private Types ================================ */
+
+
+/* =========================== Private Data ================================= */
+
+
+/* =========================== Private Prototypes =========================== */
+static void fm_lcd_ll_bringup_fail_(const char *p_msg, int32_t p_param);
 static void fm_lcd_ll_bringup_log_(const char *p_msg);
-static void fm_lcd_ll_bringup_write_pattern_(void);
-static void fm_lcd_ll_bringup_write_row_(const char *p_text, fm_lcd_ll_row_t p_row);
+static void fm_lcd_ll_bringup_show_all_confirmed_(void);
+static void fm_lcd_ll_bringup_show_clear_(void);
+static void fm_lcd_ll_bringup_show_confirmed_symbols_(void);
+static void fm_lcd_ll_bringup_show_decimal_points_(fm_lcd_ll_row_t p_row);
+static void fm_lcd_ll_bringup_show_row_all_eights_(fm_lcd_ll_row_t p_row);
+static void fm_lcd_ll_bringup_stage_done_(const char *p_msg);
+static void fm_lcd_ll_bringup_validate_geometry_(void);
+static void fm_lcd_ll_bringup_write_all_confirmed_symbols_(bool p_on);
+static void fm_lcd_ll_bringup_write_all_decimal_points_(fm_lcd_ll_row_t p_row, bool p_on);
+static void fm_lcd_ll_bringup_write_all_eights_(fm_lcd_ll_row_t p_row);
+
+
+/* =========================== Private Bodies =============================== */
+static void fm_lcd_ll_bringup_fail_(const char *p_msg, int32_t p_param)
+{
+    FM_DEBUG_ReportErrorWithParam(FM_DEBUG_ERR_BACKEND, p_param);
+
+    if (p_msg != NULL)
+    {
+        fm_lcd_ll_bringup_log_(p_msg);
+        FM_DEBUG_PanicMsg(p_msg);
+    }
+    else
+    {
+        FM_DEBUG_PanicMsg("LCD_LL_BRINGUP:FAIL\n");
+    }
+}
 
 static void fm_lcd_ll_bringup_log_(const char *p_msg)
 {
@@ -22,60 +69,140 @@ static void fm_lcd_ll_bringup_log_(const char *p_msg)
         return;
     }
 
-    (void)FM_DEBUG_UartMsg(p_msg, (uint32_t)strlen(p_msg));
+    (void) FM_DEBUG_UartMsg(p_msg, (uint32_t) strlen(p_msg));
 }
 
-static void fm_lcd_ll_bringup_write_pattern_(void)
+static void fm_lcd_ll_bringup_show_all_confirmed_(void)
 {
     FM_LCD_LL_Clear();
-    fm_lcd_ll_bringup_log_("LCD_LL_BRINGUP:CLEAR_OK\n");
+    fm_lcd_ll_bringup_write_all_eights_(FM_LCD_LL_ROW_1);
+    fm_lcd_ll_bringup_write_all_decimal_points_(FM_LCD_LL_ROW_1, true);
+    fm_lcd_ll_bringup_write_all_eights_(FM_LCD_LL_ROW_2);
+    fm_lcd_ll_bringup_write_all_decimal_points_(FM_LCD_LL_ROW_2, true);
+    fm_lcd_ll_bringup_write_all_confirmed_symbols_(true);
 
-    fm_lcd_ll_bringup_write_row_("12.34.56", FM_LCD_LL_ROW_1);
-    fm_lcd_ll_bringup_write_row_("1.23.45", FM_LCD_LL_ROW_2);
-    FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_BATTERY, true);
-    FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_RATE, true);
-    FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_SLASH, true);
-    FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_H, true);
-    FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_M, true);
-    FM_LCD_LL_Refresh();
-    fm_lcd_ll_bringup_log_("LCD_LL_BRINGUP:PATTERN_OK\n");
+    fm_lcd_ll_bringup_stage_done_("LCD_LL_BRINGUP:ALL_CONFIRMED_ON_OK\n");
 }
 
-static void fm_lcd_ll_bringup_write_row_(const char *p_text, fm_lcd_ll_row_t p_row)
+static void fm_lcd_ll_bringup_show_clear_(void)
+{
+    FM_LCD_LL_Clear();
+    fm_lcd_ll_bringup_stage_done_("LCD_LL_BRINGUP:CLEAR_OK\n");
+}
+
+static void fm_lcd_ll_bringup_show_confirmed_symbols_(void)
+{
+    FM_LCD_LL_Clear();
+    fm_lcd_ll_bringup_write_all_confirmed_symbols_(true);
+
+    fm_lcd_ll_bringup_stage_done_("LCD_LL_BRINGUP:SYMBOLS_CONFIRMED_ON_OK\n");
+}
+
+static void fm_lcd_ll_bringup_show_decimal_points_(fm_lcd_ll_row_t p_row)
+{
+    FM_LCD_LL_Clear();
+    fm_lcd_ll_bringup_write_all_eights_(p_row);
+    fm_lcd_ll_bringup_write_all_decimal_points_(p_row, true);
+
+    if (p_row == FM_LCD_LL_ROW_1)
+    {
+        fm_lcd_ll_bringup_stage_done_("LCD_LL_BRINGUP:ROW1_DP_ALL_ON_OK\n");
+    }
+    else
+    {
+        fm_lcd_ll_bringup_stage_done_("LCD_LL_BRINGUP:ROW2_DP_ALL_ON_OK\n");
+    }
+}
+
+static void fm_lcd_ll_bringup_show_row_all_eights_(fm_lcd_ll_row_t p_row)
+{
+    FM_LCD_LL_Clear();
+    fm_lcd_ll_bringup_write_all_eights_(p_row);
+
+    if (p_row == FM_LCD_LL_ROW_1)
+    {
+        fm_lcd_ll_bringup_stage_done_("LCD_LL_BRINGUP:ROW1_ALL_8_OK\n");
+    }
+    else
+    {
+        fm_lcd_ll_bringup_stage_done_("LCD_LL_BRINGUP:ROW2_ALL_8_OK\n");
+    }
+}
+
+static void fm_lcd_ll_bringup_stage_done_(const char *p_msg)
+{
+    FM_DEBUG_LedSignal(FM_DEBUG_LED_ON);
+    FM_LCD_LL_Refresh();
+    fm_lcd_ll_bringup_log_(p_msg);
+    FM_PORT_TIME_SleepMs(FM_LCD_LL_BRINGUP_STAGE_HOLD_MS);
+    FM_DEBUG_LedSignal(FM_DEBUG_LED_OFF);
+}
+
+static void fm_lcd_ll_bringup_validate_geometry_(void)
+{
+    if (FM_LCD_LL_GetRowSize(FM_LCD_LL_ROW_1) != FM_LCD_LL_BRINGUP_EXPECTED_ROW_1_COLS)
+    {
+        fm_lcd_ll_bringup_fail_("LCD_LL_BRINGUP:FAIL:ROW1_SIZE\n",
+                                (int32_t) FM_LCD_LL_GetRowSize(FM_LCD_LL_ROW_1));
+    }
+
+    if (FM_LCD_LL_GetRowSize(FM_LCD_LL_ROW_2) != FM_LCD_LL_BRINGUP_EXPECTED_ROW_2_COLS)
+    {
+        fm_lcd_ll_bringup_fail_("LCD_LL_BRINGUP:FAIL:ROW2_SIZE\n",
+                                (int32_t) FM_LCD_LL_GetRowSize(FM_LCD_LL_ROW_2));
+    }
+}
+
+static void fm_lcd_ll_bringup_write_all_confirmed_symbols_(bool p_on)
+{
+    FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_POINT, p_on);
+    FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_BATTERY, p_on);
+    FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_POWER, p_on);
+    FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_RATE, p_on);
+    FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_E, p_on);
+    FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_BATCH, p_on);
+    FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_TTL, p_on);
+    FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_SLASH, p_on);
+    FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_ACM_2, p_on);
+    FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_H, p_on);
+    FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_D, p_on);
+    FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_S, p_on);
+    FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_M, p_on);
+}
+
+static void fm_lcd_ll_bringup_write_all_decimal_points_(fm_lcd_ll_row_t p_row, bool p_on)
 {
     uint8_t col;
     uint8_t row_size;
-    char current_char;
 
-    if (p_text == NULL)
+    row_size = FM_LCD_LL_GetRowSize(p_row);
+
+    if (row_size == 0U)
     {
         return;
     }
 
-    row_size = FM_LCD_LL_GetRowSize(p_row);
-    col = 0U;
-
-    while ((col < row_size) && (*p_text != '\0'))
+    for (col = 0U; col < (row_size - 1U); col++)
     {
-        current_char = *p_text;
-
-        if (current_char == '.')
-        {
-            if (col > 0U)
-            {
-                FM_LCD_LL_DecimalPointWrite((uint8_t)(col - 1U), p_row, true);
-            }
-
-            p_text++;
-            continue;
-        }
-
-        FM_LCD_LL_PutChar(current_char, col, p_row);
-        col++;
-        p_text++;
+        FM_LCD_LL_DecimalPointWrite(col, p_row, p_on);
     }
 }
 
+static void fm_lcd_ll_bringup_write_all_eights_(fm_lcd_ll_row_t p_row)
+{
+    uint8_t col;
+    uint8_t row_size;
+
+    row_size = FM_LCD_LL_GetRowSize(p_row);
+
+    for (col = 0U; col < row_size; col++)
+    {
+        FM_LCD_LL_PutChar('8', col, p_row);
+    }
+}
+
+
+/* =========================== Public Bodies ================================ */
 void FM_LcdLlBringup_Run(void)
 {
     FM_BOARD_Init();
@@ -84,9 +211,18 @@ void FM_LcdLlBringup_Run(void)
     fm_lcd_ll_bringup_log_("LCD_LL_BRINGUP:START\n");
     FM_LCD_LL_Init(0U);
     fm_lcd_ll_bringup_log_("LCD_LL_BRINGUP:INIT_OK\n");
+    fm_lcd_ll_bringup_validate_geometry_();
 
-    fm_lcd_ll_bringup_write_pattern_();
+    fm_lcd_ll_bringup_show_clear_();
+    fm_lcd_ll_bringup_show_row_all_eights_(FM_LCD_LL_ROW_1);
+    fm_lcd_ll_bringup_show_decimal_points_(FM_LCD_LL_ROW_1);
+    fm_lcd_ll_bringup_show_row_all_eights_(FM_LCD_LL_ROW_2);
+    fm_lcd_ll_bringup_show_decimal_points_(FM_LCD_LL_ROW_2);
+    fm_lcd_ll_bringup_show_confirmed_symbols_();
+    fm_lcd_ll_bringup_show_all_confirmed_();
 
+    fm_lcd_ll_bringup_log_("LCD_LL_BRINGUP:ALPHA_PENDING\n");
+    fm_lcd_ll_bringup_log_("LCD_LL_BRINGUP:ACM1_PENDING\n");
     FM_DEBUG_LedRun(FM_DEBUG_LED_ON);
     fm_lcd_ll_bringup_log_("LCD_LL_BRINGUP:IDLE\n");
 

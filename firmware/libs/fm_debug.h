@@ -48,7 +48,11 @@ typedef struct
     int32_t  param1;
 } fm_debug_entry_t;
 
-/** @brief Initialize the debug subsystem (ring buffer, DWT, counters). Call once. */
+/**
+ * @brief Initialize the debug subsystem (ring buffer, DWT, counters). Call once.
+ *
+ *
+ */
 void FM_DEBUG_Init(void);
 
 /**
