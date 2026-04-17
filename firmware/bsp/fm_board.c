@@ -18,21 +18,6 @@
 #include "fm_debug.h"
 #include "fm_board.h"
 
-/* Private Defines */
-/* (none) */
-
-/* Private Types */
-/* (none) */
-
-/* Private Data */
-/* (none) */
-
-/* Private Prototypes */
-/* (none) */
-
-/* Private Bodies */
-/* (none) */
-
 /* Public Bodies */
 /* Shared board bring-up: debug GPIO first, then shared peripherals, with DWT last once the runtime baseline is ready. */
 void FM_BOARD_Init(void)
@@ -118,6 +103,3 @@ void FM_BOARD_OnRtcWakeupIrq(void)
     /* Non-blocking ISR log: event will be flushed later by foreground code. */
     FM_DEBUG_LogConstISR("Wakeup event");
 }
-
-/* Interrupts */
-/* (none) */

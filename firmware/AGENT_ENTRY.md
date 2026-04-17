@@ -24,7 +24,7 @@ For any non-trivial task, use this reading order:
 4. the stage document relevant to the current pass, if it exists
 5. `style-examples/README.md`
 6. the closest relevant example under `style-examples/`
-7. `05_working_context.md` only if current session continuity matters
+7. `WORKING_CONTEXT.md` only if current session continuity matters
 
 Do not read more documentation than the task needs.
 Use the workflow stage to narrow the required context.
@@ -40,7 +40,7 @@ Use the workflow stage to narrow the required context.
 | Style and naming | `STYLE.md` |
 | Agent behavior and constraints | `AGENTS.md` |
 | Examples and reference patterns | `style-examples/README.md` |
-| Live task continuity | `05_working_context.md` |
+| Live task continuity | `WORKING_CONTEXT.md` |
 
 If a workflow document conflicts with `STYLE.md` on naming or code style,
 `STYLE.md` wins.

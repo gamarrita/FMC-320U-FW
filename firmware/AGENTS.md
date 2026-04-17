@@ -38,13 +38,12 @@ Agents must:
 For non-trivial tasks, agents should use:
 
 - `AGENT_ENTRY.md`
-- `01_quickstart.md`
 - `STYLE.md`
 - `style-examples/README.md`
 - the closest relevant example under `style-examples/`
 
-Use `02_workflow.md` when the task involves process or handoff questions.
-Use `working_context.md` only when current session continuity matters.
+Use `workflows/README.md` when the task involves process or handoff questions.
+Use `WORKING_CONTEXT.md` only when current session continuity matters.
 
 ---
 
