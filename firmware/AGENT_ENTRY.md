@@ -2,27 +2,32 @@
 
 ## Purpose
 
-This is the primary entry file for AI agents working in `firmware/`.
+This is the primary operational entry file for AI agents working in `firmware/`.
 
-Use this file as the default reference when assigning implementation, refactor,
-review, or documentation tasks to an agent.
+Use this file as the default entrypoint when assigning analysis, planning,
+implementation, comment-pass, or validation work to an agent.
 
-This file defines the mandatory reading order, the source of truth for each topic,
-and the minimum behavioral expectations for generated work.
+This file defines:
+- the stable source of truth for repository rules
+- the workflow entrypoints to use by stage
+- the minimum expectations for generated work
 
 ---
 
-## Mandatory reading order
+## Read this first
 
-For any non-trivial task, read in this order:
+For any non-trivial task, use this reading order:
 
-1. `01_quickstart.md`
-2. `STYLE.md`
-3. `AGENTS.md`
-4. `02_workflow.md`
+1. `STYLE.md`
+2. `AGENTS.md`
+3. `workflows/README.md`
+4. the stage document relevant to the current pass, if it exists
 5. `style-examples/README.md`
-6. The closest relevant example under `style-examples/`
-7. `05_working_context.md` only if current task continuity matters
+6. the closest relevant example under `style-examples/`
+7. `05_working_context.md` only if current session continuity matters
+
+Do not read more documentation than the task needs.
+Use the workflow stage to narrow the required context.
 
 ---
 
@@ -30,12 +35,38 @@ For any non-trivial task, read in this order:
 
 | Topic | Source of truth |
 |---|---|
-| Quick task startup | `01_quickstart.md` |
-| Full workflow | `02_workflow.md` |
+| Workflow stage model | `workflows/README.md` |
+| Comment pass rules | `workflows/comment_pass.md` |
 | Style and naming | `STYLE.md` |
 | Agent behavior and constraints | `AGENTS.md` |
 | Examples and reference patterns | `style-examples/README.md` |
 | Live task continuity | `05_working_context.md` |
+
+If a workflow document conflicts with `STYLE.md` on naming or code style,
+`STYLE.md` wins.
+
+---
+
+## Workflow usage rule
+
+Do not assume every request should be handled in a single pass.
+
+Prefer working by stage when needed:
+- analysis
+- plan
+- implementation
+- comment pass
+- validation
+
+Examples:
+- analyze this module first
+- analyze and propose a plan
+- implement only
+- run a comment pass on these files
+- run validation on the current change
+
+Use the stage model in `workflows/README.md`.
+If a stage-specific document exists, follow it.
 
 ---
 
@@ -51,6 +82,7 @@ For any non-trivial task, read in this order:
 - Keep private helpers local to the `.c` file unless a stronger reason exists.
 - Avoid broad refactors unless the task explicitly asks for them.
 - Prefer consistency with the repository over personal preference.
+- Do not keep competing local methods alive inside the same touched file when a workflow stage defines a repository method.
 
 ---
 
@@ -60,7 +92,7 @@ Before creating or moving code, confirm the owning area.
 
 Typical responsibility split:
 
-- `app/`  
+- `apps/`  
   Product or feature-level behavior, orchestration, and application logic.
 
 - `bsp/`  
@@ -75,6 +107,9 @@ Typical responsibility split:
 - `services/`  
   Reusable internal services that are not board-specific and are not direct app orchestration.
 
+- `libs/`  
+  Reusable project modules that expose local firmware capabilities without being board bring-up code.
+
 If unsure, do not invent a new folder role.
 Match the closest existing pattern in the repository.
 
@@ -84,12 +119,13 @@ Match the closest existing pattern in the repository.
 
 Every non-trivial agent output should make these points clear:
 
-- what exact task is being solved
+- what exact task or stage is being solved
 - what files are affected
 - why the selected folder or module is the right owner
 - which naming or style rules were applied
 - whether an existing example was followed
 - whether the change is intentionally minimal
+- what remains for a later pass, if anything
 
 ---
 
@@ -97,7 +133,7 @@ Every non-trivial agent output should make these points clear:
 
 Before finalizing code or a patch, verify:
 
-- task scope is small and concrete
+- task or stage scope is small and concrete
 - folder ownership is correct
 - naming was checked against `STYLE.md`
 - public and private split is consistent
@@ -105,6 +141,7 @@ Before finalizing code or a patch, verify:
 - no unnecessary new abstractions were introduced
 - the closest relevant example was reviewed if applicable
 - the result is easy to review
+- the claimed stage was actually completed
 
 ---
 
@@ -114,12 +151,15 @@ When assigning work to an agent, reference:
 
 - `AGENT_ENTRY.md`
 - `STYLE.md`
-- the closest file under `style-examples/`
+- `workflows/README.md`
+- the stage document if one exists
+- the closest file under `style-examples/` when relevant
 
 Minimal prompt pattern:
 
 > Follow `AGENT_ENTRY.md` and `STYLE.md`.  
-> Use the closest relevant example under `style-examples/`.  
+> Use `workflows/README.md` and the relevant stage document for this pass.  
+> Use the closest relevant example under `style-examples/` when needed.  
 > Keep the change minimal and consistent with the existing folder responsibilities.
 
 ---
@@ -128,9 +168,9 @@ Minimal prompt pattern:
 
 This file is not:
 
-- the full workflow description
 - the full style guide
-- the current project status log
-- a prompt template library
+- the full prompt library
+- the mutable project status log
+- the detailed instructions for every workflow stage
 
 Those live in the dedicated files referenced above.
