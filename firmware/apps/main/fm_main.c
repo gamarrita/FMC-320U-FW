@@ -15,7 +15,6 @@
 #include "fm_main.h"
 #include "fm_debug.h"
 #include "fm_board.h"
-#include "fm_port_rcc.h"
 #include "fm_port_rtc.h"
 #include "fm_port_time.h"
 
@@ -39,9 +38,8 @@
 
 void FM_MAIN_Init(void)
 {
-    FM_PORT_RCC_Init();
+    FM_BOARD_Init();
     FM_PORT_RTC_Init();
-	FM_BOARD_Init();
     FM_DEBUG_Init();
 }
 
@@ -68,7 +66,7 @@ void FM_MAIN_Main(void)
         FM_DEBUG_UartMsg(msg, sizeof(msg) - 1U);
 
         // Sleep
-        FM_PORT_TIME_SleepMs(100U);
+        FM_PORT_TIME_SleepMs(500U);
 
         // Flush any pending debug events (ISR-safe logging is deferred until flush).
         FM_DEBUG_Flush();

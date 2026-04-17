@@ -1,41 +1,46 @@
-/* @file pcf8553.c
+/**
+ * @file    fm_pcf8553.c
+ * @brief   Transitional PCF8553 LCD driver implementation.
  *
- * @brief Driver para integrado pcf8553 usando SPI.
+ * @details
+ *  - This module is part of the commercial FMC-320U firmware product line and
+ *    runs on the same board hardware used by the previous firmware.
+ *  - The target MCU in this repository is STM32U575VIT6.
+ *  - The main purpose of this repository is to rebuild the firmware almost
+ *    from scratch using a new architecture and a VS Code + CMake workflow.
+ *  - The product behavior exposed to the user is expected to remain aligned
+ *    with the previous firmware, even though the internal code structure is
+ *    being replaced.
+ *  - The hardware did not change. What changed is the project organization,
+ *    development workflow, and the repository layer model.
  *
- * Board: NUCLEO-L452  Micro-controller: STM32L452RET
+ * Migration context:
+ *  - This file was inherited from the previous firmware codebase.
+ *  - Some inherited comments may describe the historical implementation rather
+ *    than the desired architecture of this repository.
+ *  - The current repository expects device behavior to live in `bsp/`, while
+ *    MCU transport details should migrate toward `port/` backends.
+ *  - Near-term objective: achieve a minimal PCF8553 bring-up on the current
+ *    board, then progressively clean up the driver separation.
+ *  - Expected refactor direction:
+ *      1. isolate MCU bus access behind `port/` helpers
+ *      2. keep device register logic in this module
+ *      3. remove stale assumptions inherited from the former project layout
  *
- * CUBEIDE MX CONFIG:
- * SDIO  -> PA7
- * CE -> PA4
- * SCL -> PA1
- * MSI -> 24MHZ
- *
- * Nota: Es importante completar las configuracion de cube MX que falten, si
- * se inicia un proyecto de cero se deberían tener los datos de configuracion.
- *
- * (datasheet pcf8553)
- * Input data are sampled on the rising edge of SCL:
- * (STM32L4 -> CPOL = 0, CPHA = 1, CPHA can take values 1 and 2)
- * Output data are valid after the falling edge of SCL.
- * When HIGH, the interface is reset. The SPI-bus is initialized.
- * whenever the chip enable line pin CE is pulled down.
- * RESET -> Power-On enabled.
- * Conected to pint PA6, just in case it is need in future.
- *
- * Version 1
- * Autor: Daniel H Sagarra
- * Fecha 10/11/2024
- * Modificaciones: version inicial.
- *
+ * Agent note:
+ *  - This module is intentionally documented as transitional because it is
+ *    expected to be processed incrementally by agents.
+ *  - When refactoring, prefer preserving working board behavior first and
+ *    improving layer separation in small reviewable steps.
  */
 
-/////////////////// Includes.
+/* Includes. */
 #include "fm_pcf8553.h"
 
-/////////////////// Typedef.
+/* Typedef. */
 
-// (datasheet) The first byte transmitted is the register address.
-// Modelo el primer byte a ser transmitido.
+/* (datasheet) The first byte transmitted is the register address. */
+/* Modelo el primer byte a ser transmitido. */
 typedef union
 {
     uint8_t data;
@@ -47,7 +52,7 @@ typedef union
     } bits;
 } register_address_t;
 
-// Modeling PCF8553 Device_ctrl register.
+/* Modeling PCF8553 Device_ctrl register. */
 typedef union
 {
     uint8_t reg_data;
@@ -80,7 +85,7 @@ typedef union
     } reg_bits;
 } display_ctrl_1_t;
 
-// Modeling PCF8553 Display_ctrl_2 register.
+/* Modeling PCF8553 Display_ctrl_2 register. */
 typedef union
 {
     uint8_t reg_data;
@@ -92,10 +97,10 @@ typedef union
     } reg_bits;
 } display_ctrl_2_t;
 
-// Data global constants.
+/* Data global constants. */
 const uint32_t DELAY_5_MS = 5;
 
-// Defines.
+/* Defines. */
 
 #define DATA_ADDRESS            4 /* First data address */
 
@@ -119,12 +124,12 @@ const uint32_t DELAY_5_MS = 5;
 #define COM_3_ADDRESS 			0xE
 #define COM_4_ADDRESS 			0x13
 
-// Project variables, non-static, at least used in other file.
+/* Project variables, non-static, at least used in other file. */
 
-// Extern data, defined on other modules.
+/* Extern data, defined on other modules. */
 extern SPI_HandleTypeDef hspi1;
 
-// Non-static global, used on other modules.
+/* Non-static global, used on other modules. */
 SPI_HandleTypeDef h_spi1;
 
 /*
@@ -140,7 +145,7 @@ SPI_HandleTypeDef h_spi1;
 uint8_t pcf8553_ram_map[PCF8553_RAM_SIZE]; // se usa el alias "memoria shadow de pantalla" para referirse a
 // este buffer cuando se lo escribe sin actualizar la pantalla.
 
-// Global variables, statics.
+/* Global variables, statics. */
 
 /*
  * Device_ctrl register, valores de inicio.
@@ -173,14 +178,14 @@ static display_ctrl_2_t g_display_ctrl_2 =
 { .reg_bits.inversion = 0, /* line inversion (default) */
 .reg_bits.blink = 0, .reg_bits.default_value = 0 };
 
-// Private function prototypes.
+/* Private function prototypes. */
 
 static void
 ReadyToSend(uint8_t add);
 static void
 SpiInit(void);
 
-// Private function bodies.
+/* Private function bodies. */
 
 /*
  * @brief The first byte transmitted is the register address comprising
@@ -235,7 +240,7 @@ static void SpiInit(void)
     }
 }
 
-// Public function bodies.
+/* Public function bodies. */
 
 /*
  * @brief

@@ -18,7 +18,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "i2c.h"
 #include "icache.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -87,7 +86,6 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  MX_I2C1_Init();
   MX_ICACHE_Init();
   /* USER CODE BEGIN 2 */
   APP_ENTRY_Run();

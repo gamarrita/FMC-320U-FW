@@ -1,16 +1,19 @@
 /**
  * @file    fm_board.c
- * @brief   Board-level facade for debug services on Nucleo-U575ZI-Q.
+ * @brief   Board-level facade for common board bring-up services.
  *
  * @details
- *  - Wraps fm_port_gpio / fm_port_usart1 / fm_port_dwt so applications avoid HAL.
- *  - Owns bring-up order (GPIO → USART1 → DWT); no fm_port.c aggregator by design.
- *  - GPIO init is manual (CubeMX call generation disabled) to keep LED/jumper control.
+ *  - Wraps common port-layer bring-up so applications avoid HAL sequencing.
+ *  - Owns the shared board baseline (GPIO → USART1 → SPI1 → PCF8553 control → DWT).
+ *  - GPIO init is manual (CubeMX call generation disabled) to keep board control local.
  *  - Jumper sampling uses temporary pull-ups then returns pins to analog to minimize leakage.
  */
 
 #include <fm_port_dwt.h>
 #include <fm_port_gpio.h>
+#include <fm_port_pcf8553_ctrl.h>
+#include <fm_port_rcc.h>
+#include <fm_port_spi1.h>
 #include <fm_port_usart1.h>
 #include "fm_debug.h"
 #include "fm_board.h"
@@ -31,11 +34,14 @@
 /* (none) */
 
 /* Public Bodies */
-/* Debug bring-up sequence: GPIO (LEDs/jumpers) before USART1 uses those pins, DWT last after clock tree is stable. */
+/* Shared board bring-up: debug GPIO first, then shared peripherals, with DWT last once the runtime baseline is ready. */
 void FM_BOARD_Init(void)
 {
+    FM_PORT_RCC_Init();
     FM_PORT_GPIO_Init();
     FM_PORT_Usart1_Init();
+    FM_PORT_Spi1_Init();
+    FM_PORT_Pcf8553Ctrl_Init();
     FM_PORT_DWT_Init();
 }
 
@@ -115,4 +121,3 @@ void FM_BOARD_OnRtcWakeupIrq(void)
 
 /* Interrupts */
 /* (none) */
-

@@ -1,11 +1,11 @@
 /**
  * @file    fm_board.h
- * @brief   Public board-level API for debug peripherals.
+ * @brief   Public board-level API for shared board services.
  *
  * @details
- *  - Facade for GPIO jumpers/LEDs, UART, and DWT helpers.
- *  - Applications use this surface; low-level lives in fm_hw_* modules.
- *  - FM_BOARD_Init owns bring-up order; there is no fm_hw.c aggregator.
+ *  - Facade for shared board bring-up and board-facing runtime helpers.
+ *  - Applications use this surface; low-level hardware lives in fm_port_* modules.
+ *  - FM_BOARD_Init owns the common baseline sequence for normal apps.
  */
 #ifndef FM_BOARD_H
 #define FM_BOARD_H
@@ -13,7 +13,15 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-/** @brief Initialize board-level debug peripherals (GPIO → UART → DWT). */
+/**
+ * @brief Initialize the common board baseline for normal apps.
+ *
+ * @details
+ *  - This owns the shared port-layer bring-up sequence used across apps.
+ *  - The current baseline includes debug GPIO, USART1, SPI1, PCF8553 control,
+ *    and DWT support.
+ *  - Device-specific functional initialization remains outside this API.
+ */
 void FM_BOARD_Init(void);
 
 /** @brief Sample jumper or config that enables UART debug messages. */

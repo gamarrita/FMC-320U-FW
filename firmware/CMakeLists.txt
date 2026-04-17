@@ -31,6 +31,7 @@ message("Build type: " ${CMAKE_BUILD_TYPE})
 # Enable CMake support for ASM and C languages
 enable_language(C ASM)
 
+
 # Select active app
 # Example:
 #   cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=pcf8553_bringup
@@ -40,8 +41,7 @@ set(FM_AVAILABLE_APPS
     pcf8553_bringup
 )
 
-set(FM_ACTIVE_APP "main" CACHE STRING "Active firmware app. Available: ${FM_AVAILABLE_APPS}")
-set_property(CACHE FM_ACTIVE_APP PROPERTY STRINGS ${FM_AVAILABLE_APPS})
+set(FM_ACTIVE_APP "pcf8553_bringup")
 
 if(NOT FM_ACTIVE_APP IN_LIST FM_AVAILABLE_APPS)
     message(FATAL_ERROR
@@ -74,8 +74,10 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/bsp/fm_board.c
     ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_dwt.c
     ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_gpio.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_pcf8553_ctrl.c
     ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_rcc.c
     ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_rtc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_spi1.c
     ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_time.c
     ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_usart1.c
 )
