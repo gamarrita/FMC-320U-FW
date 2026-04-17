@@ -1,28 +1,29 @@
 # FMC-320U-FW
 
-Nuevo firmware para FMC-320U.
+New firmware for FMC-320U.
 
-Objetivo inicial:
-- reescritura incremental del firmware
-- separación por capas: port, APIs, app
-- migración progresiva desde el proyecto anterior
-- primer milestone: hello world en VSCode para STM32U575
+Initial objective:
+- incremental rewrite of the firmware
+- layered separation: port, libs, apps
+- progressive migration from the previous project
+- maintainable workflow for humans and agents
 
-Capacidades canónicas actuales:
-- arquitectura separada por capas con responsabilidades explícitas
-- trabajo orientado a cambios pequeños, reviewables y consistentes con la documentación del repo
-- build STM32 reproducible fuera de VS Code
-- bootstrap explícito del entorno para terminal
-- flujo de build usable por humanos y agentes
-- entrada canónica del build documentada y verificable
+Current canonical capabilities:
+- layered architecture with explicit responsibilities
+- work oriented to small, reviewable changes consistent with repository documentation
+- reproducible STM32 build outside of VS Code
+- explicit environment bootstrap for terminal usage
+- staged workflow usable by both humans and agents
+- documented and verifiable canonical build entry
+- explicit comment-pass workflow for incremental comment cleanup
 
-Guías operativas:
+Operational entrypoints:
 - `AGENT_ENTRY.md`
-- `01_quickstart.md`
-- `02_workflow.md`
-- `04_codex_prompts.md`
+- `STYLE.md`
+- `workflows/README.md`
+- `workflows/comment_pass.md`
 
-Build y entorno STM32:
+STM32 build and environment:
 - `docs/stm32cube-build-env.md`
 - `docs/build_canonical_new_projects.md`
 - `docs/prompt_bootstrap_canonical_stm32_build.md`
