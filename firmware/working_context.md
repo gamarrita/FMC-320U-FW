@@ -1,127 +1,267 @@
 # WORKING_CONTEXT.md
 
-## Propósito
+## Purpose
 
-Contexto de trabajo vivo para tareas actuales de firmware.
-Preserva continuidad de sesión.
-Mutable; no es fuente de reglas estables.
+This file is the active working contract for the LCD redesign path.
 
-## Foco Actual
-
-Área activa:
+Use it first for tasks under:
 - `bsp/devices/lcd/`
-- `apps/lcd_ll_bringup/`
+- `bsp/devices/lcd/pcf8553/`
 
-Objetivo vigente:
-- Consolidar el camino LCD nuevo sin dependencias legacy.
-- Mantener `fm_lcd.*` como helper de nivel más alto para uso de producto.
-- Cerrar validaciones pendientes del mapping documentado y limpiar remanentes viejos.
+This document is temporary and operational.
+It is not the final API contract and it is not the repository-wide style guide.
 
-Archivos hoy relevantes:
-- `bsp/devices/lcd/fm_lcd_ll.h`
-- `bsp/devices/lcd/fm_lcd_ll.c`
+---
+
+## Reading Order
+
+For LCD redesign work, use this order:
+
+1. `WORKING_CONTEXT.md`
+2. `AGENT_ENTRY.md`
+3. `workflows/README.md`
+4. `STYLE.md` only when naming or file/module creation decisions are involved
+5. `workflows/comment_pass.md` only for a dedicated comment pass
+
+Current priority:
+- keep the LCD redesign direction clear
+- keep module boundaries clean
+- postpone broad style/comment cleanup unless a pass is explicitly about that
+
+---
+
+## Current Intent
+
+The LCD stack is being rebuilt as a new path.
+It is not a compatibility-first refactor of the existing LCD path.
+
+Design priorities:
+1. semantic clarity
+2. explicit ownership
+3. reviewable implementation
+4. low-power-aware write behavior
+5. later optimization after behavior is clear
+
+Memory size is not the main constraint in this redesign.
+Explicit tables are preferred over opaque arithmetic when they improve clarity.
+
+---
+
+## Architecture Contract
+
+The working target remains a four-module LCD stack:
+
+1. `fm_lcd.*`
+- public LCD behavior and state
+- dirty tracking
+- visible-state composition
+- flush policy
+- logical blink behavior
+
+2. `fm_lcd_layout.*`
+- semantic model of the glass
+- stable names for rows, alpha digits, and indicators
+- datasheet traceability where useful
+
+3. `fm_lcd_map.*`
+- pure glass-to-RAM mapping
+- explicit mapping tables
+- character encoding/font tables
+- caller-provided RAM buffers only
+- no hardware I/O
+
+4. `pcf8553/fm_pcf8553.*`
+- controller startup/reset/resume behavior
+- RAM write behavior
+- partial write support
+- controller-specific details only
+- no glass semantics
+
+Additional shared header allowed by current design:
+- `fm_lcd_types.h`
+  - only for small public types shared by the new LCD modules
+  - must stay narrow
+  - must not become a dump of unrelated definitions
+
+---
+
+## Contract Artifacts Already Created
+
+The following new-path headers already exist:
+- `bsp/devices/lcd/fm_lcd_layout.h`
+- `bsp/devices/lcd/fm_lcd_types.h`
 - `bsp/devices/lcd/fm_lcd.h`
-- `bsp/devices/lcd/fm_lcd.c`
-- `apps/lcd_ll_bringup/fm_lcd_ll_bringup.c`
-- `bsp/devices/lcd/docs/lcd_true_source.yaml`
+- `bsp/devices/lcd/fm_lcd_map.h`
 - `bsp/devices/lcd/pcf8553/fm_pcf8553.h`
-- `bsp/devices/lcd/pcf8553/fm_pcf8553.c`
 
-Nota de build:
-- El `CMakeLists.txt` principal compila hoy `fm_lcd.c`, `fm_lcd_ll.c` y `pcf8553/fm_pcf8553.c`.
-- El cierre del refactor ya no depende de archivos legacy dentro del árbol.
-- Los archivos `fm_lcd_legacy.*` y `fm_lcd_ll_legacy.*` ya fueron retirados del repositorio tras validar `ACM_1`.
-
----
-
-## Estado Actual
-
-`fm_lcd_ll.c/h` ya cubre el camino principal nuevo para:
-- init, clear, fill y refresh del controlador
-- escritura de caracteres de 7 segmentos en fila 1 y fila 2
-- escritura de puntos decimales por fila y columna
-- escritura de la mayoría de los símbolos independientes
-- tamaño de filas (`8` arriba, `7` abajo)
-- escritura de los dos caracteres alfanuméricos de 14 segmentos mediante `FM_LCD_LL_AlphaPutChar()`
-
-`fm_lcd.c/h` ya está alineado con el camino nuevo:
-- envuelve a `fm_lcd_ll.*`
-- expone helpers de nivel más alto para strings, enteros, decimal points y símbolos
-- ya no depende de remanentes legacy
-
-`apps/lcd_ll_bringup/fm_lcd_ll_bringup.c` ya valida visualmente:
-- clear
-- fila 1 completa con `8`
-- puntos decimales de fila 1
-- fila 2 completa con `8`
-- puntos decimales de fila 2
-- símbolos confirmados
-- `ACM_1`
-- patrón combinado con todos los elementos confirmados
-- patrones alpha `A`, `H`, `N`, `M`, `X`, `2` y `8`
-
-La migración del soporte alfanumérico de 14 segmentos debe considerarse funcionalmente avanzada:
-- el mapping base de ambos dígitos ya está en `fm_lcd_ll.c`
-- las tablas de encoding por caracter ya existen en el driver nuevo
-- el bring-up ya consume esa API nueva y no el camino legacy para esos dígitos
-
-El documento `lcd_true_source.yaml` sigue siendo la fuente técnica de referencia para mapping y gaps conocidos.
+What this means now:
+- the contract surface is already far enough along
+- the main work is no longer “invent the headers”
+- the main work is now implementation and validation in the correct order
 
 ---
 
-## Pendientes Reales
+## Legacy Separation Rule
 
-`ACM_1` ya quedó cerrado en el camino nuevo:
-- `FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_ACM_1, ...)` escribe `reg: 5`, `bit: 3`
-- el dato quedó incorporado a `lcd_true_source.yaml`
-- la validación visual en hardware fue confirmada con `lcd_ll_bringup`
+The legacy LCD path must not condition the new LCD path.
 
-Blink queda explícitamente fuera del refactor actual:
-- el comportamiento legacy de blink no se migra a `fm_lcd_ll.*`
-- si el producto vuelve a necesitar blink, conviene rediseñarlo desde cero con ownership claro en una pasada futura
-- la API pública `FM_PCF8553_Blink()` del camino nuevo puede considerarse código muerto si no reaparece un consumidor real
+This rule is active and non-negotiable while the redesign is in progress.
 
-Las APIs legacy `FM_LCD_LL_PutChar_1()` y `FM_LCD_LL_PutChar_2()` no existen en el camino nuevo:
-- no son necesarias para el build activo porque el nuevo driver usa `FM_LCD_LL_AlphaPutChar()` y el bring-up ya prueba ese camino
-- ya no son criterio para retener archivos legacy en el repo
+Hard separation rules:
+- do not make the new path call legacy symbols through wrappers
+- do not share mutable globals between legacy and new paths
+- do not make new modules include legacy headers except in explicitly legacy
+  translation units
+- if a useful legacy sequence is reused, copy it consciously into the new path
+  with new ownership instead of delegating behavior back to the legacy path
 
-El naming geométrico fino de los 14 segmentos sigue deliberadamente encapsulado dentro de `fm_lcd_ll.c`.
-La API pública nueva evita exponer nombres A..N del vidrio mientras esa nomenclatura no quede cerrada con evidencia de hardware.
+The point of the legacy path is:
+- backup
+- reference
+- known-working behavior source
 
-No hay todavía una pasada de validación que confirme:
-- exactitud física final de todos los patrones alpha fuera del set ya usado en bring-up
-
----
-
-## Restricciones Actuales
-
-No mezclar en el mismo patch:
-- resolución de mapping faltante
-- rediseño amplio de API
-- limpieza general del módulo
-
-Mantener ownership claro:
-- `fm_lcd_ll.*` para mapping del glass y acceso elemento por elemento
-- `fm_lcd.*` para helpers LCD de más alto nivel
-- `apps/lcd_ll_bringup/*` para validación runtime por etapas
-
-Seguir usando `lcd_true_source.yaml` como source of truth para mapping y trazabilidad; no volver a inferir el layout desde el código legacy salvo como apoyo puntual.
+The point of the legacy path is not:
+- architectural dependency
+- helper layer for the new path
+- hidden implementation substrate for the new path
 
 ---
 
-## Próximo Paso Recomendado
+## Current Legacy/New Split
 
-Hacer la próxima pasada chica enfocada en limpieza post-migración:
-- eliminar remanentes legacy del árbol
-- correr build y grep de referencias para confirmar que el camino nuevo quedó autosuficiente
+New-path contracts:
+- `bsp/devices/lcd/fm_lcd.h`
+- `bsp/devices/lcd/fm_lcd_layout.h`
+- `bsp/devices/lcd/fm_lcd_types.h`
+- `bsp/devices/lcd/fm_lcd_map.h`
+- `bsp/devices/lcd/pcf8553/fm_pcf8553.h`
+
+Frozen legacy path:
+- `bsp/devices/lcd/fm_lcd.c`
+- `bsp/devices/lcd/fm_lcd_legacy.h`
+- `bsp/devices/lcd/fm_lcd_ll.c`
+- `bsp/devices/lcd/fm_lcd_ll.h`
+- `bsp/devices/lcd/pcf8553/fm_pcf8553_legacy.c`
+- `bsp/devices/lcd/pcf8553/fm_pcf8553_legacy.h`
+
+Current backend split:
+- `fm_pcf8553_legacy.c/.h` preserve the historical backend path
+- `fm_pcf8553.c/.h` are reserved for the redesigned backend path
+
+Current bring-up apps are not architecture constraints for the redesign path.
 
 ---
 
-## Notas para la Próxima Sesión
+## Semantic Rules
 
-No volver a tratar la migración alpha como pendiente principal: ya hay implementación nueva y bring-up dedicado.
-La discrepancia principal ya no es `ACM_1`, sino cuánto endurecer la validación alpha y cuánta limpieza adicional conviene hacer alrededor del módulo.
+The LCD should be modeled as:
+- one top numeric row with 8 visible positions
+- one bottom numeric row with 7 visible positions
+- one set of standalone indicators and product-specific legends
+- one pair of 14-segment alphanumeric characters
 
-Si se hace una próxima pasada de análisis, concentrarla en:
-- validación física adicional de patrones alpha si hace falta
-- limpieza residual del módulo LCD que no cambie comportamiento
+Public naming should prefer visible meaning over raw datasheet labels.
+Datasheet labels may still appear in comments or traceability notes.
+
+Decimal points belong semantically to numeric rows, not to the standalone
+indicator set.
+
+Blink is expected to be logical display behavior owned by `fm_lcd.*`, not the
+primary semantic model of the PCF8553 hardware blink.
+
+---
+
+## Current Boundary Notes
+
+`fm_lcd_map.h` no longer depends on `fm_lcd.h` for alignment types.
+That boundary correction is already applied through `fm_lcd_types.h`.
+
+Current contract quality assessment:
+- no major legacy contamination is expected in the new headers
+- the new headers no longer depend on legacy headers
+- the backend new path and backend legacy path now have separate public symbols
+
+This does not mean the implementation is finished.
+It means the structural direction is now acceptable to continue from.
+
+---
+
+## Backend Notes
+
+The new backend must own:
+- controller initialization
+- reset sequencing
+- resume behavior
+- display RAM range writes
+- controller-specific startup quirks from the datasheet
+
+The new backend must not own:
+- glass semantics
+- higher-level desired LCD state
+- public blink semantics
+- legacy framebuffer globals
+
+Known controller facts still relevant:
+- the PCF8553 supports sequential RAM writes with auto-incremented addressing
+- hardware blink exists but should not define the LCD public API
+- after reset or POR, controller configuration must be restored before normal
+  operation
+
+---
+
+## Current Phase
+
+The redesign is no longer in pure contract-definition mode.
+
+The active phase is:
+1. harden `pcf8553/fm_pcf8553.c`
+2. implement `fm_lcd_map.c`
+3. implement `fm_lcd.c`
+
+This order is intentional.
+Do not skip upward while the lower boundary is still unstable.
+
+---
+
+## Immediate Next Work
+
+Current recommended next step:
+- finish hardening `bsp/devices/lcd/pcf8553/fm_pcf8553.c`
+
+That means:
+- validate startup behavior
+- validate reset/resume expectations
+- validate RAM range write behavior
+- keep the implementation independent from the legacy backend path
+
+Only after that:
+- implement `bsp/devices/lcd/fm_lcd_map.c`
+
+Only after that:
+- implement `bsp/devices/lcd/fm_lcd.c`
+
+---
+
+## Out Of Scope For Now
+
+Do not let the redesign get blocked by:
+- preserving compatibility with the old `fm_lcd.*` API
+- preserving compatibility with the old `fm_lcd_ll.*` API
+- reusing current bring-up apps as architectural anchors
+- broad cleanup outside the LCD redesign path
+- final comment polish everywhere
+- broad naming cleanup unrelated to the current pass
+
+---
+
+## Decision Rule
+
+When a choice is unclear, prefer:
+1. semantic clarity
+2. explicit ownership
+3. clean separation from legacy
+4. reviewable implementation
+5. small forward progress
+
+If a choice would make the new path depend structurally on the legacy path,
+stop and choose a different approach.

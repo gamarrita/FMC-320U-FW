@@ -9,7 +9,7 @@
 
 #include <stddef.h>
 
-#include "pcf8553/fm_pcf8553.h"
+#include "pcf8553/fm_pcf8553_legacy.h"
 
 /* =========================== Private Types ============================== */
 typedef struct
@@ -494,18 +494,18 @@ static bool fm_lcd_ll_get_symbol_addr_(fm_lcd_ll_symbol_t p_symbol,
 
 static void fm_lcd_ll_set_bit_(uint8_t p_reg, uint8_t p_bit, bool p_on)
 {
-    if ((p_reg >= PCF8553_RAM_SIZE) || (p_bit >= 8U))
+    if ((p_reg >= FM_PCF8553_LEGACY_RAM_SIZE) || (p_bit >= 8U))
     {
         return;
     }
 
     if (p_on)
     {
-        pcf8553_ram_map[p_reg] |= (uint8_t)(1U << p_bit);
+        g_fm_pcf8553_legacy_ram_map[p_reg] |= (uint8_t)(1U << p_bit);
     }
     else
     {
-        pcf8553_ram_map[p_reg] &= (uint8_t) ~(1U << p_bit);
+        g_fm_pcf8553_legacy_ram_map[p_reg] &= (uint8_t) ~(1U << p_bit);
     }
 }
 
@@ -551,7 +551,7 @@ static void fm_lcd_ll_write_pattern_(fm_lcd_ll_row_t p_row, uint8_t p_col, uint8
 /* =========================== Public Bodies ============================== */
 void FM_LCD_LL_Clear(void)
 {
-    FM_LCD_LL_Fill(PCF8553_SEGMENTS_OFF);
+    FM_LCD_LL_Fill(FM_PCF8553_LEGACY_SEGMENTS_OFF);
 }
 
 void FM_LCD_LL_AlphaPutChar(char p_char, fm_lcd_ll_alpha_digit_t p_digit)
@@ -574,7 +574,7 @@ void FM_LCD_LL_DecimalPointWrite(uint8_t p_col, fm_lcd_ll_row_t p_row, bool p_on
 
 void FM_LCD_LL_Fill(uint8_t p_fill)
 {
-    FM_PCF8553_WriteAll(p_fill);
+    FM_PCF8553_LEGACY_WriteAll(p_fill);
 }
 
 uint8_t FM_LCD_LL_GetRowSize(fm_lcd_ll_row_t p_row)
@@ -584,7 +584,7 @@ uint8_t FM_LCD_LL_GetRowSize(fm_lcd_ll_row_t p_row)
 
 void FM_LCD_LL_Init(uint8_t p_fill)
 {
-    FM_PCF8553_Init();
+    FM_PCF8553_LEGACY_Init();
     FM_LCD_LL_Fill(p_fill);
 }
 
@@ -607,7 +607,7 @@ void FM_LCD_LL_PutChar(char p_char, uint8_t p_col, fm_lcd_ll_row_t p_row)
 
 void FM_LCD_LL_Refresh(void)
 {
-    FM_PCF8553_Refresh();
+    FM_PCF8553_LEGACY_Refresh();
 }
 
 void FM_LCD_LL_SymbolWrite(fm_lcd_ll_symbol_t p_symbol, bool p_on)

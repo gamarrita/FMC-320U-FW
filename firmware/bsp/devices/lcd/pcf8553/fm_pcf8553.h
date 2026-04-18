@@ -1,58 +1,119 @@
 /**
  * @file    fm_pcf8553.h
- * @brief   Public device-level API for the PCF8553 LCD driver.
+ * @brief   Public backend contract for the redesigned PCF8553 path.
  *
- * @details
- *  - This module belongs to the commercial FMC-320U firmware product line and
- *    targets the same board hardware used by the previous firmware.
- *  - The target MCU in this repository is STM32U575VIT6.
- *  - This repository is a near-from-scratch firmware rewrite that keeps the
- *    same user-visible product behavior while replacing the former
- *    STM32CubeIDE/Eclipse-oriented project structure with a VS Code + CMake
- *    workflow.
- *  - The hardware has not changed; the migration is architectural and
- *    tooling-oriented.
- *  - This driver file is transitional. It was inherited from the previous
- *    firmware codebase and is being adapted to the layer model of the current
- *    repository.
- *  - Near-term goal: enable a minimal PCF8553 bring-up on the current board.
- *  - Expected destination: device logic stays in `bsp/devices/lcd/pcf8553/`,
- *    while MCU transport details move behind dedicated `port/` backends.
- *  - Because repository modules will be progressively reworked by agents, this
- *    header intentionally documents migration context to reduce false
- *    assumptions during refactors.
+ * This header defines the intended controller-facing contract for the new LCD
+ * backend. It is a contract artifact, not the final implementation.
+ *
+ * Current backend intent:
+ * - own controller-specific startup, reset, and resume behavior
+ * - own controller-specific RAM write behavior
+ * - expose explicit write-range support for partial LCD flushes
+ * - stay independent from LCD glass semantics and field naming
+ *
+ * Current non-goals:
+ * - owning the desired LCD state
+ * - owning the LCD RAM image used by higher layers
+ * - exposing glass-level rows, indicators, or alphanumeric semantics
+ * - defining public blink semantics for the LCD stack
  */
 
 #ifndef FM_PCF8553_H_
 #define FM_PCF8553_H_
 
-/* Includes. */
-
 #include <stdint.h>
 
-/* Defines. */
+/* =========================== Public Macros ============================= */
+#define FM_PCF8553_RAM_SIZE    20U
 
-/*
- * Tamaño de la memoria interna del pcf8553 para controlar el encendido/apagado
- * de los segmentos, con 20 bytes se controlan 20 * 8 =  160 segmentos.
+/* =========================== Public Types ============================== */
+/**
+ * @brief Public result codes for the PCF8553 backend API.
  *
+ * Contract rule:
+ * - this backend owns controller-facing behavior and therefore reports
+ *   argument, range, state, and I/O failures explicitly
+ * - public LCD semantics should be handled by upper layers, not encoded here
+ *
+ * Status code intent:
+ * - FM_PCF8553_OK: operation completed successfully
+ * - FM_PCF8553_EINVAL: invalid argument value or invalid argument combination
+ * - FM_PCF8553_ERANGE: argument or requested range exceeds backend limits
+ * - FM_PCF8553_ESTATE: backend state does not allow the requested operation
+ * - FM_PCF8553_EIO: controller reset, transport, or communication step failed
  */
-#define PCF8553_RAM_SIZE         20U
-#define PCF8553_SEGMENTS_ON      0xFFU
-#define PCF8553_SEGMENTS_OFF     0x00U
+typedef enum
+{
+    FM_PCF8553_OK = 0,
+    FM_PCF8553_EINVAL,
+    FM_PCF8553_ERANGE,
+    FM_PCF8553_ESTATE,
+    FM_PCF8553_EIO
+} fm_pcf8553_status_t;
 
-/* Extern. */
+/* =========================== Public API ================================ */
+/**
+ * @brief Initialize the PCF8553 backend for first use.
+ *
+ * This initialization path is expected to own controller-specific startup
+ * requirements such as reset and any datasheet-required power-on handling.
+ *
+ * This function does not own the desired LCD content model.
+ *
+ * @return FM_PCF8553_OK on success.
+ * @return FM_PCF8553_EIO on transport or controller communication failure.
+ */
+fm_pcf8553_status_t FM_PCF8553_Init(void);
 
-extern uint8_t pcf8553_ram_map[PCF8553_RAM_SIZE];
+/**
+ * @brief Apply a controller reset sequence.
+ *
+ * This function resets the controller to a known backend-owned state.
+ * Any controller-side RAM contents should be considered lost or undefined after
+ * reset unless later backend behavior guarantees otherwise.
+ *
+ * @return FM_PCF8553_OK on success.
+ * @return FM_PCF8553_EIO on reset control or communication failure.
+ */
+fm_pcf8553_status_t FM_PCF8553_Reset(void);
 
-/* Public function prototypes. */
+/**
+ * @brief Reapply the controller operational configuration after wake or reset.
+ *
+ * This function is intended to restore backend-owned configuration without
+ * defining higher-layer LCD content policy.
+ *
+ * Rewriting visible LCD RAM remains an upper-layer decision.
+ *
+ * @return FM_PCF8553_OK on success.
+ * @return FM_PCF8553_ESTATE when the backend has not been initialized.
+ * @return FM_PCF8553_EIO on transport or controller communication failure.
+ */
+fm_pcf8553_status_t FM_PCF8553_Resume(void);
 
-void FM_PCF8553_ClearBuffer();
-void FM_PCF8553_Init();
-void FM_PCF8553_Refresh();
-void FM_PCF8553_Reset();
-void FM_PCF8553_WriteAll(uint8_t data);
-void FM_PCF8553_WriteByte(uint8_t add, uint8_t data);
+/**
+ * @brief Write a contiguous RAM range to the PCF8553 display RAM.
+ *
+ * The RAM offset is relative to the PCF8553 display RAM space, not to the
+ * raw command-register address space.
+ *
+ * The backend is expected to translate this offset into the appropriate device
+ * write sequence.
+ *
+ * @param[in] p_ram_offset Zero-based offset into PCF8553 display RAM.
+ * @param[in] p_data Pointer to the RAM bytes to write.
+ * @param[in] p_len Number of bytes to write.
+ *
+ * @return FM_PCF8553_OK on success.
+ * @return FM_PCF8553_EINVAL when `p_data` is NULL.
+ * @return FM_PCF8553_ERANGE when the requested RAM range exceeds
+ *         `FM_PCF8553_RAM_SIZE`.
+ * @return FM_PCF8553_ESTATE when the backend has not been initialized.
+ * @return FM_PCF8553_EIO on transport or controller communication failure.
+ */
+fm_pcf8553_status_t FM_PCF8553_WriteRam(uint8_t p_ram_offset,
+                                        const uint8_t *p_data,
+                                        uint8_t p_len);
 
 #endif /* FM_PCF8553_H_ */
 

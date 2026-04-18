@@ -5,7 +5,7 @@
 #include "fm_board.h"
 #include "fm_debug.h"
 #include "fm_port_time.h"
-#include "devices/lcd/pcf8553/fm_pcf8553.h"
+#include "devices/lcd/pcf8553/fm_pcf8553_legacy.h"
 
 #define FM_PCF8553_BRINGUP_IDLE_DELAY_MS   100U
 
@@ -22,10 +22,10 @@ static void fm_pcf8553_bringup_log_(const char *p_msg)
 static void fm_pcf8553_bringup_run_all_on_(void)
 {
     fm_pcf8553_bringup_log_("PCF8553_BRINGUP:INIT_START\n");
-    FM_PCF8553_Init();
+    FM_PCF8553_LEGACY_Init();
     fm_pcf8553_bringup_log_("PCF8553_BRINGUP:INIT_OK\n");
 
-    FM_PCF8553_WriteAll(PCF8553_SEGMENTS_ON);
+    FM_PCF8553_LEGACY_WriteAll(FM_PCF8553_LEGACY_SEGMENTS_ON);
     fm_pcf8553_bringup_log_("PCF8553_BRINGUP:ALL_ON_OK\n");
 }
 

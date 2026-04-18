@@ -3,7 +3,7 @@
  * @brief   High-level helpers for the FMC segmented LCD.
  */
 
-#include "fm_lcd.h"
+#include "fm_lcd_legacy.h"
 
 #include <stdio.h>
 #include <string.h>

@@ -1,31 +1,9 @@
 /**
  * @file    fm_pcf8553.c
- * @brief   Transitional PCF8553 LCD driver implementation.
+ * @brief   Redesigned PCF8553 backend implementation.
  *
- * @details
- *  - This module is part of the commercial FMC-320U firmware product line and
- *    runs on the same board hardware used by the previous firmware.
- *  - The target MCU in this repository is STM32U575VIT6.
- *  - The main purpose of this repository is to rebuild the firmware almost
- *    from scratch using a new architecture and a VS Code + CMake workflow.
- *  - The product behavior exposed to the user is expected to remain aligned
- *    with the previous firmware, even though the internal code structure is
- *    being replaced.
- *  - The hardware did not change. What changed is the project organization,
- *    development workflow, and the repository layer model.
- *
- * Migration context:
- *  - This file was inherited from the previous firmware codebase.
- *  - Some inherited comments may describe the historical implementation rather
- *    than the desired architecture of this repository.
- *  - The current repository expects device behavior to live in `bsp/`, while
- *    MCU transport details should migrate toward `port/` backends.
- *  - Near-term objective: achieve a minimal PCF8553 bring-up on the current
- *    board, then progressively clean up the driver separation.
- *  - Expected refactor direction:
- *      1. isolate MCU bus access behind `port/` helpers
- *      2. keep device register logic in this module
- *      3. remove stale assumptions inherited from the former project layout
+ * This module implements the new backend contract without depending on the
+ * frozen legacy backend path.
  */
 
 #include "fm_pcf8553.h"
@@ -38,7 +16,7 @@
 #include "fm_port_pcf8553_ctrl.h"
 #include "fm_port_spi1.h"
 
-/* Private Types */
+/* =========================== Private Types ============================== */
 typedef union
 {
     uint8_t data;
@@ -86,7 +64,7 @@ typedef union
     } reg_bits;
 } fm_pcf8553_display_ctrl_2_t;
 
-/* Private Defines */
+/* =========================== Private Macros ============================= */
 #define FM_PCF8553_SPI_TIMEOUT_MS             5U
 #define FM_PCF8553_POST_RESET_DELAY_MS        5U
 #define FM_PCF8553_DATA_ADDRESS               0x04U
@@ -95,10 +73,10 @@ typedef union
 #define FM_PCF8553_DISPLAY_CTRL_2_ADDRESS     0x03U
 #define FM_PCF8553_WRITE_DATA                 0U
 
-/* Private Data */
-uint8_t pcf8553_ram_map[PCF8553_RAM_SIZE];
+/* =========================== Private Data =============================== */
+static bool g_fm_pcf8553_initialized_;
 
-static fm_pcf8553_device_ctrl_t g_device_ctrl =
+static fm_pcf8553_device_ctrl_t g_fm_pcf8553_device_ctrl_ =
 {
     .reg_bits.clock_output = 0U,
     .reg_bits.internal_oscillator = 0U,
@@ -106,7 +84,7 @@ static fm_pcf8553_device_ctrl_t g_device_ctrl =
     .reg_bits.reserved = 0U
 };
 
-static fm_pcf8553_display_ctrl_1_t g_display_ctrl_1 =
+static fm_pcf8553_display_ctrl_1_t g_fm_pcf8553_display_ctrl_1_ =
 {
     .reg_bits.display_enabled = 1U,
     .reg_bits.bias_mode = 0U,
@@ -115,108 +93,178 @@ static fm_pcf8553_display_ctrl_1_t g_display_ctrl_1 =
     .reg_bits.reserved = 0U
 };
 
-static fm_pcf8553_display_ctrl_2_t g_display_ctrl_2 =
+static fm_pcf8553_display_ctrl_2_t g_fm_pcf8553_display_ctrl_2_ =
 {
     .reg_bits.inversion = 0U,
     .reg_bits.blink = 0U,
     .reg_bits.reserved = 0U
 };
 
-/* Private Prototypes */
-static uint8_t fm_pcf8553_build_write_address_(uint8_t address);
-static bool fm_pcf8553_write_transaction_(const uint8_t *p_data, uint16_t len);
-static void fm_pcf8553_write_sequence_(uint8_t start_address, const uint8_t *p_data, uint16_t len);
+/* =========================== Private Prototypes ========================= */
+static fm_pcf8553_status_t fm_pcf8553_apply_configuration_(void);
+static uint8_t fm_pcf8553_build_write_address_(uint8_t p_address);
+static fm_pcf8553_status_t fm_pcf8553_validate_ram_range_(uint8_t p_ram_offset,
+                                                          uint8_t p_len);
+static bool fm_pcf8553_write_transaction_(const uint8_t *p_data, uint16_t p_len);
+static fm_pcf8553_status_t fm_pcf8553_write_sequence_(uint8_t p_start_address,
+                                                      const uint8_t *p_data,
+                                                      uint16_t p_len);
 
-/* Private Bodies */
-static uint8_t fm_pcf8553_build_write_address_(uint8_t address)
+/* =========================== Private Bodies ============================= */
+static fm_pcf8553_status_t fm_pcf8553_apply_configuration_(void)
+{
+    uint8_t init_registers[] =
+    {
+        g_fm_pcf8553_device_ctrl_.reg_data,
+        g_fm_pcf8553_display_ctrl_1_.reg_data,
+        g_fm_pcf8553_display_ctrl_2_.reg_data
+    };
+
+    return fm_pcf8553_write_sequence_(FM_PCF8553_DEVICE_CTRL_ADDRESS,
+                                      init_registers,
+                                      (uint16_t) sizeof(init_registers));
+}
+
+static uint8_t fm_pcf8553_build_write_address_(uint8_t p_address)
 {
     fm_pcf8553_register_address_t register_address = { 0 };
 
-    register_address.bits.address = address;
+    register_address.bits.address = p_address;
     register_address.bits.not_used = 0U;
     register_address.bits.read_write = FM_PCF8553_WRITE_DATA;
 
     return register_address.data;
 }
 
-static bool fm_pcf8553_write_transaction_(const uint8_t *p_data, uint16_t len)
+static fm_pcf8553_status_t fm_pcf8553_validate_ram_range_(uint8_t p_ram_offset,
+                                                          uint8_t p_len)
+{
+    if (p_len == 0U)
+    {
+        return FM_PCF8553_EINVAL;
+    }
+
+    if (((uint16_t)p_ram_offset + (uint16_t)p_len) > FM_PCF8553_RAM_SIZE)
+    {
+        return FM_PCF8553_ERANGE;
+    }
+
+    return FM_PCF8553_OK;
+}
+
+static bool fm_pcf8553_write_transaction_(const uint8_t *p_data, uint16_t p_len)
 {
     bool success;
 
-    if ((p_data == NULL) || (len == 0U))
+    if ((p_data == NULL) || (p_len == 0U))
     {
         return false;
     }
 
     FM_PORT_Pcf8553Ctrl_Enable();
-    success = FM_PORT_Spi1_Write(p_data, len, FM_PCF8553_SPI_TIMEOUT_MS);
+    success = FM_PORT_Spi1_Write(p_data, p_len, FM_PCF8553_SPI_TIMEOUT_MS);
     FM_PORT_Pcf8553Ctrl_Disable();
 
     return success;
 }
 
-static void fm_pcf8553_write_sequence_(uint8_t start_address, const uint8_t *p_data, uint16_t len)
+static fm_pcf8553_status_t fm_pcf8553_write_sequence_(uint8_t p_start_address,
+                                                      const uint8_t *p_data,
+                                                      uint16_t p_len)
 {
-    uint8_t frame[PCF8553_RAM_SIZE + 1U];
+    uint8_t frame[FM_PCF8553_RAM_SIZE + 1U];
 
-    if ((p_data == NULL) || (len == 0U) || (len > PCF8553_RAM_SIZE))
+    if (p_data == NULL)
     {
-        Error_Handler();
-        return;
+        return FM_PCF8553_EINVAL;
     }
 
-    frame[0] = fm_pcf8553_build_write_address_(start_address);
-    (void) memcpy(&frame[1], p_data, len);
-
-    if (!fm_pcf8553_write_transaction_(frame, (uint16_t)(len + 1U)))
+    if ((p_len == 0U) || (p_len > FM_PCF8553_RAM_SIZE))
     {
-        Error_Handler();
+        return FM_PCF8553_ERANGE;
     }
-}
 
-/* Public Bodies */
-void FM_PCF8553_ClearBuffer(void)
-{
-    (void) memset(pcf8553_ram_map, PCF8553_SEGMENTS_OFF, sizeof(pcf8553_ram_map));
-}
+    frame[0] = fm_pcf8553_build_write_address_(p_start_address);
+    (void) memcpy(&frame[1], p_data, p_len);
 
-void FM_PCF8553_Init(void)
-{
-    uint8_t init_registers[] =
+    if (!fm_pcf8553_write_transaction_(frame, (uint16_t)(p_len + 1U)))
     {
-        g_device_ctrl.reg_data,
-        g_display_ctrl_1.reg_data,
-        g_display_ctrl_2.reg_data
-    };
+        return FM_PCF8553_EIO;
+    }
 
-    FM_PCF8553_Reset();
-    fm_pcf8553_write_sequence_(FM_PCF8553_DEVICE_CTRL_ADDRESS,
-                               init_registers,
-                               (uint16_t) sizeof(init_registers));
+    return FM_PCF8553_OK;
 }
 
-void FM_PCF8553_Refresh(void)
+/* =========================== Public Bodies ============================== */
+fm_pcf8553_status_t FM_PCF8553_Init(void)
 {
-    fm_pcf8553_write_sequence_(FM_PCF8553_DATA_ADDRESS,
-                               pcf8553_ram_map,
-                               (uint16_t) sizeof(pcf8553_ram_map));
+    fm_pcf8553_status_t status;
+
+    g_fm_pcf8553_initialized_ = false;
+
+    status = FM_PCF8553_Reset();
+
+    if (status != FM_PCF8553_OK)
+    {
+        return status;
+    }
+
+    status = fm_pcf8553_apply_configuration_();
+
+    if (status != FM_PCF8553_OK)
+    {
+        return status;
+    }
+
+    g_fm_pcf8553_initialized_ = true;
+
+    return FM_PCF8553_OK;
 }
 
-void FM_PCF8553_Reset(void)
+fm_pcf8553_status_t FM_PCF8553_Reset(void)
 {
     FM_PORT_Pcf8553Ctrl_Reset();
     HAL_Delay(FM_PCF8553_POST_RESET_DELAY_MS);
+
+    return FM_PCF8553_OK;
 }
 
-void FM_PCF8553_WriteAll(uint8_t data)
+fm_pcf8553_status_t FM_PCF8553_Resume(void)
 {
-    (void) memset(pcf8553_ram_map, data, sizeof(pcf8553_ram_map));
-    FM_PCF8553_Refresh();
+    if (!g_fm_pcf8553_initialized_)
+    {
+        return FM_PCF8553_ESTATE;
+    }
+
+    return fm_pcf8553_apply_configuration_();
 }
 
-void FM_PCF8553_WriteByte(uint8_t add, uint8_t data)
+fm_pcf8553_status_t FM_PCF8553_WriteRam(uint8_t p_ram_offset,
+                                        const uint8_t *p_data,
+                                        uint8_t p_len)
 {
-    fm_pcf8553_write_sequence_(add, &data, 1U);
+    fm_pcf8553_status_t status;
+
+    if (p_data == NULL)
+    {
+        return FM_PCF8553_EINVAL;
+    }
+
+    status = fm_pcf8553_validate_ram_range_(p_ram_offset, p_len);
+
+    if (status != FM_PCF8553_OK)
+    {
+        return status;
+    }
+
+    if (!g_fm_pcf8553_initialized_)
+    {
+        return FM_PCF8553_ESTATE;
+    }
+
+    return fm_pcf8553_write_sequence_((uint8_t)(FM_PCF8553_DATA_ADDRESS + p_ram_offset),
+                                      p_data,
+                                      p_len);
 }
 
 /*** end of file ***/

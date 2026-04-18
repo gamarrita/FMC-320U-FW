@@ -79,6 +79,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/bsp/devices/lcd/fm_lcd.c
     ${CMAKE_CURRENT_SOURCE_DIR}/bsp/devices/lcd/fm_lcd_ll.c
     ${CMAKE_CURRENT_SOURCE_DIR}/bsp/devices/lcd/pcf8553/fm_pcf8553.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsp/devices/lcd/pcf8553/fm_pcf8553_legacy.c
     ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_dwt.c
     ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_gpio.c
     ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_pcf8553_ctrl.c
