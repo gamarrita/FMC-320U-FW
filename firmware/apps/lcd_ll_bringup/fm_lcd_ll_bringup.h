@@ -13,7 +13,7 @@
  *  - Initializes board and debug services.
  *  - Exercises the LCD elements currently confirmed by the YAML source of truth.
  *  - Emits stable UART checkpoints intended for human and agent verification.
- *  - Leaves unresolved alpha and ACM_1 paths explicitly marked as pending.
+ *  - Includes the visually confirmed ACM_1 symbol in the staged validation flow.
  */
 void FM_LcdLlBringup_Run(void);
 

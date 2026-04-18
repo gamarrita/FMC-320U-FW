@@ -6,6 +6,7 @@
 #include "fm_lcd.h"
 
 #include <stdio.h>
+#include <string.h>
 
 /* =========================== Private Macros ============================= */
 #define FM_LCD_BUFFER_SIZE    20U
@@ -22,6 +23,18 @@ void FM_LCD_Clear(void)
 void FM_LCD_DecimalPointWrite(uint8_t p_col, fm_lcd_ll_row_t p_row, bool p_on)
 {
     FM_LCD_LL_DecimalPointWrite(p_col, p_row, p_on);
+}
+
+void FM_LCD_DisplayMessage(const char *p_msg, fm_lcd_ll_row_t p_row)
+{
+    if (p_msg == NULL)
+    {
+        return;
+    }
+
+    FM_LCD_Clear();
+    FM_LCD_PutString(p_msg, (uint32_t)strlen(p_msg), p_row);
+    FM_LCD_Refresh();
 }
 
 void FM_LCD_Fill(uint8_t p_fill)

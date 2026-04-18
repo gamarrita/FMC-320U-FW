@@ -30,17 +30,6 @@
 
 #include <stdint.h>
 
-/* Typedef. */
-
-/*
- * Enumeración de las velocidades disponibles para hacer parpadear la
- * pantalla en su totalidad.
- */
-typedef enum
-{
-    OFF_SPEED, LOW_SPEED, MED_SPEED, HIGH_SPEED
-} blink_t;
-
 /* Defines. */
 
 /*
@@ -58,7 +47,6 @@ extern uint8_t pcf8553_ram_map[PCF8553_RAM_SIZE];
 
 /* Public function prototypes. */
 
-void FM_PCF8553_Blink(blink_t mode);
 void FM_PCF8553_ClearBuffer();
 void FM_PCF8553_Init();
 void FM_PCF8553_Refresh();

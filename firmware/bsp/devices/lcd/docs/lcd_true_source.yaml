@@ -691,7 +691,7 @@ numeric_row_mapping:
       - "Any future driver shall preserve visible-order addressing in its public API"
 
 standalone_symbol_mapping:
-  status: "confirmed_with_one_unresolved_item"
+  status: "confirmed"
   description: "Dedicated symbols not encoded through the parametric numeric-row mapping"
   symbols:
     POINT:
@@ -731,8 +731,12 @@ standalone_symbol_mapping:
         com: 2
         seg: 21
     ACM_1:
-      status: "unresolved"
-      note: "Visible in artwork and logical model, but no explicit standalone mapping confirmed from available evidence"
+      reg: 5
+      bit: 3
+      com_seg:
+        com: 1
+        seg: 3
+      validation_note: "Visually confirmed on hardware during lcd_ll_bringup"
     TTL:
       reg: 17
       bit: 4
@@ -1000,10 +1004,6 @@ production_test_recommendation:
 known_gaps:
   status: "explicit"
   items:
-    - id: "ACM_1_mapping"
-      status: "unresolved"
-      impact: "One standalone indicator cannot yet be guaranteed from present evidence"
-      mitigation: "Verify by one-hot sweep or annotated spreadsheet"
     - id: "14seg_A_to_N_naming"
       status: "unresolved"
       impact: "Future alphanumeric driver may rely on legacy lookup tables unless segment names are finalized"
@@ -1029,7 +1029,7 @@ traceability:
     ram_map: "high"
     controller_to_glass_com_translation: "high"
     numeric_row_mapping: "high"
-    symbol_mapping: "high except ACM_1"
+    symbol_mapping: "high"
     decimal_points: "high"
     14seg_presence_and_electrode_sets: "high"
     14seg_A_to_N_names: "medium/insufficient"

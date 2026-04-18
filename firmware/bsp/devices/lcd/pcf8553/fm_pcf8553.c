@@ -175,14 +175,6 @@ static void fm_pcf8553_write_sequence_(uint8_t start_address, const uint8_t *p_d
 }
 
 /* Public Bodies */
-void FM_PCF8553_Blink(blink_t mode)
-{
-    g_display_ctrl_2.reg_bits.blink = (uint8_t) mode;
-    fm_pcf8553_write_sequence_(FM_PCF8553_DISPLAY_CTRL_2_ADDRESS,
-                               &g_display_ctrl_2.reg_data,
-                               1U);
-}
-
 void FM_PCF8553_ClearBuffer(void)
 {
     (void) memset(pcf8553_ram_map, PCF8553_SEGMENTS_OFF, sizeof(pcf8553_ram_map));

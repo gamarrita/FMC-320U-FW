@@ -13,6 +13,7 @@
 
 void FM_LCD_Clear(void);
 void FM_LCD_DecimalPointWrite(uint8_t p_col, fm_lcd_ll_row_t p_row, bool p_on);
+void FM_LCD_DisplayMessage(const char *p_msg, fm_lcd_ll_row_t p_row);
 void FM_LCD_Fill(uint8_t p_fill);
 void FM_LCD_Init(uint8_t p_fill);
 void FM_LCD_PutString(const char *p_str, uint32_t p_str_len, fm_lcd_ll_row_t p_row);

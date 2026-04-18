@@ -18,6 +18,13 @@ typedef struct
     uint8_t bit;
 } fm_lcd_ll_addr_t;
 
+typedef struct
+{
+    char ch;
+    uint16_t digit_0_pattern;
+    uint16_t digit_1_pattern;
+} fm_lcd_ll_alpha_encoding_t;
+
 typedef enum
 {
     FM_LCD_LL_SEG_A = 0,
@@ -40,6 +47,7 @@ typedef enum
 #define FM_LCD_LL_SEG_G_MASK    (1U << 6)
 
 #define FM_LCD_LL_DIGIT_STRIDE_BITS    2U
+#define FM_LCD_LL_ALPHA_SEG_COUNT      14U
 
 /* =========================== Private Constants ========================== */
 static const fm_lcd_ll_addr_t g_fm_lcd_ll_row_1_base_segments_[FM_LCD_LL_SEG_COUNT] =
@@ -87,8 +95,92 @@ static const fm_lcd_ll_addr_t g_fm_lcd_ll_row_2_decimal_points_[FM_LCD_LL_ROW_2_
     { .reg = 0U, .bit = 0U }
 };
 
+static const fm_lcd_ll_addr_t g_fm_lcd_ll_alpha_digit_0_segments_[FM_LCD_LL_ALPHA_SEG_COUNT] =
+{
+    { .reg = 0U,  .bit = 2U },
+    { .reg = 0U,  .bit = 3U },
+    { .reg = 0U,  .bit = 4U },
+    { .reg = 0U,  .bit = 5U },
+    { .reg = 5U,  .bit = 2U },
+    { .reg = 5U,  .bit = 4U },
+    { .reg = 5U,  .bit = 5U },
+    { .reg = 10U, .bit = 2U },
+    { .reg = 10U, .bit = 3U },
+    { .reg = 10U, .bit = 4U },
+    { .reg = 15U, .bit = 2U },
+    { .reg = 15U, .bit = 3U },
+    { .reg = 15U, .bit = 4U },
+    { .reg = 15U, .bit = 5U }
+};
+
+static const fm_lcd_ll_addr_t g_fm_lcd_ll_alpha_digit_1_segments_[FM_LCD_LL_ALPHA_SEG_COUNT] =
+{
+    { .reg = 0U,  .bit = 0U },
+    { .reg = 0U,  .bit = 1U },
+    { .reg = 4U,  .bit = 6U },
+    { .reg = 4U,  .bit = 7U },
+    { .reg = 5U,  .bit = 0U },
+    { .reg = 5U,  .bit = 1U },
+    { .reg = 9U,  .bit = 6U },
+    { .reg = 10U, .bit = 0U },
+    { .reg = 14U, .bit = 6U },
+    { .reg = 14U, .bit = 7U },
+    { .reg = 15U, .bit = 0U },
+    { .reg = 15U, .bit = 1U },
+    { .reg = 19U, .bit = 6U },
+    { .reg = 19U, .bit = 7U }
+};
+
+/*
+ * Keep alpha patterns per visible digit until the A..N naming is fully locked
+ * down. The new LL API stays clean while the unresolved geometric naming stays
+ * internal to this transitional mapping layer.
+ */
+static const fm_lcd_ll_alpha_encoding_t g_fm_lcd_ll_alpha_encodings_[] =
+{
+    { .ch = ' ', .digit_0_pattern = 0x0000U, .digit_1_pattern = 0x0000U },
+    { .ch = '0', .digit_0_pattern = 0x294AU, .digit_1_pattern = 0x2A2AU },
+    { .ch = '1', .digit_0_pattern = 0x0802U, .digit_1_pattern = 0x2008U },
+    { .ch = '2', .digit_0_pattern = 0x0D4CU, .digit_1_pattern = 0x3223U },
+    { .ch = '3', .digit_0_pattern = 0x0D46U, .digit_1_pattern = 0x3229U },
+    { .ch = '4', .digit_0_pattern = 0x2C06U, .digit_1_pattern = 0x3809U },
+    { .ch = '5', .digit_0_pattern = 0x2542U, .digit_1_pattern = 0x1A29U },
+    { .ch = '6', .digit_0_pattern = 0x254EU, .digit_1_pattern = 0x1A2BU },
+    { .ch = '7', .digit_0_pattern = 0x0902U, .digit_1_pattern = 0x2208U },
+    { .ch = '8', .digit_0_pattern = 0x2D4EU, .digit_1_pattern = 0x3A2BU },
+    { .ch = '9', .digit_0_pattern = 0x2D06U, .digit_1_pattern = 0x3A09U },
+    { .ch = 'A', .digit_0_pattern = 0x2D0EU, .digit_1_pattern = 0x3A0BU },
+    { .ch = 'B', .digit_0_pattern = 0x0B56U, .digit_1_pattern = 0x22E9U },
+    { .ch = 'C', .digit_0_pattern = 0x2148U, .digit_1_pattern = 0x0A22U },
+    { .ch = 'D', .digit_0_pattern = 0x0B52U, .digit_1_pattern = 0x22E8U },
+    { .ch = 'E', .digit_0_pattern = 0x2548U, .digit_1_pattern = 0x1A22U },
+    { .ch = 'F', .digit_0_pattern = 0x2508U, .digit_1_pattern = 0x1A02U },
+    { .ch = 'G', .digit_0_pattern = 0x254EU, .digit_1_pattern = 0x1A2BU },
+    { .ch = 'H', .digit_0_pattern = 0x2C0EU, .digit_1_pattern = 0x380BU },
+    { .ch = 'I', .digit_0_pattern = 0x0350U, .digit_1_pattern = 0x02E0U },
+    { .ch = 'J', .digit_0_pattern = 0x0842U, .digit_1_pattern = 0x2028U },
+    { .ch = 'K', .digit_0_pattern = 0x3428U, .digit_1_pattern = 0x1C12U },
+    { .ch = 'L', .digit_0_pattern = 0x2048U, .digit_1_pattern = 0x0822U },
+    { .ch = 'M', .digit_0_pattern = 0x388AU, .digit_1_pattern = 0x2D0AU },
+    { .ch = 'N', .digit_0_pattern = 0x28AAU, .digit_1_pattern = 0x291AU },
+    { .ch = 'O', .digit_0_pattern = 0x294AU, .digit_1_pattern = 0x2A2AU },
+    { .ch = 'P', .digit_0_pattern = 0x2D0CU, .digit_1_pattern = 0x3A03U },
+    { .ch = 'Q', .digit_0_pattern = 0x296AU, .digit_1_pattern = 0x2A3AU },
+    { .ch = 'R', .digit_0_pattern = 0x2D2CU, .digit_1_pattern = 0x3A13U },
+    { .ch = 'S', .digit_0_pattern = 0x2546U, .digit_1_pattern = 0x1A29U },
+    { .ch = 'T', .digit_0_pattern = 0x0310U, .digit_1_pattern = 0x02C0U },
+    { .ch = 'U', .digit_0_pattern = 0x284AU, .digit_1_pattern = 0x282AU },
+    { .ch = 'V', .digit_0_pattern = 0x3009U, .digit_1_pattern = 0x0C06U },
+    { .ch = 'W', .digit_0_pattern = 0x282BU, .digit_1_pattern = 0x281EU },
+    { .ch = 'X', .digit_0_pattern = 0x10A1U, .digit_1_pattern = 0x0514U },
+    { .ch = 'Y', .digit_0_pattern = 0x1090U, .digit_1_pattern = 0x0540U },
+    { .ch = 'Z', .digit_0_pattern = 0x1545U, .digit_1_pattern = 0x1625U }
+};
+
 /* =========================== Private Prototypes ========================= */
+static uint16_t fm_lcd_ll_encode_alpha_char_(char p_char, fm_lcd_ll_alpha_digit_t p_digit);
 static uint8_t fm_lcd_ll_encode_char_(char p_char);
+static const fm_lcd_ll_addr_t *fm_lcd_ll_get_alpha_segments_(fm_lcd_ll_alpha_digit_t p_digit);
 static bool fm_lcd_ll_get_decimal_addr_(uint8_t p_col,
                                         fm_lcd_ll_row_t p_row,
                                         uint8_t *p_reg,
@@ -103,9 +195,41 @@ static bool fm_lcd_ll_get_symbol_addr_(fm_lcd_ll_symbol_t p_symbol,
                                        uint8_t *p_reg,
                                        uint8_t *p_bit);
 static void fm_lcd_ll_set_bit_(uint8_t p_reg, uint8_t p_bit, bool p_on);
+static void fm_lcd_ll_write_alpha_pattern_(fm_lcd_ll_alpha_digit_t p_digit, uint16_t p_pattern);
 static void fm_lcd_ll_write_pattern_(fm_lcd_ll_row_t p_row, uint8_t p_col, uint8_t p_pattern);
 
 /* =========================== Private Bodies ============================= */
+static uint16_t fm_lcd_ll_encode_alpha_char_(char p_char, fm_lcd_ll_alpha_digit_t p_digit)
+{
+    size_t index;
+    char normalized_char = p_char;
+
+    if ((normalized_char >= 'a') && (normalized_char <= 'z'))
+    {
+        normalized_char = (char)(normalized_char - ('a' - 'A'));
+    }
+
+    for (index = 0U; index < (sizeof(g_fm_lcd_ll_alpha_encodings_) / sizeof(g_fm_lcd_ll_alpha_encodings_[0])); index++)
+    {
+        if (g_fm_lcd_ll_alpha_encodings_[index].ch == normalized_char)
+        {
+            if (p_digit == FM_LCD_LL_ALPHA_DIGIT_0)
+            {
+                return g_fm_lcd_ll_alpha_encodings_[index].digit_0_pattern;
+            }
+
+            if (p_digit == FM_LCD_LL_ALPHA_DIGIT_1)
+            {
+                return g_fm_lcd_ll_alpha_encodings_[index].digit_1_pattern;
+            }
+
+            return 0U;
+        }
+    }
+
+    return 0U;
+}
+
 static uint8_t fm_lcd_ll_encode_char_(char p_char)
 {
     switch (p_char)
@@ -189,6 +313,19 @@ static uint8_t fm_lcd_ll_encode_char_(char p_char)
         return FM_LCD_LL_SEG_A_MASK;
     default:
         return 0U;
+    }
+}
+
+static const fm_lcd_ll_addr_t *fm_lcd_ll_get_alpha_segments_(fm_lcd_ll_alpha_digit_t p_digit)
+{
+    switch (p_digit)
+    {
+    case FM_LCD_LL_ALPHA_DIGIT_0:
+        return g_fm_lcd_ll_alpha_digit_0_segments_;
+    case FM_LCD_LL_ALPHA_DIGIT_1:
+        return g_fm_lcd_ll_alpha_digit_1_segments_;
+    default:
+        return NULL;
     }
 }
 
@@ -319,7 +456,9 @@ static bool fm_lcd_ll_get_symbol_addr_(fm_lcd_ll_symbol_t p_symbol,
         *p_bit = 5U;
         return true;
     case FM_LCD_LL_SYM_ACM_1:
-        return false;
+        *p_reg = 5U;
+        *p_bit = 3U;
+        return true;
     case FM_LCD_LL_SYM_TTL:
         *p_reg = 17U;
         *p_bit = 4U;
@@ -370,6 +509,26 @@ static void fm_lcd_ll_set_bit_(uint8_t p_reg, uint8_t p_bit, bool p_on)
     }
 }
 
+static void fm_lcd_ll_write_alpha_pattern_(fm_lcd_ll_alpha_digit_t p_digit, uint16_t p_pattern)
+{
+    const fm_lcd_ll_addr_t *p_segments;
+    uint8_t segment;
+
+    p_segments = fm_lcd_ll_get_alpha_segments_(p_digit);
+
+    if (p_segments == NULL)
+    {
+        return;
+    }
+
+    for (segment = 0U; segment < FM_LCD_LL_ALPHA_SEG_COUNT; segment++)
+    {
+        fm_lcd_ll_set_bit_(p_segments[segment].reg,
+                           p_segments[segment].bit,
+                           ((p_pattern & ((uint16_t)1U << segment)) != 0U));
+    }
+}
+
 static void fm_lcd_ll_write_pattern_(fm_lcd_ll_row_t p_row, uint8_t p_col, uint8_t p_pattern)
 {
     uint8_t reg;
@@ -393,6 +552,11 @@ static void fm_lcd_ll_write_pattern_(fm_lcd_ll_row_t p_row, uint8_t p_col, uint8
 void FM_LCD_LL_Clear(void)
 {
     FM_LCD_LL_Fill(PCF8553_SEGMENTS_OFF);
+}
+
+void FM_LCD_LL_AlphaPutChar(char p_char, fm_lcd_ll_alpha_digit_t p_digit)
+{
+    fm_lcd_ll_write_alpha_pattern_(p_digit, fm_lcd_ll_encode_alpha_char_(p_char, p_digit));
 }
 
 void FM_LCD_LL_DecimalPointWrite(uint8_t p_col, fm_lcd_ll_row_t p_row, bool p_on)

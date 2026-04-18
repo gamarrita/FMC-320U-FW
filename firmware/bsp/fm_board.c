@@ -2,11 +2,8 @@
  * @file    fm_board.c
  * @brief   Board-level facade for common board bring-up services.
  *
- * @details
- *  - Wraps common port-layer bring-up so applications avoid HAL sequencing.
- *  - Owns the shared board baseline (GPIO → USART1 → SPI1 → PCF8553 control → DWT).
- *  - GPIO init is manual (CubeMX call generation disabled) to keep board control local.
- *  - Jumper sampling uses temporary pull-ups then returns pins to analog to minimize leakage.
+ * Wraps common port-layer bring-up so applications use board-level services
+ * instead of port or HAL sequencing directly.
  */
 
 #include <fm_port_dwt.h>
@@ -30,7 +27,7 @@ void FM_BOARD_Init(void)
     FM_PORT_DWT_Init();
 }
 
-/* Debug enable sampling: gate debug messages/LEDs via jumpers with low-leakage pulls. */
+/* Debug enable sampling uses GPIO jumper reads with low-leakage pulls managed in the port layer. */
 bool FM_BOARD_DebugMsgEnabled(void)
 {
     return FM_PORT_GPIO_IsDbgMsgEnabled();
@@ -50,7 +47,6 @@ bool FM_BOARD_DebugLedsEnabled(void)
     return FM_PORT_GPIO_IsDbgLedEnabled();
 }
 
-/* LED control wrappers */
 void FM_BOARD_LedErrorOn(void)
 {
     FM_PORT_GPIO_LedErrorOn();
@@ -81,13 +77,12 @@ void FM_BOARD_LedSignalOff(void)
     FM_PORT_GPIO_LedSignalOff();
 }
 
-/* Board debug UART wrapper: exposes the board debug channel, backend lives in the USART1 port module. */
+/* Board-level debug UART path; the USART1 transport backend remains in the port layer. */
 bool FM_BOARD_DebugUartTransmit(const uint8_t *p_data, uint32_t len, uint32_t timeout_ms)
 {
     return FM_PORT_Usart1_Transmit(p_data, len, timeout_ms);
 }
 
-/* DWT wrappers: expose cycle counter when hardware supports CYCCNT (returns false/0 otherwise). */
 bool FM_BOARD_DwtInit(void)
 {
     return FM_PORT_DWT_Init();

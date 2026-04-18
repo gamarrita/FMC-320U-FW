@@ -34,6 +34,11 @@
 /* =========================== Private Prototypes =========================== */
 static void fm_lcd_ll_bringup_fail_(const char *p_msg, int32_t p_param);
 static void fm_lcd_ll_bringup_log_(const char *p_msg);
+static void fm_lcd_ll_bringup_show_acm_1_(void);
+static void fm_lcd_ll_bringup_show_alpha_pair_(char p_digit_0_char,
+                                               char p_digit_1_char,
+                                               const char *p_msg);
+static void fm_lcd_ll_bringup_show_alpha_patterns_(void);
 static void fm_lcd_ll_bringup_show_all_confirmed_(void);
 static void fm_lcd_ll_bringup_show_clear_(void);
 static void fm_lcd_ll_bringup_show_confirmed_symbols_(void);
@@ -72,6 +77,28 @@ static void fm_lcd_ll_bringup_log_(const char *p_msg)
     (void) FM_DEBUG_UartMsg(p_msg, (uint32_t) strlen(p_msg));
 }
 
+static void 
+fm_lcd_ll_bringup_show_alpha_pair_(char p_digit_0_char,
+                                               char p_digit_1_char,
+                                               const char *p_msg)
+{
+    FM_LCD_LL_Clear();
+    FM_LCD_LL_AlphaPutChar(p_digit_0_char, FM_LCD_LL_ALPHA_DIGIT_0);
+    FM_LCD_LL_AlphaPutChar(p_digit_1_char, FM_LCD_LL_ALPHA_DIGIT_1);
+    fm_lcd_ll_bringup_stage_done_(p_msg);
+}
+
+static void fm_lcd_ll_bringup_show_alpha_patterns_(void)
+{
+    fm_lcd_ll_bringup_show_alpha_pair_('A', 'A', "LCD_LL_BRINGUP:ALPHA_AA_OK\n");
+    fm_lcd_ll_bringup_show_alpha_pair_('H', 'H', "LCD_LL_BRINGUP:ALPHA_HH_OK\n");
+    fm_lcd_ll_bringup_show_alpha_pair_('N', 'N', "LCD_LL_BRINGUP:ALPHA_NN_OK\n");
+    fm_lcd_ll_bringup_show_alpha_pair_('M', 'M', "LCD_LL_BRINGUP:ALPHA_MM_OK\n");
+    fm_lcd_ll_bringup_show_alpha_pair_('X', 'X', "LCD_LL_BRINGUP:ALPHA_XX_OK\n");
+    fm_lcd_ll_bringup_show_alpha_pair_('2', '2', "LCD_LL_BRINGUP:ALPHA_22_OK\n");
+    fm_lcd_ll_bringup_show_alpha_pair_('8', '8', "LCD_LL_BRINGUP:ALPHA_88_OK\n");
+}
+
 static void fm_lcd_ll_bringup_show_all_confirmed_(void)
 {
     FM_LCD_LL_Clear();
@@ -96,6 +123,14 @@ static void fm_lcd_ll_bringup_show_confirmed_symbols_(void)
     fm_lcd_ll_bringup_write_all_confirmed_symbols_(true);
 
     fm_lcd_ll_bringup_stage_done_("LCD_LL_BRINGUP:SYMBOLS_CONFIRMED_ON_OK\n");
+}
+
+static void fm_lcd_ll_bringup_show_acm_1_(void)
+{
+    FM_LCD_LL_Clear();
+    FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_ACM_1, true);
+
+    fm_lcd_ll_bringup_stage_done_("LCD_LL_BRINGUP:ACM_1_ON_OK\n");
 }
 
 static void fm_lcd_ll_bringup_show_decimal_points_(fm_lcd_ll_row_t p_row)
@@ -164,6 +199,7 @@ static void fm_lcd_ll_bringup_write_all_confirmed_symbols_(bool p_on)
     FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_TTL, p_on);
     FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_SLASH, p_on);
     FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_ACM_2, p_on);
+    FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_ACM_1, p_on);
     FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_H, p_on);
     FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_D, p_on);
     FM_LCD_LL_SymbolWrite(FM_LCD_LL_SYM_S, p_on);
@@ -220,9 +256,10 @@ void FM_LcdLlBringup_Run(void)
     fm_lcd_ll_bringup_show_decimal_points_(FM_LCD_LL_ROW_2);
     fm_lcd_ll_bringup_show_confirmed_symbols_();
     fm_lcd_ll_bringup_show_all_confirmed_();
+    fm_lcd_ll_bringup_show_alpha_patterns_();
+    fm_lcd_ll_bringup_show_acm_1_();
 
-    fm_lcd_ll_bringup_log_("LCD_LL_BRINGUP:ALPHA_PENDING\n");
-    fm_lcd_ll_bringup_log_("LCD_LL_BRINGUP:ACM1_PENDING\n");
+    fm_lcd_ll_bringup_log_("LCD_LL_BRINGUP:ACM1_VALIDATED\n");
     FM_DEBUG_LedRun(FM_DEBUG_LED_ON);
     fm_lcd_ll_bringup_log_("LCD_LL_BRINGUP:IDLE\n");
 

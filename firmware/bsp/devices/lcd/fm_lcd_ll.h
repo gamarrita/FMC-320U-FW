@@ -20,6 +20,12 @@ typedef enum
 
 typedef enum
 {
+    FM_LCD_LL_ALPHA_DIGIT_0 = 0,
+    FM_LCD_LL_ALPHA_DIGIT_1
+} fm_lcd_ll_alpha_digit_t;
+
+typedef enum
+{
     FM_LCD_LL_SYM_POINT = 0,
     FM_LCD_LL_SYM_BATTERY,
     FM_LCD_LL_SYM_POWER,
@@ -38,6 +44,7 @@ typedef enum
 } fm_lcd_ll_symbol_t;
 
 void FM_LCD_LL_Clear(void);
+void FM_LCD_LL_AlphaPutChar(char p_char, fm_lcd_ll_alpha_digit_t p_digit);
 void FM_LCD_LL_DecimalPointWrite(uint8_t p_col, fm_lcd_ll_row_t p_row, bool p_on);
 void FM_LCD_LL_Fill(uint8_t p_fill);
 uint8_t FM_LCD_LL_GetRowSize(fm_lcd_ll_row_t p_row);
