@@ -12,7 +12,6 @@
 #include "fm_panic_demo.h"
 
 #include <stdint.h>
-#include <string.h>
 
 #include "main.h"
 #include "stm32u5xx_it.h"
@@ -40,23 +39,12 @@ typedef enum
 #define FM_PANIC_DEMO_CASE  FM_PANIC_DEMO_CASE_ERROR_HANDLER
 
 /* Private Prototypes */
-static void fm_panic_demo_log_(const char *p_msg);
 static void fm_panic_demo_run_case_(void);
 static void fm_panic_demo_run_panic_msg_(void);
 static void fm_panic_demo_run_error_handler_(void);
 static void fm_panic_demo_run_hardfault_(void);
 
 /* Private Bodies */
-static void fm_panic_demo_log_(const char *p_msg)
-{
-    if (p_msg == NULL)
-    {
-        return;
-    }
-
-    (void) FM_DEBUG_UartMsg(p_msg, (uint32_t) strlen(p_msg));
-}
-
 /*
  * The small dispatcher keeps the public entry point easy to read.
  * The switch also makes the selected scenario explicit in code review.
@@ -89,7 +77,7 @@ static void fm_panic_demo_run_case_(void)
  */
 static void fm_panic_demo_run_panic_msg_(void)
 {
-    fm_panic_demo_log_("PANIC_DEMO: case=PANIC_MSG\n");
+    (void) FM_DEBUG_UartStr("PANIC_DEMO: case=PANIC_MSG\n");
     FM_PORT_TIME_SleepMs(PANIC_DEMO_PRE_PANIC_DELAY_MS);
     FM_DEBUG_PanicMsg("PANIC_DEMO:PANIC_MSG");
 }
@@ -103,7 +91,7 @@ static void fm_panic_demo_run_panic_msg_(void)
  */
 static void fm_panic_demo_run_error_handler_(void)
 {
-    fm_panic_demo_log_("PANIC_DEMO: case=ERROR_HANDLER\n");
+    (void) FM_DEBUG_UartStr("PANIC_DEMO: case=ERROR_HANDLER\n");
     FM_PORT_TIME_SleepMs(PANIC_DEMO_PRE_PANIC_DELAY_MS);
     Error_Handler();
 }
@@ -119,7 +107,7 @@ static void fm_panic_demo_run_error_handler_(void)
  */
 static void fm_panic_demo_run_hardfault_(void)
 {
-    fm_panic_demo_log_("PANIC_DEMO: case=HARDFAULT\n");
+    (void) FM_DEBUG_UartStr("PANIC_DEMO: case=HARDFAULT\n");
     FM_PORT_TIME_SleepMs(PANIC_DEMO_PRE_PANIC_DELAY_MS);
     HardFault_Handler();
 }
@@ -143,6 +131,6 @@ void FM_PanicDemo_Run(void)
      * Emit one stable banner first so a human on the terminal or an agent
      * parsing UART output can immediately identify the app that was built.
      */
-    fm_panic_demo_log_("PANIC_DEMO: tutorial start\n");
+    (void) FM_DEBUG_UartStr("PANIC_DEMO: tutorial start\n");
     fm_panic_demo_run_case_();
 }

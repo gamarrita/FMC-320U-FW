@@ -10,7 +10,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 
 #include "fm_board.h"
 #include "fm_debug.h"
@@ -33,7 +32,6 @@
 
 /* =========================== Private Prototypes =========================== */
 static void fm_lcd_ll_bringup_fail_(const char *p_msg, int32_t p_param);
-static void fm_lcd_ll_bringup_log_(const char *p_msg);
 static void fm_lcd_ll_bringup_show_acm_1_(void);
 static void fm_lcd_ll_bringup_show_alpha_pair_(char p_digit_0_char,
                                                char p_digit_1_char,
@@ -58,23 +56,13 @@ static void fm_lcd_ll_bringup_fail_(const char *p_msg, int32_t p_param)
 
     if (p_msg != NULL)
     {
-        fm_lcd_ll_bringup_log_(p_msg);
+        (void) FM_DEBUG_UartStr(p_msg);
         FM_DEBUG_PanicMsg(p_msg);
     }
     else
     {
         FM_DEBUG_PanicMsg("LCD_LL_BRINGUP:FAIL\n");
     }
-}
-
-static void fm_lcd_ll_bringup_log_(const char *p_msg)
-{
-    if (p_msg == NULL)
-    {
-        return;
-    }
-
-    (void) FM_DEBUG_UartMsg(p_msg, (uint32_t) strlen(p_msg));
 }
 
 static void 
@@ -168,7 +156,7 @@ static void fm_lcd_ll_bringup_stage_done_(const char *p_msg)
 {
     FM_DEBUG_LedSignal(FM_DEBUG_LED_ON);
     FM_LCD_LL_Refresh();
-    fm_lcd_ll_bringup_log_(p_msg);
+    (void) FM_DEBUG_UartStr(p_msg);
     FM_PORT_TIME_SleepMs(FM_LCD_LL_BRINGUP_STAGE_HOLD_MS);
     FM_DEBUG_LedSignal(FM_DEBUG_LED_OFF);
 }
@@ -244,9 +232,9 @@ void FM_LcdLlBringup_Run(void)
     FM_BOARD_Init();
     FM_DEBUG_Init();
 
-    fm_lcd_ll_bringup_log_("LCD_LL_BRINGUP:START\n");
+    (void) FM_DEBUG_UartStr("LCD_LL_BRINGUP:START\n");
     FM_LCD_LL_Init(0U);
-    fm_lcd_ll_bringup_log_("LCD_LL_BRINGUP:INIT_OK\n");
+    (void) FM_DEBUG_UartStr("LCD_LL_BRINGUP:INIT_OK\n");
     fm_lcd_ll_bringup_validate_geometry_();
 
     fm_lcd_ll_bringup_show_clear_();
@@ -259,9 +247,9 @@ void FM_LcdLlBringup_Run(void)
     fm_lcd_ll_bringup_show_alpha_patterns_();
     fm_lcd_ll_bringup_show_acm_1_();
 
-    fm_lcd_ll_bringup_log_("LCD_LL_BRINGUP:ACM1_VALIDATED\n");
+    (void) FM_DEBUG_UartStr("LCD_LL_BRINGUP:ACM1_VALIDATED\n");
     FM_DEBUG_LedRun(FM_DEBUG_LED_ON);
-    fm_lcd_ll_bringup_log_("LCD_LL_BRINGUP:IDLE\n");
+    (void) FM_DEBUG_UartStr("LCD_LL_BRINGUP:IDLE\n");
 
     for (;;)
     {

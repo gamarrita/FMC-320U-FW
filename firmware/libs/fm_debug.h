@@ -47,6 +47,8 @@ typedef struct
  * @brief Initialize the debug subsystem.
  *
  * @note Call once after board peripherals are ready.
+ * @note Emits one best-effort UART status banner describing whether message
+ *       and LED debug outputs are currently enabled by jumper policy.
  */
 void FM_DEBUG_Init(void);
 
@@ -159,6 +161,13 @@ void FM_DEBUG_Flush(void);
  * @warning Foreground only. Not IRQ-safe.
  */
 bool FM_DEBUG_UartMsg(const char *p_msg, uint32_t len);
+
+/**
+ * @brief Send a null-terminated string over the debug UART.
+ *
+ * @warning Foreground only. Not IRQ-safe.
+ */
+bool FM_DEBUG_UartStr(const char *p_msg);
 
 /**
  * @brief Send an unsigned 32-bit value over the debug UART.

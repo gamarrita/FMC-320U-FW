@@ -70,7 +70,7 @@ static bool fm_port_gpio_read_jumper_(GPIO_TypeDef *port, uint16_t pin)
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(port, &GPIO_InitStruct);
 
-    enabled = (HAL_GPIO_ReadPin(port, pin) == GPIO_PIN_SET);
+    enabled = (HAL_GPIO_ReadPin(port, pin) == GPIO_PIN_RESET);
 
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;

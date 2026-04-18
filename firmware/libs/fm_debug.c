@@ -78,6 +78,7 @@ static const char *err_str[FM_DEBUG_ERR_COUNT] =
 /* Private Prototypes */
 static uint32_t timestamp_cycles(void);
 static bool enqueue_event(uint16_t code, uint16_t flags, int32_t param0, int32_t param1, const char *p_text);
+static void fm_debug_init_status_banner_(void);
 static void fm_debug_panic_send_(const char *p_msg);
 static void fm_debug_panic_loop_(bool flush_events);
 
@@ -125,6 +126,37 @@ static bool enqueue_event(uint16_t code, uint16_t flags, int32_t param0, int32_t
     }
 
     return true;
+}
+
+static void fm_debug_init_status_banner_(void)
+{
+    int len;
+    const char *p_msg_state;
+    const char *p_led_state;
+
+    p_msg_state = msg_enable ? "ENABLED" : "DISABLED";
+    p_led_state = leds_enable ? "ENABLED" : "DISABLED";
+
+    len = snprintf(msg_buffer,
+                   MSG_BUFFER_LENGTH,
+                   "DEBUG_INIT:MSG=%s LED=%s\n",
+                   p_msg_state,
+                   p_led_state);
+
+    if (len <= 0)
+    {
+        return;
+    }
+
+    if ((uint32_t) len >= MSG_BUFFER_LENGTH)
+    {
+        len = (int) (MSG_BUFFER_LENGTH - 1U);
+        msg_buffer[len] = '\0';
+    }
+
+    (void) FM_BOARD_DebugUartTransmit((const uint8_t *) msg_buffer,
+                                      (uint32_t) len,
+                                      UART_TIMEOUT_MS);
 }
 
 /* Best-effort panic message send. Bypasses normal message gating. */
@@ -181,6 +213,7 @@ void FM_DEBUG_Init(void)
 
     FM_DEBUG_ClearErrors();
     FM_DEBUG_RefreshJumpers();
+    fm_debug_init_status_banner_();
 }
 
 void FM_DEBUG_PanicMsg(const char *p_msg)
@@ -326,6 +359,25 @@ bool FM_DEBUG_UartMsg(const char *p_msg, uint32_t len)
     (void) FM_BOARD_DebugUartTransmit((const uint8_t*) p_msg, len, UART_TIMEOUT_MS);
 
     return true;
+}
+
+bool FM_DEBUG_UartStr(const char *p_msg)
+{
+    uint32_t len;
+
+    if (p_msg == NULL)
+    {
+        return false;
+    }
+
+    len = (uint32_t) strlen(p_msg);
+
+    if (len == 0U)
+    {
+        return false;
+    }
+
+    return FM_DEBUG_UartMsg(p_msg, len);
 }
 
 bool FM_DEBUG_UartUint32(uint32_t num)

@@ -43,9 +43,24 @@ set(FM_AVAILABLE_APPS
     lcd_ll_bringup
 )
 
+# Default app defined in this file.
+# The cache follows this value only while the user has not explicitly
+# overridden FM_ACTIVE_APP to a different app.
+set(FM_ACTIVE_APP_DEFAULT "pcf8553_bringup")
+
 if(NOT DEFINED FM_ACTIVE_APP)
-    set(FM_ACTIVE_APP "lcd_ll_bringup")
+    set(FM_ACTIVE_APP "${FM_ACTIVE_APP_DEFAULT}" CACHE STRING "Active firmware app")
+elseif(NOT DEFINED FM_ACTIVE_APP_LAST_DEFAULT)
+    set(FM_ACTIVE_APP "${FM_ACTIVE_APP_DEFAULT}" CACHE STRING "Active firmware app" FORCE)
+elseif(DEFINED FM_ACTIVE_APP_LAST_DEFAULT)
+    if((FM_ACTIVE_APP STREQUAL FM_ACTIVE_APP_LAST_DEFAULT) AND
+       NOT (FM_ACTIVE_APP_DEFAULT STREQUAL FM_ACTIVE_APP_LAST_DEFAULT))
+        set(FM_ACTIVE_APP "${FM_ACTIVE_APP_DEFAULT}" CACHE STRING "Active firmware app" FORCE)
+    endif()
 endif()
+
+set(FM_ACTIVE_APP_LAST_DEFAULT "${FM_ACTIVE_APP_DEFAULT}" CACHE INTERNAL
+    "Last FM_ACTIVE_APP default value from CMakeLists.txt" FORCE)
 
 if(NOT FM_ACTIVE_APP IN_LIST FM_AVAILABLE_APPS)
     message(FATAL_ERROR
@@ -71,15 +86,11 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined library search paths
 )
 
-# Add sources to executable
-target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    ${FM_APP_SOURCES}
+# Shared sources for every app.
+set(FM_COMMON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/libs/fm_debug.c
     ${CMAKE_CURRENT_SOURCE_DIR}/bsp/fm_board.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/bsp/devices/lcd/fm_lcd.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/bsp/devices/lcd/fm_lcd_ll.c
     ${CMAKE_CURRENT_SOURCE_DIR}/bsp/devices/lcd/pcf8553/fm_pcf8553.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/bsp/devices/lcd/pcf8553/fm_pcf8553_legacy.c
     ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_dwt.c
     ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_gpio.c
     ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_pcf8553_ctrl.c
@@ -89,6 +100,25 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_time.c
     ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_usart1.c
 )
+
+# Legacy LCD path is compiled only for the legacy bring-up app.
+set(FM_LEGACY_LCD_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsp/devices/lcd/fm_lcd.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsp/devices/lcd/fm_lcd_ll.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsp/devices/lcd/pcf8553/fm_pcf8553_legacy.c
+)
+
+# Add sources to executable
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE
+    ${FM_APP_SOURCES}
+    ${FM_COMMON_SOURCES}
+)
+
+if(FM_ACTIVE_APP STREQUAL "lcd_ll_bringup")
+    target_sources(${CMAKE_PROJECT_NAME} PRIVATE
+        ${FM_LEGACY_LCD_SOURCES}
+    )
+endif()
 
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE

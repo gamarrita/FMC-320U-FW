@@ -1,32 +1,68 @@
+/**
+ * @file    fm_pcf8553_bringup.c
+ * @brief   Minimal bring-up app for the redesigned PCF8553 backend.
+ *
+ * This app intentionally targets the new backend contract only.
+ * It is a small smoke path, not the final backend validation flow.
+ */
+
 #include "fm_pcf8553_bringup.h"
 
-#include <string.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #include "fm_board.h"
 #include "fm_debug.h"
 #include "fm_port_time.h"
-#include "devices/lcd/pcf8553/fm_pcf8553_legacy.h"
+#include "devices/lcd/pcf8553/fm_pcf8553.h"
 
+/* =========================== Private Defines ============================== */
 #define FM_PCF8553_BRINGUP_IDLE_DELAY_MS   100U
 
-static void fm_pcf8553_bringup_log_(const char *p_msg)
+/* =========================== Private Prototypes =========================== */
+static void fm_pcf8553_bringup_fail_(const char *p_msg);
+static void fm_pcf8553_bringup_run_backend_smoke_(void);
+
+/* =========================== Private Bodies =============================== */
+static void fm_pcf8553_bringup_fail_(const char *p_msg)
 {
-    if (p_msg == NULL)
+    if (p_msg != NULL)
     {
+        FM_DEBUG_PanicMsg(p_msg);
+    }
+    else
+    {
+        FM_DEBUG_PanicMsg("PCF8553_BRINGUP:FAIL\n");
+    }
+}
+
+static void fm_pcf8553_bringup_run_backend_smoke_(void)
+{
+    static const uint8_t g_fm_pcf8553_bringup_clear_frame_[FM_PCF8553_RAM_SIZE] = { 0 };
+    fm_pcf8553_status_t status;
+
+    (void) FM_DEBUG_UartStr("PCF8553_BRINGUP:BACKEND_INIT_START\n");
+    status = FM_PCF8553_Init();
+
+    if (status != FM_PCF8553_OK)
+    {
+        fm_pcf8553_bringup_fail_("PCF8553_BRINGUP:BACKEND_INIT_FAIL\n");
         return;
     }
 
-    (void) FM_DEBUG_UartMsg(p_msg, (uint32_t) strlen(p_msg));
-}
+    (void) FM_DEBUG_UartStr("PCF8553_BRINGUP:BACKEND_INIT_OK\n");
 
-static void fm_pcf8553_bringup_run_all_on_(void)
-{
-    fm_pcf8553_bringup_log_("PCF8553_BRINGUP:INIT_START\n");
-    FM_PCF8553_LEGACY_Init();
-    fm_pcf8553_bringup_log_("PCF8553_BRINGUP:INIT_OK\n");
+    status = FM_PCF8553_WriteRam(0U,
+                                 g_fm_pcf8553_bringup_clear_frame_,
+                                 FM_PCF8553_RAM_SIZE);
 
-    FM_PCF8553_LEGACY_WriteAll(FM_PCF8553_LEGACY_SEGMENTS_ON);
-    fm_pcf8553_bringup_log_("PCF8553_BRINGUP:ALL_ON_OK\n");
+    if (status != FM_PCF8553_OK)
+    {
+        fm_pcf8553_bringup_fail_("PCF8553_BRINGUP:BACKEND_WRITE_FAIL\n");
+        return;
+    }
+
+    (void) FM_DEBUG_UartStr("PCF8553_BRINGUP:BACKEND_WRITE_OK\n");
 }
 
 void FM_Pcf8553Bringup_Run(void)
@@ -34,10 +70,10 @@ void FM_Pcf8553Bringup_Run(void)
     FM_BOARD_Init();
     FM_DEBUG_Init();
 
-    fm_pcf8553_bringup_log_("PCF8553_BRINGUP:START\n");
-    fm_pcf8553_bringup_run_all_on_();
+    (void) FM_DEBUG_UartStr("PCF8553_BRINGUP:START\n");
+    fm_pcf8553_bringup_run_backend_smoke_();
     FM_DEBUG_LedRun(FM_DEBUG_LED_ON);
-    fm_pcf8553_bringup_log_("PCF8553_BRINGUP:IDLE\n");
+    (void) FM_DEBUG_UartStr("PCF8553_BRINGUP:IDLE\n");
 
     for (;;)
     {
