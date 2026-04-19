@@ -17,11 +17,15 @@ Current canonical capabilities:
 - documented and verifiable canonical build entry
 - explicit comment-pass workflow for incremental comment cleanup
 
-Operational entrypoints:
+Operational entrypoint:
 - `WORKING_CONTEXT.md`
+
+Stable supporting references:
 - `STYLE.md`
 - `docs/workflow/README.md`
-- `docs/workflow/comment_pass.md`
+
+Specialized pass reference:
+- `docs/workflow/comment_pass.md` only when the task is a dedicated comment pass
 
 STM32 build and environment:
 - `docs/stm32cube-cli-workflow.md`

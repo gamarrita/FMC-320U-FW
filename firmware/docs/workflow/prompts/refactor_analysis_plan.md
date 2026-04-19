@@ -10,7 +10,7 @@ Usá como referencia:
 - `firmware/WORKING_CONTEXT.md`
 - `firmware/STYLE.md`
 - `firmware/docs/workflow/README.md`
-- `firmware/docs/contexts/...` solo si hay una línea activa de trabajo relevante para esta tarea
+- el archivo de contexto activo referenciado por `firmware/WORKING_CONTEXT.md`, solo si es relevante para esta tarea
 
 Restricciones:
 - análisis y plan solamente

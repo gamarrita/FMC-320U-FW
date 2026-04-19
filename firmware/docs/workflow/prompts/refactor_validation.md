@@ -9,7 +9,7 @@ Tarea: Hacé una pasada de validación sobre el cambio implementado
 Objetivo:
 verificar que el cambio quedó correcto usando el flujo canónico del repo y, cuando aplique, validarlo también observando la salida de debug por el Virtual COM del ST-Link.
 
-Puedes agregar codigo que te permita recibir datos de verificacion por el puerto com.
+Si la validación depende de observabilidad adicional que el cambio actual no expone, trátalo como un límite explícito de validación y repórtalo en el resultado, sin convertir esta pasada en una implementación nueva.
 
 Respondé con esta estructura:
 
