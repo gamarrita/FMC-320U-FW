@@ -17,7 +17,6 @@
 #include "fm_board.h"
 #include "fm_port_rtc.h"
 #include "fm_port_time.h"
-#include "fm_lcd_ll.h"
 
 
 /* =========================== Private Defines ============================== */

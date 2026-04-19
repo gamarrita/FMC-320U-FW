@@ -17,6 +17,12 @@
 #include "fm_port_spi1.h"
 
 /* =========================== Private Types ============================== */
+typedef struct
+{
+    bool initialized;
+    bool configuration_applied;
+} fm_pcf8553_state_t;
+
 typedef union
 {
     uint8_t data;
@@ -28,42 +34,6 @@ typedef union
     } bits;
 } fm_pcf8553_register_address_t;
 
-typedef union
-{
-    uint8_t reg_data;
-    struct
-    {
-        uint8_t clock_output : 1;
-        uint8_t internal_oscillator : 1;
-        uint8_t frame_frequency : 2;
-        uint8_t reserved : 4;
-    } reg_bits;
-} fm_pcf8553_device_ctrl_t;
-
-typedef union
-{
-    uint8_t reg_data;
-    struct
-    {
-        uint8_t display_enabled : 1;
-        uint8_t bias_mode : 1;
-        uint8_t mux : 2;
-        uint8_t boost : 1;
-        uint8_t reserved : 3;
-    } reg_bits;
-} fm_pcf8553_display_ctrl_1_t;
-
-typedef union
-{
-    uint8_t reg_data;
-    struct
-    {
-        uint8_t inversion : 1;
-        uint8_t blink : 2;
-        uint8_t reserved : 5;
-    } reg_bits;
-} fm_pcf8553_display_ctrl_2_t;
-
 /* =========================== Private Macros ============================= */
 #define FM_PCF8553_SPI_TIMEOUT_MS             5U
 #define FM_PCF8553_POST_RESET_DELAY_MS        5U
@@ -71,33 +41,29 @@ typedef union
 #define FM_PCF8553_DEVICE_CTRL_ADDRESS        0x01U
 #define FM_PCF8553_DISPLAY_CTRL_1_ADDRESS     0x02U
 #define FM_PCF8553_DISPLAY_CTRL_2_ADDRESS     0x03U
+#define FM_PCF8553_CONFIGURATION_SIZE         3U
 #define FM_PCF8553_WRITE_DATA                 0U
 
 /* =========================== Private Data =============================== */
-static bool g_fm_pcf8553_initialized_;
+/*
+ * Board note:
+ * - PORE and IFS are strapped to VDD on the current hardware.
+ * - This backend therefore owns CE/reset sequencing and the runtime register
+ *   configuration sequence, not those hardware strap decisions.
+ */
+static fm_pcf8553_state_t g_fm_pcf8553_state;
 
-static fm_pcf8553_device_ctrl_t g_fm_pcf8553_device_ctrl_ =
+/*
+ * Runtime controller configuration owned by this backend:
+ * - Device_ctrl      = 0x00: no clock output, external clock mode not used
+ * - Display_ctrl_1   = 0x01: display enabled, 1/3 bias, 1:4 mux, boost off
+ * - Display_ctrl_2   = 0x00: line inversion, blink off
+ */
+static const uint8_t g_fm_pcf8553_configuration[FM_PCF8553_CONFIGURATION_SIZE] =
 {
-    .reg_bits.clock_output = 0U,
-    .reg_bits.internal_oscillator = 0U,
-    .reg_bits.frame_frequency = 0U,
-    .reg_bits.reserved = 0U
-};
-
-static fm_pcf8553_display_ctrl_1_t g_fm_pcf8553_display_ctrl_1_ =
-{
-    .reg_bits.display_enabled = 1U,
-    .reg_bits.bias_mode = 0U,
-    .reg_bits.mux = 0U,
-    .reg_bits.boost = 0U,
-    .reg_bits.reserved = 0U
-};
-
-static fm_pcf8553_display_ctrl_2_t g_fm_pcf8553_display_ctrl_2_ =
-{
-    .reg_bits.inversion = 0U,
-    .reg_bits.blink = 0U,
-    .reg_bits.reserved = 0U
+    0x00U,
+    0x01U,
+    0x00U
 };
 
 /* =========================== Private Prototypes ========================= */
@@ -113,16 +79,21 @@ static fm_pcf8553_status_t fm_pcf8553_write_sequence_(uint8_t p_start_address,
 /* =========================== Private Bodies ============================= */
 static fm_pcf8553_status_t fm_pcf8553_apply_configuration_(void)
 {
-    uint8_t init_registers[] =
-    {
-        g_fm_pcf8553_device_ctrl_.reg_data,
-        g_fm_pcf8553_display_ctrl_1_.reg_data,
-        g_fm_pcf8553_display_ctrl_2_.reg_data
-    };
+    fm_pcf8553_status_t status;
 
-    return fm_pcf8553_write_sequence_(FM_PCF8553_DEVICE_CTRL_ADDRESS,
-                                      init_registers,
-                                      (uint16_t) sizeof(init_registers));
+    status = fm_pcf8553_write_sequence_(FM_PCF8553_DEVICE_CTRL_ADDRESS,
+                                        g_fm_pcf8553_configuration,
+                                        FM_PCF8553_CONFIGURATION_SIZE);
+
+    if (status != FM_PCF8553_OK)
+    {
+        g_fm_pcf8553_state.configuration_applied = false;
+        return status;
+    }
+
+    g_fm_pcf8553_state.configuration_applied = true;
+
+    return FM_PCF8553_OK;
 }
 
 static uint8_t fm_pcf8553_build_write_address_(uint8_t p_address)
@@ -200,7 +171,8 @@ fm_pcf8553_status_t FM_PCF8553_Init(void)
 {
     fm_pcf8553_status_t status;
 
-    g_fm_pcf8553_initialized_ = false;
+    g_fm_pcf8553_state.initialized = false;
+    g_fm_pcf8553_state.configuration_applied = false;
 
     status = FM_PCF8553_Reset();
 
@@ -216,22 +188,27 @@ fm_pcf8553_status_t FM_PCF8553_Init(void)
         return status;
     }
 
-    g_fm_pcf8553_initialized_ = true;
+    g_fm_pcf8553_state.initialized = true;
 
     return FM_PCF8553_OK;
 }
 
 fm_pcf8553_status_t FM_PCF8553_Reset(void)
 {
+    bool was_initialized;
+
+    was_initialized = g_fm_pcf8553_state.initialized;
     FM_PORT_Pcf8553Ctrl_Reset();
     HAL_Delay(FM_PCF8553_POST_RESET_DELAY_MS);
+    g_fm_pcf8553_state.initialized = was_initialized;
+    g_fm_pcf8553_state.configuration_applied = false;
 
     return FM_PCF8553_OK;
 }
 
 fm_pcf8553_status_t FM_PCF8553_Resume(void)
 {
-    if (!g_fm_pcf8553_initialized_)
+    if (!g_fm_pcf8553_state.initialized)
     {
         return FM_PCF8553_ESTATE;
     }
@@ -257,7 +234,8 @@ fm_pcf8553_status_t FM_PCF8553_WriteRam(uint8_t p_ram_offset,
         return status;
     }
 
-    if (!g_fm_pcf8553_initialized_)
+    if ((!g_fm_pcf8553_state.initialized) ||
+        (!g_fm_pcf8553_state.configuration_applied))
     {
         return FM_PCF8553_ESTATE;
     }

@@ -102,13 +102,14 @@ fm_pcf8553_status_t FM_PCF8553_Resume(void);
  *
  * @param[in] p_ram_offset Zero-based offset into PCF8553 display RAM.
  * @param[in] p_data Pointer to the RAM bytes to write.
- * @param[in] p_len Number of bytes to write.
+ * @param[in] p_len Number of bytes to write. Must be greater than zero.
  *
  * @return FM_PCF8553_OK on success.
- * @return FM_PCF8553_EINVAL when `p_data` is NULL.
+ * @return FM_PCF8553_EINVAL when `p_data` is NULL or `p_len` is zero.
  * @return FM_PCF8553_ERANGE when the requested RAM range exceeds
  *         `FM_PCF8553_RAM_SIZE`.
- * @return FM_PCF8553_ESTATE when the backend has not been initialized.
+ * @return FM_PCF8553_ESTATE when the backend has not been initialized or when
+ *         controller configuration has not been restored after reset.
  * @return FM_PCF8553_EIO on transport or controller communication failure.
  */
 fm_pcf8553_status_t FM_PCF8553_WriteRam(uint8_t p_ram_offset,

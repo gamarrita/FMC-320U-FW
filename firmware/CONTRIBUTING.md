@@ -2,122 +2,103 @@
 
 ## Purpose
 
-This file explains how to contribute changes under `firmware/`.
+This file describes repository hygiene for contributions under `firmware/`.
 
-It focuses on change quality, scope control, and alignment with the staged workflow.
+It is about how to manage changes in the repo.
+It is not the workflow entrypoint for agents.
+It is not the style guide.
 
-For workflow stages, see `workflows/README.md`.
-For style and naming, see `STYLE.md`.
-For agent entry guidance, see `AGENT_ENTRY.md`.
+For task routing, use `WORKING_CONTEXT.md`.
+For style and naming, use `STYLE.md`.
 
 ---
 
-## Contribution principles
+## Scope
 
-Contributions should be:
+Use this document for:
+- commits
+- changelog updates
+- release or tag-related handling when applicable
+- keeping changes integrable and easy to review
 
-- small when possible
-- clearly scoped
-- consistent with repository conventions
+Do not use this document as the source of truth for:
+- coding style
+- workflow stages
+- active refactor context
+
+---
+
+## Commit Expectations
+
+Prefer commits that are:
+- small
+- scoped to one clear change
 - easy to review
-- aligned with existing folder responsibilities
 
-Avoid mixing unrelated improvements into one change.
+Avoid mixing unrelated topics in one commit.
 
----
-
-## Workflow usage
-
-Contributions may be split into stages:
-
-- analysis
-- plan
-- implementation
-- comment pass
-- validation
-
-Not all tasks require all stages.
-
-Prefer explicit stage-based changes over mixed-purpose patches.
-
----
-
-## Before modifying code
-
-Before making a code change:
-
-1. define the exact task
-2. identify the target folder and module
-3. review `STYLE.md`
-4. inspect the closest relevant example in `style-examples/`
-5. confirm what is explicitly out of scope
-
-If the task is broad, split it before implementation.
-
----
-
-## Preferred change types
-
-Preferred contribution size:
-
+Good examples:
 - one bug fix
 - one local refactor
-- one new small module
-- one API naming correction
 - one documentation cleanup
-- one responsibility split with clear ownership
+- one validation-related adjustment
 
-Less preferred:
-
-- large mixed refactors
-- broad folder reorganization without prior design agreement
-- naming sweeps mixed with behavior changes
-- speculative cleanup outside the task boundary
+Less useful examples:
+- behavior change mixed with naming sweep
+- implementation mixed with unrelated cleanup
+- large mechanical noise without a clear purpose
 
 ---
 
-## Documentation expectations
+## Changelog
 
-When changing documentation:
+Update `CHANGELOG.md` when the change is repository-visible and worth preserving as project history.
 
-- keep one topic per file
-- keep one source of truth per rule
-- do not duplicate workflow definitions
-- keep prompt libraries separate from normative documentation
+Typical examples:
+- a new stable workflow or documentation contract
+- a new canonical tool or entrypoint
+- a meaningful architectural milestone
+- a removed or replaced repository mechanism
 
----
+Do not force a changelog entry for every small local patch.
 
-## Code expectations
-
-Code contributions should:
-
-- follow `STYLE.md`
-- keep public APIs minimal
-- keep private helpers local
-- respect module ownership
-- avoid unnecessary abstraction
-- match repository patterns where valid
+When updating the changelog:
+- keep the entry short
+- describe the repository-visible outcome
+- avoid patch-level narration
 
 ---
 
-## Review checklist
+## Tags And Releases
 
-Before considering a contribution ready:
+Tags and releases should be handled intentionally, not as part of routine coding work.
 
-- [ ] task scope is clear
-- [ ] target ownership is justified
-- [ ] naming matches `STYLE.md`
-- [ ] no unrelated edits were introduced
-- [ ] documentation was updated if a stable rule changed
-- [ ] examples were consulted if relevant
-- [ ] patch is reasonably easy to review
+If a task explicitly includes release preparation:
+- make sure the relevant changelog state is ready
+- make sure the intended build and validation state is known
+- avoid mixing unrelated last-minute cleanup into the release change
+
+If the task does not explicitly include release work:
+- do not introduce tag or release changes speculatively
 
 ---
 
-## Related documents
+## Before Considering A Change Ready
 
-- Agent entry: `AGENT_ENTRY.md`
-- Workflow model: `workflows/README.md`
-- Comment pass: `workflows/comment_pass.md`
-- Style and naming: `STYLE.md`
-- Agent behavior: `AGENTS.md`
+Before treating a contribution as ready to integrate:
+- confirm the task scope is clear
+- confirm the change is reasonably reviewable
+- confirm stable docs were updated only when needed
+- confirm the change does not leave the repo in a more confusing state
+
+If a stable repository rule changed:
+- update the one file that should own that rule
+- avoid duplicating the same rule across multiple markdown files
+
+---
+
+## Related Documents
+
+- task routing: `WORKING_CONTEXT.md`
+- style and naming: `STYLE.md`
+- workflow stages: `docs/workflow/README.md`

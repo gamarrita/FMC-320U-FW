@@ -9,10 +9,10 @@ It is not a source of truth for current style, naming, or workflow rules.
 
 For stable rules, see:
 
-- `AGENT_ENTRY.md`
+- `WORKING_CONTEXT.md`
 - `STYLE.md`
 - `AGENTS.md`
-- `workflows/README.md`
+- `docs/workflow/README.md`
 
 ---
 
@@ -37,7 +37,7 @@ Recommended format:
 ## Entries
 
 ## 2026-04-17
-- Introduced staged workflow model under `workflows/`.
+- Introduced staged workflow model under `docs/workflow/`.
 - Added `comment_pass.md` as canonical method for comment consistency.
 - Aligned repository entrypoints to the staged workflow.
 - Began consolidation of legacy workflow documents.
@@ -48,5 +48,5 @@ Recommended format:
 - Documented the canonical build workflow of the repo.
 
 ## 2026-04-04
-- Reorganized firmware documentation structure around a single agent entrypoint.
+- Reorganized firmware documentation structure around `WORKING_CONTEXT.md` as the single operational entrypoint.
 - Separated quickstart, full workflow, prompt libraries, style guide, and working context.

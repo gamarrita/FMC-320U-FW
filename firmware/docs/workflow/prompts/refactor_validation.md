@@ -1,5 +1,9 @@
 Trabaja en `firmware/`.
 
+Usá como referencia:
+- `firmware/WORKING_CONTEXT.md`
+- `firmware/docs/workflow/README.md`
+
 Tarea: Hacé una pasada de validación sobre el cambio implementado
 
 Objetivo:

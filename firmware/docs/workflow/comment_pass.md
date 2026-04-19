@@ -302,6 +302,6 @@ Antes de cerrar una pasada de comentarios, verificar:
 
 ## Documentos relacionados
 
-- Modelo de workflow: `workflows/README.md`
+- Modelo de workflow: `docs/workflow/README.md`
 - Reglas estables de estilo: `STYLE.md`
-- Punto de entrada para agentes: `AGENT_ENTRY.md`
+- Punto de entrada operativo: `WORKING_CONTEXT.md`

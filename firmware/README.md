@@ -18,12 +18,11 @@ Current canonical capabilities:
 - explicit comment-pass workflow for incremental comment cleanup
 
 Operational entrypoints:
-- `AGENT_ENTRY.md`
+- `WORKING_CONTEXT.md`
 - `STYLE.md`
-- `workflows/README.md`
-- `workflows/comment_pass.md`
+- `docs/workflow/README.md`
+- `docs/workflow/comment_pass.md`
 
 STM32 build and environment:
-- `docs/stm32cube-build-env.md`
+- `docs/stm32cube-cli-workflow.md`
 - `docs/build_canonical_new_projects.md`
-- `docs/prompt_bootstrap_canonical_stm32_build.md`

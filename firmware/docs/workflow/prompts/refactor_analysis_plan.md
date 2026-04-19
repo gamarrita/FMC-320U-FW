@@ -7,10 +7,10 @@ Objetivo:
 entender la estructura actual del módulo y proponer un refactor chico, claro y revisable, sin expandir el alcance innecesariamente.
 
 Usá como referencia:
-- `firmware/AGENT_ENTRY.md`
+- `firmware/WORKING_CONTEXT.md`
 - `firmware/STYLE.md`
-- `firmware/workflows/README.md`
-- `firmware/WORKING_CONTEXT.md` solo si aporta continuidad relevante para esta tarea
+- `firmware/docs/workflow/README.md`
+- `firmware/docs/contexts/...` solo si hay una línea activa de trabajo relevante para esta tarea
 
 Restricciones:
 - análisis y plan solamente

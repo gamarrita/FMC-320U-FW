@@ -18,8 +18,9 @@ Reglas generales:
 - no cambiar lógica
 
 Referencias:
+- `firmware/WORKING_CONTEXT.md`
 - `firmware/STYLE.md`
-- `firmware/workflows/comment_pass.md`
+- `firmware/docs/workflow/comment_pass.md`
 - `firmware/libs/fm_debug.h`
 - `firmware/libs/fm_debug.c`
 

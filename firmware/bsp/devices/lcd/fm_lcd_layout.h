@@ -3,7 +3,7 @@
  * @brief   Interim semantic LCD glass contract for the redesign path.
  *
  * This header captures the layout-specific part of the active LCD redesign
- * contract currently described in `WORKING_CONTEXT.md`.
+ * contract currently described in `docs/contexts/lcd_redesign.md`.
  *
  * Current module intent:
  * - model the LCD glass as coherent visible fields

@@ -1,9 +1,9 @@
-# Reproducible STM32 Build Flow for VS Code, CLI, and Agents
+# Reusable STM32 Canonical Build Guide for New Projects
 
 [Go to Spanish version](#version-en-espanol)
 
-Short operational reference for this repo:
-- `docs/stm32cube-build-env.md`
+Operational source of truth for this repo:
+- `docs/stm32cube-cli-workflow.md`
 
 This document explains which problem was solved by making the STM32 environment reproducible outside the IDE, how to recognize that problem from a normal shell, and how to reuse the same pattern in new STM32 projects.
 
@@ -350,10 +350,10 @@ That is why the correct rule is not to copy exact versions, but to preserve the 
 
 ## Version en espanol
 
-# Flujo de build STM32 reproducible para VS Code, CLI y agentes
+# Guia reusable para dejar un build STM32 canonico en proyectos nuevos
 
-Referencia operativa corta del repo:
-- `docs/stm32cube-build-env.md`
+Fuente operativa de verdad para este repo:
+- `docs/stm32cube-cli-workflow.md`
 
 Este documento explica qué problema resolvió el plan para hacer reproducible el entorno STM32 fuera del IDE, cómo reconocer ese problema en una shell común, y cómo repetir el mismo esquema en proyectos STM32 nuevos.
 

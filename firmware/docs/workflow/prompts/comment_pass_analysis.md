@@ -10,8 +10,9 @@ Objetivo:
 decidir cómo debería hacerse una pasada de comentarios en este módulo para dejarlo consistente con el repo.
 
 Usá como referencia:
+- `firmware/WORKING_CONTEXT.md`
 - `firmware/STYLE.md`
-- `firmware/workflows/comment_pass.md`
+- `firmware/docs/workflow/comment_pass.md`
 - `firmware/libs/fm_debug.h`
 - `firmware/libs/fm_debug.c`
 
