@@ -45,8 +45,8 @@ Do not expect `WORKING_CONTEXT.md` to restate their content.
 
 ## Current Priority
 
-- validate `apps/lcd_bringup/` on hardware
-- compare the LCD and UART behavior against the expected scene and milestones
+- validate the scene sequence in `apps/lcd_bringup/` on hardware
+- compare the LCD and UART behavior against the expected scene sequence and milestones
 - use that evidence to decide the next correction pass
 
 Expected next options after validation:

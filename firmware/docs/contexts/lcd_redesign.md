@@ -20,7 +20,7 @@ Current stage:
 
 Current situation:
 - the new LCD stack already exists
-- the canonical bring-up already exists
+- the canonical bring-up now runs as a human validation sequence
 - the next useful progress depends on real LCD and UART evidence
 
 Current validation target:
@@ -29,9 +29,16 @@ Current validation target:
 Expected UART milestones:
 - `LCD_BRINGUP:START`
 - `LCD_BRINGUP:LCD_INIT_OK`
-- `LCD_BRINGUP:ROW_TOP_OK`
-- `LCD_BRINGUP:INDICATOR_OK`
-- `LCD_BRINGUP:FLUSH_OK`
+- `LCD_BRINGUP:LOOP_RESTART`
+- `LCD_BRINGUP:SCENE_CLEAR`
+- `LCD_BRINGUP:SCENE_ALL_DIGITS_ON TOP=88888888 BOT=8888888`
+- `LCD_BRINGUP:SCENE_ALL_DECIMALS_ON`
+- `LCD_BRINGUP:SCENE_DIGIT_PATTERN TOP=12345678 BOT=1234567`
+- `LCD_BRINGUP:SCENE_BASIC_ICONS POINT+BATT`
+- `LCD_BRINGUP:SCENE_UPPER_LEGENDS`
+- `LCD_BRINGUP:SCENE_LOWER_RIGHT_LEGENDS`
+- `LCD_BRINGUP:SCENE_ALL_INDICATORS`
+- `LCD_BRINGUP:SCENE_NOMINAL_USE TOP=12.34 BOT=56.7`
 - `LCD_BRINGUP:IDLE`
 
 Current expected interaction:
@@ -57,7 +64,7 @@ Current expected interaction:
 - `bsp/devices/lcd/fm_lcd.c`
   - first public stateful LCD V1 completed over `fm_lcd_map.*` and `fm_pcf8553.*`
 - `apps/lcd_bringup/`
-  - first unified bring-up for the new stack completed
+  - unified human-validation bring-up sequence completed
 
 ### Structural decisions already taken
 - the redesign is not compatibility-first
@@ -130,13 +137,24 @@ Relevant controller facts:
 
 Immediate remaining work:
 1. validate `apps/lcd_bringup/` end to end on hardware
-2. compare observed UART and LCD behavior against the expected milestones and scene
+2. compare observed UART and LCD behavior against the expected scene sequence
 3. apply the smallest correction pass supported by that evidence
 
 Likely next work after that:
 1. mapping correction if visible segments or indicators are wrong
-2. alpha support if validation shows the base path is stable enough
+2. alpha support if validation shows the numeric rows, decimal points, and indicators are stable enough
 3. blink or resume-policy work once the base behavior is trusted
+
+Current validation coverage in this stage:
+- top numeric row
+- bottom numeric row
+- decimal points
+- standalone indicators
+
+Explicitly not validated yet in this stage:
+- 14-segment alpha pair
+- logical blink behavior
+- richer resume or recovery policy
 
 ---
 
