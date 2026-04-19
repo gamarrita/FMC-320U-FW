@@ -35,7 +35,7 @@ Specific implication for the current LCD work:
 - `STYLE.md`
 - `AGENTS.md`
 - `docs/workflow/README.md`
-- `docs/workflow/comment_pass.md`
+- `docs/workflow/passes/README.md`
 - `CONTRIBUTING.md`
 
 Inspect the file that applies.

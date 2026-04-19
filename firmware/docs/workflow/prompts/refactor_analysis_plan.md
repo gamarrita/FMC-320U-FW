@@ -1,5 +1,9 @@
 Trabaja en `firmware/`.
 
+Tipo de prompt:
+- bootstrap
+- puede crear o reencuadrar `WORKING_CONTEXT.md`
+
 Tarea:
 Hacé una pasada de análisis y plan sobre <módulo o archivo objetivo> para evaluar un posible refactor de código.
 

@@ -1,5 +1,10 @@
 Trabaja en `firmware/`.
 
+Tipo de prompt:
+- non-bootstrap
+- opera sobre el contexto existente
+- no crea ni reemplaza `WORKING_CONTEXT.md`
+
 Analizá:
 - <target .c>
 - <target .h>
@@ -12,7 +17,7 @@ decidir cómo debería hacerse una pasada de comentarios en este módulo para de
 Usá como referencia:
 - `firmware/WORKING_CONTEXT.md`
 - `firmware/STYLE.md`
-- `firmware/docs/workflow/comment_pass.md`
+- `firmware/docs/workflow/passes/comments/README.md`
 - `firmware/libs/fm_debug.h`
 - `firmware/libs/fm_debug.c`
 

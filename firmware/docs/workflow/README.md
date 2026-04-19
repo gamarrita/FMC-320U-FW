@@ -87,14 +87,23 @@ Typical closure examples:
 
 ---
 
-## Specialized Closure Passes
+## Methodological Passes
 
-Some closure passes have their own documents.
+Methodological passes live under:
+- `docs/workflow/passes/`
 
-Current example:
-- `docs/workflow/comment_pass.md`
+Current pass families:
+- `comments/`
+- `naming_style/`
+- `contracts/`
+- `safety/`
+- `refactor/`
+- `new_feature/`
 
-Use a specialized pass document only when that pass is the actual task.
+Bootstrap passes may create or reframe `WORKING_CONTEXT.md`.
+Non-bootstrap passes operate inside the existing context.
+
+Use a pass document only when that pass is the actual task.
 
 ---
 

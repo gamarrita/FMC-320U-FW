@@ -1,5 +1,10 @@
 Trabaja en `firmware/`.
 
+Tipo de prompt:
+- non-bootstrap
+- opera sobre el contexto existente
+- no crea ni reemplaza `WORKING_CONTEXT.md`
+
 Usá como referencia:
 - `firmware/WORKING_CONTEXT.md`
 - `firmware/docs/workflow/README.md`

@@ -25,7 +25,7 @@ Stable supporting references:
 - `docs/workflow/README.md`
 
 Specialized pass reference:
-- `docs/workflow/comment_pass.md` only when the task is a dedicated comment pass
+- `docs/workflow/passes/README.md` when the task enters a methodological pass
 
 STM32 build and environment:
 - `docs/stm32cube-cli-workflow.md`
