@@ -52,6 +52,10 @@ WORKING_CONTEXT.md:
 - References:
   - `docs/contexts/<slug>.md`
   - `STYLE.md`
+- Maintenance Rule:
+  - update `WORKING_CONTEXT.md` when execution state changes
+  - update `docs/contexts/<slug>.md` when extended context changes
+  - update both together when they would otherwise diverge
 - Strong Rule
 
 docs/contexts/<slug>.md:
@@ -70,3 +74,4 @@ Do NOT:
 - escribir análisis largo en `WORKING_CONTEXT.md`
 - copiar completo el archivo de contexto extendido
 - referenciar otros passes
+- olvidar embebir la regla de mantener alineados `WORKING_CONTEXT.md` y `docs/contexts/<slug>.md`

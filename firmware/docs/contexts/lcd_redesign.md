@@ -22,8 +22,10 @@ Current situation:
 - the new LCD stack already exists
 - the canonical bring-up already passed on hardware for the validated scope
 - alpha support now exists in the public contract and in the new stack
-- the next useful progress is to expose alpha in the bring-up and validate it
-  on hardware without destabilizing the validated numeric base
+- the bring-up now exposes alpha validation scenes and a sequential alpha
+  character sweep
+- the next useful progress is to validate those alpha scenes on hardware
+  without destabilizing the validated numeric base
 
 Validated hardware target:
 - `apps/lcd_bringup/`
@@ -72,11 +74,18 @@ Current expected interaction:
   - first backend hardening pass completed
 - `bsp/devices/lcd/fm_lcd_map.c`
   - first pure mapping pass completed for numeric rows, indicators, and alpha
+  - lowercase alpha inputs are now explicitly accepted
+  - `'#'` is currently encoded as a validation glyph that turns on all 14 alpha
+    segments
 - `bsp/devices/lcd/fm_lcd.c`
   - first public stateful LCD V1 completed over `fm_lcd_map.*` and `fm_pcf8553.*`
   - alpha support now exposed through the public contract
 - `apps/lcd_bringup/`
   - unified human-validation bring-up sequence completed
+  - alpha scenes now include:
+    - left alpha full-on
+    - right alpha full-on
+    - sequential sweep of the currently encoded alpha character set
 
 ### Validation already completed
 - `apps/lcd_bringup/`
@@ -156,14 +165,19 @@ Relevant controller facts:
 ## Remaining Work
 
 Immediate remaining work:
-1. extend `apps/lcd_bringup/` with alpha scenes
-2. validate alpha behavior on hardware using LCD + UART evidence
-3. apply the smallest correction pass supported by that evidence
+1. validate the new alpha scenes on hardware using LCD + UART evidence
+2. confirm left/right alpha full-on behavior and the sequential sweep of the
+   currently encoded character set
+3. decide whether any additional application-facing symbol is needed beyond the
+   current validation glyph `'#'`
+4. apply the smallest correction pass supported by that evidence
 
 Likely next work after that:
 1. mapping correction only if alpha validation exposes issues in the currently
    unvalidated area
-2. blink or resume-policy work once alpha behavior is trusted
+2. add a very small set of validated application-facing symbols if hardware
+   evidence justifies them
+3. blink or resume-policy work once alpha behavior is trusted
 
 Current validated coverage:
 - top numeric row
@@ -175,6 +189,16 @@ Explicitly not validated yet:
 - 14-segment alpha pair
 - logical blink behavior
 - richer resume or recovery policy
+
+Current alpha string policy:
+- application text enters alpha through normal C strings
+- printable ASCII is the intended input domain
+- lowercase is accepted by the mapping table
+- unsupported characters are rendered as blank
+- non-printable control-byte encodings are not part of the intended public
+  string contract
+- `'#'` is a validation glyph for bring-up use, not yet a recommended
+  application symbol
 
 ---
 
