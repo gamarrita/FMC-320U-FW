@@ -8,9 +8,12 @@ Its job is simple:
 - define the default stage model used in this repo
 - explain what each stage is for
 - point to more specific pass documents when needed
+- expose the wizard entrypoint for starting or reframing a new workstream
 
-This directory is not the task entrypoint.
-Use `WORKING_CONTEXT.md` first.
+This directory is not always the task entrypoint.
+Use `WORKING_CONTEXT.md` first for active work.
+Use `docs/workflow/wizard/README.md` when the user is starting or reframing a
+new workstream.
 
 ---
 
@@ -126,6 +129,8 @@ This keeps tasks smaller and reviewable.
 
 - `WORKING_CONTEXT.md`
   - task routing, active contexts, current priorities
+- `docs/workflow/wizard/README.md`
+  - human-facing entrypoint for creating or reframing a workstream context
 - `STYLE.md`
   - naming and code structure
 - `CONTRIBUTING.md`

@@ -5,8 +5,10 @@
 This directory contains methodological passes used after the main workflow stage
 has already been identified.
 
-These passes are not entrypoints.
-Use `WORKING_CONTEXT.md` first.
+These passes are not the human-facing wizard entrypoint.
+Use:
+- `WORKING_CONTEXT.md` first for active work
+- `docs/workflow/wizard/README.md` when starting or reframing a new workstream
 
 ---
 
@@ -43,3 +45,6 @@ Examples:
 - support prompts for `comments/` live under `comments/`
 
 Do not rely on a global prompts folder for pass-owned behavior.
+
+The wizard may call into bootstrap passes internally, but the wizard itself is
+the human-facing entry layer.

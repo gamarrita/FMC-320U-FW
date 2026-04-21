@@ -40,6 +40,22 @@ If scope, ownership, or interaction with active work is unclear:
 
 ---
 
+## Wizard Gate
+
+Use the workflow wizard when:
+- the user explicitly says `wizard`
+- the user asks to start a new `refactor` or `new_feature` track
+- the user asks to create or reframe a `WORKING_CONTEXT.md`
+- the request falls outside the active `WORKING_CONTEXT.md` and should become a
+  separate workstream
+
+If the wizard gate is triggered:
+- do not force the request into the current workstream
+- use `docs/workflow/wizard/README.md` as the entrypoint
+- ask only the minimum blocking questions before generating a new context pair
+
+---
+
 ## Protected Code
 
 Without explicit human approval, do not edit:

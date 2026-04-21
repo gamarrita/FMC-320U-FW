@@ -6,13 +6,14 @@ Stage:
 - analysis
 
 Active pass:
-- new_feature
+- refactor
 
 Operational context:
 
 Area:
 - `AGENTS.md`
 - `docs/workflow/`
+- `docs/workflow/wizard/`
 - `docs/workflow/passes/`
 - `docs/contexts/`
 
@@ -28,11 +29,25 @@ Current focus:
 - define a reproducible bootstrap process for high-quality `working_context.md`
   and extended context files
 - use the archived LCD track as the validated reference case
-- limit the industrialization effort to `new_feature` and `refactor`
+- limit the current industrialization effort to a refactor wizard MVP first
+- a candidate bootstrap quality checklist now exists as the first reusable
+  evaluation artifact
+- the candidate checklist has now been applied to the archived LCD case
+- a candidate bootstrap contract now exists as the next layer above the
+  checklist
+- a candidate minimum input and stop rule now exists for the refactor wizard
+  MVP
+- the theoretical `refactor` bootstrap prompt has now been reduced to match the
+  wizard MVP candidate
+- sandbox trials have now exercised multiple plausible refactor cases
+- those trials justified explicit question mode and explicit
+  create-versus-reframe branching in the `refactor` bootstrap prompt
+- a stable wizard gate now exists in `AGENTS.md`
+- a human-facing wizard entrypoint now exists under `docs/workflow/wizard/`
 
 Constraints:
 - do not reopen the closed LCD stack context except as reference evidence
-- do not change unrelated passes outside `new_feature` and `refactor`
+- do not change unrelated passes outside `refactor`
 - treat `AGENTS.md` as stable unless a true policy gap is proven
 - do not assume undocumented behavior; promote only validated patterns into the
   bootstrap design
@@ -40,10 +55,10 @@ Constraints:
 
 ## Next Step
 
-- extract the bootstrap contract from the archived LCD case
-- define acceptance criteria for a high-quality initial `working_context.md` and
-  extended context
-- only then decide which templates, prompts, or helper docs need changes
+- run one live `refactor` wizard trial through the new `docs/workflow/wizard/`
+  entrypoint
+- use that trial to verify that the entrypoint plus the backend `refactor`
+  wizard are sufficient in practice
 
 ## References
 
@@ -52,10 +67,13 @@ Constraints:
 - `docs/contexts/archive/lcd_stack_closed/working_context.md`
 - `docs/contexts/archive/lcd_stack_closed/lcd_redesign.md`
 - `docs/workflow/README.md`
+- `docs/workflow/wizard/README.md`
 - `docs/workflow/passes/README.md`
-- `docs/workflow/passes/new_feature/README.md`
+- `docs/workflow/passes/bootstrap_quality_checklist_candidate.md`
+- `docs/workflow/passes/bootstrap_contract_candidate.md`
 - `docs/workflow/passes/refactor/README.md`
-- `docs/workflow/passes/new_feature/prompts/bootstrap_context.md`
+- `docs/workflow/passes/refactor/refactor_wizard_mvp_candidate.md`
+- `docs/workflow/passes/refactor/sandbox/trial_matrix.md`
 - `docs/workflow/passes/refactor/prompts/bootstrap_context.md`
 
 ## Invocation Rule
