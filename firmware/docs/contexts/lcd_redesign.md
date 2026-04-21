@@ -36,11 +36,15 @@ Current situation:
 - minimal pure visible-cell helper contracts now exist in `fm_lcd_map.h`
 - the minimal pure visible-cell helpers are now implemented in `fm_lcd_map.c`
 - visible blink masking is now implemented in `fm_lcd.c`
-- the next useful progress is extending `apps/lcd_bringup/` with blink scenes
-  for hardware validation
+- `apps/lcd_bringup/` should remain the canonical static validation app
+- the next useful progress is creating `apps/lcd_blink_bringup/` for blink
+  validation with blocking timing outside `fm_lcd.*`
 
 Canonical human-validation target:
 - `apps/lcd_bringup/fm_lcd_bringup.c`
+
+Dedicated blink-validation target:
+- `apps/lcd_blink_bringup/`
 
 Validation evidence rule:
 - the canonical UART scene labels and expected visible behavior should live in
@@ -173,16 +177,15 @@ Relevant controller facts:
 ## Remaining Work
 
 Immediate remaining work:
-1. extend `apps/lcd_bringup/` with simple blink scenes for:
-   - top row
-   - bottom row
-   - alpha pair
-2. validate the visible blink behavior on hardware
+1. create `apps/lcd_blink_bringup/`
+2. validate top-row, bottom-row, and alpha blink behavior there with a simple
+   blocking delay that toggles logical blink phase
 3. keep timer ownership outside `fm_lcd.*`
 
 Likely next work after that:
-1. extend `apps/lcd_bringup/` only after the visible blink behavior is stable
-2. validate top-row, bottom-row, and alpha blink scenes on hardware
+1. validate that the dedicated blink bring-up app matches visible hardware
+   behavior
+2. decide whether a richer scheduler-driven blink harness is needed later
 3. build the higher-level editing module on top of the LCD blink primitives
 
 Current validated coverage:
@@ -216,6 +219,8 @@ Current blink contract direction:
   - top row
   - bottom row
   - alpha pair
+- keep validation of static LCD content separate from validation of temporal
+  blink behavior
 
 Current visible-cell helper direction:
 - keep the helpers generic and semantic, not blink-specific
@@ -271,6 +276,8 @@ Limitations intentionally implied by this model for V1:
   scope
 - a blink phase change is not visible until the caller reaches the next
   `FM_LCD_Flush()`
+- early blink bring-up may use a blocking delay in the app layer without
+  implying any timing ownership inside the LCD stack
 
 ---
 
