@@ -6,7 +6,7 @@ Stage:
 - implementation
 
 Active pass:
-- bringup-blink-scenes
+- blink-bringup-app
 
 Operational context:
 
@@ -14,6 +14,7 @@ Area:
 - `bsp/devices/lcd/`
 - `bsp/devices/lcd/pcf8553/`
 - `apps/lcd_bringup/`
+- `apps/lcd_blink_bringup/`
 
 Core structure:
 - the redesigned LCD stack is the active path
@@ -27,25 +28,28 @@ Core structure:
 Current focus:
 - the last completed step was implementing visible blink masking in `fm_lcd.c`
   using the new visible-cell mapping helpers
-- the next useful step is extending `apps/lcd_bringup/` with simple blink
-  scenes for top row, bottom row, and alpha
-- use bring-up next to validate the new visible blink behavior on hardware
+- `apps/lcd_bringup/` should remain the static base-validation app
+- the next useful step is creating `apps/lcd_blink_bringup/` as a dedicated
+  blink-validation app with simple blocking delays outside `fm_lcd.*`
 
 Constraints:
 - keep visible-cell helpers generic and semantic, not blink-specific
 - avoid further `fm_lcd_map.*` changes unless `fm_lcd.c` exposes a real gap in
   the helper contract
 - keep timer ownership outside `fm_lcd.*`
+- keep blink timing outside `fm_lcd.*` even in bring-up
+- allow a simple blocking delay inside `lcd_blink_bringup` for this validation
+  phase
+- keep `apps/lcd_bringup/` focused on static LCD validation
 - do not spend this iteration on old-path compatibility, broad cleanup, or the higher-level variable editing module
 
 ## Next Step
 
-- extend `apps/lcd_bringup/` with simple blink scenes that exercise:
-  - top-row visible cell blink
-  - bottom-row visible cell blink
-  - left and right alpha digit blink
-- keep the scenes human-readable from UART and visible LCD output
-- validate by canonical build first, then hardware observation
+- create `apps/lcd_blink_bringup/`
+- drive blink by toggling logical blink phase from the app with a simple
+  blocking delay
+- validate top-row, bottom-row, and alpha blink behavior there before any
+  richer timing integration
 
 ## References
 
