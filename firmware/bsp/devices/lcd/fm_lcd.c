@@ -22,6 +22,10 @@ typedef struct
     bool initialized;
     bool dirty;
     bool hw_synced;
+    bool blink_enabled;
+    fm_lcd_blink_phase_t blink_phase;
+    uint8_t blink_range_count;
+    fm_lcd_blink_range_t blink_ranges[FM_LCD_BLINK_RANGE_MAX];
     uint8_t desired_ram[FM_LCD_MAP_RAM_SIZE];
     uint8_t flushed_ram[FM_LCD_MAP_RAM_SIZE];
 } fm_lcd_context_t;
@@ -31,8 +35,10 @@ static fm_lcd_context_t g_fm_lcd_context;
 
 /* =========================== Private Prototypes ========================= */
 static uint8_t fm_lcd_get_row_columns_(fm_lcd_layout_row_t p_row);
+static uint8_t fm_lcd_get_text_field_columns_(fm_lcd_text_field_t p_field);
 static fm_lcd_status_t fm_lcd_from_map_status_(fm_lcd_map_status_t p_status);
 static fm_lcd_status_t fm_lcd_from_backend_status_(fm_pcf8553_status_t p_status);
+static fm_lcd_status_t fm_lcd_validate_blink_range_(const fm_lcd_blink_range_t *p_range);
 static void fm_lcd_refresh_dirty_flag_(void);
 static bool fm_lcd_find_dirty_range_(uint8_t *p_first, uint8_t *p_len);
 
@@ -45,6 +51,21 @@ static uint8_t fm_lcd_get_row_columns_(fm_lcd_layout_row_t p_row)
         return FM_LCD_LAYOUT_TOP_ROW_COLUMNS;
     case FM_LCD_LAYOUT_ROW_BOTTOM:
         return FM_LCD_LAYOUT_BOTTOM_ROW_COLUMNS;
+    default:
+        return 0U;
+    }
+}
+
+static uint8_t fm_lcd_get_text_field_columns_(fm_lcd_text_field_t p_field)
+{
+    switch (p_field)
+    {
+    case FM_LCD_TEXT_FIELD_TOP_ROW:
+        return FM_LCD_LAYOUT_TOP_ROW_COLUMNS;
+    case FM_LCD_TEXT_FIELD_BOTTOM_ROW:
+        return FM_LCD_LAYOUT_BOTTOM_ROW_COLUMNS;
+    case FM_LCD_TEXT_FIELD_ALPHA:
+        return FM_LCD_LAYOUT_ALPHA_DIGIT_COUNT;
     default:
         return 0U;
     }
@@ -82,6 +103,40 @@ static fm_lcd_status_t fm_lcd_from_backend_status_(fm_pcf8553_status_t p_status)
     default:
         return FM_LCD_EIO;
     }
+}
+
+static fm_lcd_status_t fm_lcd_validate_blink_range_(const fm_lcd_blink_range_t *p_range)
+{
+    uint8_t field_columns;
+
+    if (p_range == NULL)
+    {
+        return FM_LCD_EINVAL;
+    }
+
+    if (p_range->length == 0U)
+    {
+        return FM_LCD_EINVAL;
+    }
+
+    field_columns = fm_lcd_get_text_field_columns_(p_range->field);
+
+    if (field_columns == 0U)
+    {
+        return FM_LCD_ERANGE;
+    }
+
+    if (p_range->start >= field_columns)
+    {
+        return FM_LCD_ERANGE;
+    }
+
+    if ((uint16_t) p_range->start + (uint16_t) p_range->length > (uint16_t) field_columns)
+    {
+        return FM_LCD_ERANGE;
+    }
+
+    return FM_LCD_OK;
 }
 
 static void fm_lcd_refresh_dirty_flag_(void)
@@ -230,6 +285,100 @@ fm_lcd_status_t FM_LCD_ClearAlpha(void)
     }
 
     fm_lcd_refresh_dirty_flag_();
+
+    return FM_LCD_OK;
+}
+
+fm_lcd_status_t FM_LCD_BlinkClear(void)
+{
+    if (!g_fm_lcd_context.initialized)
+    {
+        return FM_LCD_ESTATE;
+    }
+
+    g_fm_lcd_context.blink_enabled = false;
+    g_fm_lcd_context.blink_phase = FM_LCD_BLINK_PHASE_ON;
+    g_fm_lcd_context.blink_range_count = 0U;
+    (void) memset(g_fm_lcd_context.blink_ranges, 0, sizeof(g_fm_lcd_context.blink_ranges));
+
+    return FM_LCD_OK;
+}
+
+fm_lcd_status_t FM_LCD_BlinkSetRanges(const fm_lcd_blink_range_t *p_ranges,
+                                      uint8_t p_range_count)
+{
+    fm_lcd_status_t status;
+    uint8_t index;
+
+    if (!g_fm_lcd_context.initialized)
+    {
+        return FM_LCD_ESTATE;
+    }
+
+    if ((p_ranges == NULL) || (p_range_count == 0U) ||
+        (p_range_count > FM_LCD_BLINK_RANGE_MAX))
+    {
+        return FM_LCD_EINVAL;
+    }
+
+    for (index = 0U; index < p_range_count; index++)
+    {
+        status = fm_lcd_validate_blink_range_(&p_ranges[index]);
+
+        if (status != FM_LCD_OK)
+        {
+            return status;
+        }
+    }
+
+    (void) memcpy(g_fm_lcd_context.blink_ranges,
+                  p_ranges,
+                  (size_t) p_range_count * sizeof(g_fm_lcd_context.blink_ranges[0]));
+
+    if (p_range_count < FM_LCD_BLINK_RANGE_MAX)
+    {
+        (void) memset(&g_fm_lcd_context.blink_ranges[p_range_count],
+                      0,
+                      (size_t) (FM_LCD_BLINK_RANGE_MAX - p_range_count) *
+                          sizeof(g_fm_lcd_context.blink_ranges[0]));
+    }
+
+    g_fm_lcd_context.blink_range_count = p_range_count;
+
+    return FM_LCD_OK;
+}
+
+fm_lcd_status_t FM_LCD_BlinkSetEnabled(bool p_enabled)
+{
+    if (!g_fm_lcd_context.initialized)
+    {
+        return FM_LCD_ESTATE;
+    }
+
+    if (p_enabled && (g_fm_lcd_context.blink_range_count == 0U))
+    {
+        return FM_LCD_ESTATE;
+    }
+
+    g_fm_lcd_context.blink_enabled = p_enabled;
+
+    return FM_LCD_OK;
+}
+
+fm_lcd_status_t FM_LCD_BlinkSetPhase(fm_lcd_blink_phase_t p_phase)
+{
+    if (!g_fm_lcd_context.initialized)
+    {
+        return FM_LCD_ESTATE;
+    }
+
+    if ((p_phase != FM_LCD_BLINK_PHASE_ON) &&
+        (p_phase != FM_LCD_BLINK_PHASE_OFF))
+    {
+        return FM_LCD_EINVAL;
+    }
+
+    g_fm_lcd_context.blink_phase = p_phase;
 
     return FM_LCD_OK;
 }

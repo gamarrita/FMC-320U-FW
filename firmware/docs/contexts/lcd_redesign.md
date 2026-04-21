@@ -11,6 +11,9 @@ It should preserve:
 - remaining work
 - the contract pieces still needed to continue safely
 
+For immediate execution, `WORKING_CONTEXT.md` is authoritative.
+This file is the extended technical basis, backlog, and redesign rationale.
+
 ---
 
 ## Current State
@@ -20,12 +23,14 @@ Current stage:
 
 Current situation:
 - the new LCD stack already exists
-- the canonical bring-up already passed on hardware for the validated scope
+- the canonical bring-up already passed on hardware for the validated segment scope
 - alpha support now exists in the public contract and in the new stack
-- the bring-up now exposes alpha validation scenes and a sequential alpha
-  character sweep
-- the next useful progress is to validate those alpha scenes on hardware
-  without destabilizing the validated numeric base
+- the validated segment path is now treated as closed unless future visual
+  evidence exposes a real defect
+- logical blink contracts now exist in the public LCD headers
+- a timer-neutral companion blink-policy module now exists outside `fm_lcd.*`
+- the next useful progress is implementing visible blink masking in `fm_lcd.c`
+  before any bring-up extension
 
 Validated hardware target:
 - `apps/lcd_bringup/`
@@ -66,6 +71,7 @@ Current expected interaction:
 - `bsp/devices/lcd/fm_lcd_layout.h`
 - `bsp/devices/lcd/fm_lcd_types.h`
 - `bsp/devices/lcd/fm_lcd.h`
+- `bsp/devices/lcd/fm_lcd_blink.h`
 - `bsp/devices/lcd/fm_lcd_map.h`
 - `bsp/devices/lcd/pcf8553/fm_pcf8553.h`
 
@@ -80,6 +86,9 @@ Current expected interaction:
 - `bsp/devices/lcd/fm_lcd.c`
   - first public stateful LCD V1 completed over `fm_lcd_map.*` and `fm_pcf8553.*`
   - alpha support now exposed through the public contract
+  - blink selection and phase state are now stored in the LCD core
+- `bsp/devices/lcd/fm_lcd_blink.c`
+  - timer-neutral blink state machine now exists for on/off phase sequencing
 - `apps/lcd_bringup/`
   - unified human-validation bring-up sequence completed
   - alpha scenes now include:
@@ -165,28 +174,26 @@ Relevant controller facts:
 ## Remaining Work
 
 Immediate remaining work:
-1. validate the new alpha scenes on hardware using LCD + UART evidence
-2. confirm left/right alpha full-on behavior and the sequential sweep of the
-   currently encoded character set
-3. decide whether any additional application-facing symbol is needed beyond the
-   current validation glyph `'#'`
-4. apply the smallest correction pass supported by that evidence
+1. implement visible blink masking in `fm_lcd.c`
+2. compose the visible LCD image from:
+   - stable desired content
+   - configured blink ranges
+   - current blink phase
+3. keep `fm_lcd_map.*` unchanged and keep timer ownership outside `fm_lcd.*`
 
 Likely next work after that:
-1. mapping correction only if alpha validation exposes issues in the currently
-   unvalidated area
-2. add a very small set of validated application-facing symbols if hardware
-   evidence justifies them
-3. blink or resume-policy work once alpha behavior is trusted
+1. extend `apps/lcd_bringup/` only after the visible blink behavior is stable
+2. validate top-row, bottom-row, and alpha blink scenes on hardware
+3. build the higher-level editing module on top of the LCD blink primitives
 
 Current validated coverage:
 - top numeric row
 - bottom numeric row
 - decimal points
 - standalone indicators
+- current supported alpha rendering behavior
 
 Explicitly not validated yet:
-- 14-segment alpha pair
 - logical blink behavior
 - richer resume or recovery policy
 
@@ -200,6 +207,15 @@ Current alpha string policy:
 - `'#'` is a validation glyph for bring-up use, not yet a recommended
   application symbol
 
+Current blink contract direction:
+- keep blink selection ownership inside `fm_lcd.*`
+- keep timer ownership outside `fm_lcd.*`
+- keep the higher-level variable editing flow outside the LCD stack
+- keep V1 blink limited to text cells:
+  - top row
+  - bottom row
+  - alpha pair
+
 ---
 
 ## Out Of Scope For Now
@@ -211,3 +227,4 @@ Do not let this refactor get blocked by:
 - broad cleanup outside the LCD redesign path
 - final comment polish everywhere
 - broad naming cleanup unrelated to the active validation-driven pass
+- implementing the higher-level variable editing module itself inside `fm_lcd.*`

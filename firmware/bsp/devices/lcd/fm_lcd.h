@@ -16,7 +16,7 @@
  * - rich alphanumeric formatting helpers
  * - integer formatting helpers
  * - hardware-resume and recovery policy details
- * - detailed blink configuration API
+ * - timer ownership or scheduler integration for blink timing
  */
 
 #ifndef FM_LCD_H_
@@ -53,6 +53,23 @@ typedef enum
     FM_LCD_ESTATE,
     FM_LCD_EIO
 } fm_lcd_status_t;
+
+typedef enum
+{
+    FM_LCD_TEXT_FIELD_TOP_ROW = 0,
+    FM_LCD_TEXT_FIELD_BOTTOM_ROW,
+    FM_LCD_TEXT_FIELD_ALPHA
+} fm_lcd_text_field_t;
+
+typedef struct
+{
+    fm_lcd_text_field_t field;
+    uint8_t start;
+    uint8_t length;
+} fm_lcd_blink_range_t;
+
+/* =========================== Public Macros ============================ */
+#define FM_LCD_BLINK_RANGE_MAX    4U
 
 /* =========================== Public API ================================ */
 /**
@@ -109,6 +126,80 @@ fm_lcd_status_t FM_LCD_ClearRow(fm_lcd_layout_row_t p_row);
  * @return FM_LCD_ESTATE when the module is not initialized.
  */
 fm_lcd_status_t FM_LCD_ClearAlpha(void);
+
+/**
+ * @brief Clear the full active logical blink selection.
+ *
+ * This removes every configured blink range, disables blink, and restores the
+ * stored blink phase to `FM_LCD_BLINK_PHASE_ON`.
+ *
+ * This function updates desired LCD behavior only. It does not perform display
+ * I/O.
+ *
+ * @return FM_LCD_OK on success.
+ * @return FM_LCD_ESTATE when the module is not initialized.
+ */
+fm_lcd_status_t FM_LCD_BlinkClear(void);
+
+/**
+ * @brief Replace the full active logical blink selection.
+ *
+ * Blink ranges describe visible character cells only:
+ * - top numeric row columns
+ * - bottom numeric row columns
+ * - alpha pair positions
+ *
+ * Overlapping ranges are allowed and behave as their visible union.
+ *
+ * This function updates desired LCD behavior only. It does not perform display
+ * I/O.
+ *
+ * @param[in] p_ranges Blink range array.
+ * @param[in] p_range_count Number of entries in `p_ranges`.
+ *
+ * @return FM_LCD_OK on success.
+ * @return FM_LCD_EINVAL when `p_ranges` is NULL, `p_range_count` is zero, or
+ *         `p_range_count` exceeds `FM_LCD_BLINK_RANGE_MAX`.
+ * @return FM_LCD_ERANGE when any range exceeds the visible LCD text domain.
+ * @return FM_LCD_ESTATE when the module is not initialized.
+ */
+fm_lcd_status_t FM_LCD_BlinkSetRanges(const fm_lcd_blink_range_t *p_ranges,
+                                      uint8_t p_range_count);
+
+/**
+ * @brief Enable or disable logical blink over the configured blink selection.
+ *
+ * When enabled, the current blink phase applies to the configured blink
+ * ranges. When disabled, the blink selection remains stored but has no visible
+ * effect until re-enabled.
+ *
+ * This function updates desired LCD behavior only. It does not perform display
+ * I/O.
+ *
+ * @param[in] p_enabled Enable state to apply.
+ *
+ * @return FM_LCD_OK on success.
+ * @return FM_LCD_ESTATE when the module is not initialized or when enabling is
+ *         requested without a configured blink selection.
+ */
+fm_lcd_status_t FM_LCD_BlinkSetEnabled(bool p_enabled);
+
+/**
+ * @brief Store the current logical blink phase.
+ *
+ * `FM_LCD_BLINK_PHASE_ON` means the selected text is shown normally.
+ * `FM_LCD_BLINK_PHASE_OFF` means the selected text is hidden.
+ *
+ * This function updates desired LCD behavior only. It does not perform display
+ * I/O.
+ *
+ * @param[in] p_phase Blink phase to store.
+ *
+ * @return FM_LCD_OK on success.
+ * @return FM_LCD_EINVAL when `p_phase` is invalid.
+ * @return FM_LCD_ESTATE when the module is not initialized.
+ */
+fm_lcd_status_t FM_LCD_BlinkSetPhase(fm_lcd_blink_phase_t p_phase);
 
 /**
  * @brief Write text into one numeric row.

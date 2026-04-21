@@ -90,6 +90,7 @@ set(FM_COMMON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/libs/fm_debug.c
     ${CMAKE_CURRENT_SOURCE_DIR}/bsp/fm_board.c
     ${CMAKE_CURRENT_SOURCE_DIR}/bsp/devices/lcd/fm_lcd.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsp/devices/lcd/fm_lcd_blink.c
     ${CMAKE_CURRENT_SOURCE_DIR}/bsp/devices/lcd/fm_lcd_map.c
     ${CMAKE_CURRENT_SOURCE_DIR}/bsp/devices/lcd/pcf8553/fm_pcf8553.c
     ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_dwt.c
