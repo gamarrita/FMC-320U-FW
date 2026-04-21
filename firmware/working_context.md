@@ -3,10 +3,10 @@
 ## Current Work
 
 Stage:
-- implementation
+- closure
 
 Active pass:
-- blink-bringup-app
+- stack-closure-docs
 
 Operational context:
 
@@ -26,30 +26,29 @@ Core structure:
   - `docs/contexts/lcd_redesign.md`
 
 Current focus:
-- the last completed step was implementing visible blink masking in `fm_lcd.c`
-  using the new visible-cell mapping helpers
-- `apps/lcd_bringup/` should remain the static base-validation app
-- the next useful step is creating `apps/lcd_blink_bringup/` as a dedicated
-  blink-validation app with simple blocking delays outside `fm_lcd.*`
+- the LCD stack is now considered complete for its intended scope
+- `apps/lcd_bringup/` remains the static base-validation app
+- `apps/lcd_blink_bringup/` remains the temporal validation app for logical
+  blink behavior
+- the current task is closing the documentation around the finished stack state
 
 Constraints:
 - keep visible-cell helpers generic and semantic, not blink-specific
-- avoid further `fm_lcd_map.*` changes unless `fm_lcd.c` exposes a real gap in
-  the helper contract
+- do not reopen the base LCD stack unless a real visual defect or a new
+  product requirement appears
 - keep timer ownership outside `fm_lcd.*`
 - keep blink timing outside `fm_lcd.*` even in bring-up
 - allow a simple blocking delay inside `lcd_blink_bringup` for this validation
   phase
 - keep `apps/lcd_bringup/` focused on static LCD validation
+- prefer one case-insensitive visible result per 7-seg letter intent, not
+  separate uppercase/lowercase runtime behavior
 - do not spend this iteration on old-path compatibility, broad cleanup, or the higher-level variable editing module
 
 ## Next Step
 
-- create `apps/lcd_blink_bringup/`
-- drive blink by toggling logical blink phase from the app with a simple
-  blocking delay
-- validate top-row, bottom-row, and alpha blink behavior there before any
-  richer timing integration
+- keep the stack closed unless new evidence requires a targeted correction
+- move future work to higher-level modules that consume the LCD primitives
 
 ## References
 

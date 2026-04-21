@@ -23,7 +23,7 @@ implementation rationale even when the public surface evolves incrementally.
 ## Current State
 
 Current stage:
-- implementation
+- closure
 
 Current situation:
 - the new LCD stack already exists
@@ -37,8 +37,18 @@ Current situation:
 - the minimal pure visible-cell helpers are now implemented in `fm_lcd_map.c`
 - visible blink masking is now implemented in `fm_lcd.c`
 - `apps/lcd_bringup/` should remain the canonical static validation app
-- the next useful progress is creating `apps/lcd_blink_bringup/` for blink
-  validation with blocking timing outside `fm_lcd.*`
+- `apps/lcd_blink_bringup/` now exists as a dedicated blink-validation app
+  with blocking timing outside `fm_lcd.*`
+- hardware feedback already confirms that visible blink works in the dedicated
+  blink app, while also exposing unsupported letters in the current 7-seg
+  numeric-row font
+- the explicit case-insensitive 7-seg letter policy is now implemented in
+  `fm_lcd_map.c`
+- hardware validation now confirms that the updated 7-seg numeric-row glyphs
+  also work visually in the dedicated blink app
+- the LCD stack is now considered complete for its intended scope
+- further work should move to higher-level modules unless new evidence requires
+  a targeted LCD-stack correction
 
 Canonical human-validation target:
 - `apps/lcd_bringup/fm_lcd_bringup.c`
@@ -80,6 +90,8 @@ Current expected interaction:
   - pure visible-cell clearing helpers now exist for:
     - one numeric row cell
     - one alpha digit
+  - the numeric-row 7-seg font now uses an explicit case-insensitive
+    `A-Z/a-z -> glyph or '-'` policy
 - `bsp/devices/lcd/fm_lcd.c`
   - first public stateful LCD V1 completed over `fm_lcd_map.*` and `fm_pcf8553.*`
   - alpha support now exposed through the public contract
@@ -98,6 +110,16 @@ Current expected interaction:
     - left alpha full-on
     - right alpha full-on
     - sequential sweep of the currently encoded alpha character set
+- `apps/lcd_blink_bringup/`
+  - dedicated blink-validation app now exists
+  - current scope is one "hello world" scene with:
+    - top row: `HELLO123`
+    - bottom row: `WORLD42`
+    - alpha: `HI`
+  - logical blink phase is toggled from the app with a blocking delay
+  - hardware validation now confirms:
+    - visible blink behavior works
+    - the updated 7-seg numeric-row glyphs work visually on glass
 
 ### Validation already completed
 - `apps/lcd_bringup/`
@@ -106,6 +128,10 @@ Current expected interaction:
     - bottom numeric row
     - decimal points
     - standalone indicators
+- `apps/lcd_blink_bringup/`
+  - hardware validation completed for:
+    - logical blink behavior on the redesigned stack
+    - updated 7-seg numeric-row glyph visibility
 
 ### Structural decisions already taken
 - the redesign is not compatibility-first
@@ -177,16 +203,13 @@ Relevant controller facts:
 ## Remaining Work
 
 Immediate remaining work:
-1. create `apps/lcd_blink_bringup/`
-2. validate top-row, bottom-row, and alpha blink behavior there with a simple
-   blocking delay that toggles logical blink phase
-3. keep timer ownership outside `fm_lcd.*`
+1. keep the LCD stack closed unless new evidence requires a targeted correction
+2. keep `apps/lcd_blink_bringup/` available as the temporal validation app for
+   logical blink behavior
 
 Likely next work after that:
-1. validate that the dedicated blink bring-up app matches visible hardware
-   behavior
+1. build the higher-level editing module on top of the LCD blink primitives
 2. decide whether a richer scheduler-driven blink harness is needed later
-3. build the higher-level editing module on top of the LCD blink primitives
 
 Current validated coverage:
 - top numeric row
@@ -196,7 +219,6 @@ Current validated coverage:
 - current supported alpha rendering behavior
 
 Explicitly not validated yet:
-- logical blink behavior
 - richer resume or recovery policy
 
 Current alpha string policy:
@@ -208,6 +230,15 @@ Current alpha string policy:
   string contract
 - `'#'` is a validation glyph for bring-up use, not yet a recommended
   application symbol
+
+Current numeric-row 7-seg policy direction:
+- define support with an explicit table, not ad hoc heuristics
+- uppercase and lowercase inputs should resolve to the same visible result for a
+  given alphabetic intent when a 7-seg glyph is accepted
+- if neither an uppercase-style nor lowercase-style glyph is accepted for a
+  letter, render `'-'`
+- non-printable or non-supported text input for numeric rows should render `'-'`
+- this policy applies to the numeric 7-seg rows, not to the 14-seg alpha pair
 
 Current blink contract direction:
 - keep blink selection ownership inside `fm_lcd.*`
@@ -244,19 +275,12 @@ The model should be understood this way:
 - `flushed_ram` should represent the last visible image actually written to the
   controller, not just the stable desired content
 
-Current implementation fact before visible blink masking:
-- `FM_LCD_Flush()` still writes `desired_ram` directly to hardware
-- dirty tracking still compares `desired_ram` against `flushed_ram`
-- this is sufficient for the already validated non-blink path, but it is not
-  yet the final intended model for logical blink
-
-Intended behavior once visible blink masking is implemented:
+Current implementation behavior:
 - text-writing APIs update `desired_ram`, not hardware
 - blink-selection APIs update logical blink state, not base content
-- phase changes should affect only the composed visible image
-- `FM_LCD_Flush()` should write the composed visible image, not raw
-  `desired_ram`, when blink affects visibility
-- dirty tracking should be driven by the visible composed image versus the last
+- phase changes affect only the composed visible image
+- `FM_LCD_Flush()` writes the composed visible image, not raw `desired_ram`
+- dirty tracking is driven by the visible composed image versus the last
   flushed visible image
 
 Capabilities this model is meant to provide:

@@ -245,6 +245,7 @@ static bool fm_lcd_map_get_numeric_addr_(fm_lcd_layout_row_t p_row,
                                          fm_lcd_map_segment_t p_segment,
                                          uint8_t *p_reg,
                                          uint8_t *p_bit);
+static char fm_lcd_map_get_canonical_numeric_glyph_(char p_char);
 static uint8_t fm_lcd_map_encode_char_(char p_char);
 static void fm_lcd_map_set_bit_(uint8_t *p_ram, uint8_t p_reg, uint8_t p_bit, bool p_on);
 static void fm_lcd_map_write_alpha_pattern_(uint8_t *p_ram,
@@ -507,8 +508,105 @@ static bool fm_lcd_map_get_numeric_addr_(fm_lcd_layout_row_t p_row,
     return true;
 }
 
+static char fm_lcd_map_get_canonical_numeric_glyph_(char p_char)
+{
+    if (((p_char >= '0') && (p_char <= '9')) ||
+        (p_char == ' ') ||
+        (p_char == '-') ||
+        (p_char == '_'))
+    {
+        return p_char;
+    }
+
+    switch (p_char)
+    {
+    case 'A':
+    case 'a':
+        return 'A';
+    case 'B':
+    case 'b':
+        return 'b';
+    case 'C':
+    case 'c':
+        return 'C';
+    case 'D':
+    case 'd':
+        return 'd';
+    case 'E':
+    case 'e':
+        return 'E';
+    case 'F':
+    case 'f':
+        return 'F';
+    case 'G':
+    case 'g':
+        return '-';
+    case 'H':
+    case 'h':
+        return 'H';
+    case 'I':
+    case 'i':
+        return 'I';
+    case 'J':
+    case 'j':
+        return 'J';
+    case 'K':
+    case 'k':
+        return '-';
+    case 'L':
+    case 'l':
+        return 'L';
+    case 'M':
+    case 'm':
+        return '-';
+    case 'N':
+    case 'n':
+        return 'n';
+    case 'O':
+    case 'o':
+        return 'O';
+    case 'P':
+    case 'p':
+        return 'P';
+    case 'Q':
+    case 'q':
+        return 'q';
+    case 'R':
+    case 'r':
+        return 'r';
+    case 'S':
+    case 's':
+        return 'S';
+    case 'T':
+    case 't':
+        return 't';
+    case 'U':
+    case 'u':
+        return 'U';
+    case 'V':
+    case 'v':
+        return 'u';
+    case 'W':
+    case 'w':
+        return '-';
+    case 'X':
+    case 'x':
+        return '-';
+    case 'Y':
+    case 'y':
+        return 'y';
+    case 'Z':
+    case 'z':
+        return '-';
+    default:
+        return '-';
+    }
+}
+
 static uint8_t fm_lcd_map_encode_char_(char p_char)
 {
+    p_char = fm_lcd_map_get_canonical_numeric_glyph_(p_char);
+
     switch (p_char)
     {
     case ' ':
@@ -553,43 +651,74 @@ static uint8_t fm_lcd_map_encode_char_(char p_char)
                FM_LCD_MAP_SEG_E_MASK | FM_LCD_MAP_SEG_F_MASK |
                FM_LCD_MAP_SEG_G_MASK;
     case 'A':
-    case 'a':
         return FM_LCD_MAP_SEG_B_MASK | FM_LCD_MAP_SEG_C_MASK |
                FM_LCD_MAP_SEG_D_MASK | FM_LCD_MAP_SEG_E_MASK |
                FM_LCD_MAP_SEG_F_MASK | FM_LCD_MAP_SEG_G_MASK;
+    case 'b':
+        return FM_LCD_MAP_SEG_A_MASK | FM_LCD_MAP_SEG_B_MASK |
+               FM_LCD_MAP_SEG_C_MASK | FM_LCD_MAP_SEG_D_MASK |
+               FM_LCD_MAP_SEG_E_MASK;
+    case 'C':
+        return FM_LCD_MAP_SEG_A_MASK | FM_LCD_MAP_SEG_B_MASK |
+               FM_LCD_MAP_SEG_E_MASK | FM_LCD_MAP_SEG_G_MASK;
+    case 'd':
+        return FM_LCD_MAP_SEG_A_MASK | FM_LCD_MAP_SEG_B_MASK |
+               FM_LCD_MAP_SEG_C_MASK | FM_LCD_MAP_SEG_D_MASK |
+               FM_LCD_MAP_SEG_F_MASK;
     case 'E':
-    case 'e':
         return FM_LCD_MAP_SEG_A_MASK | FM_LCD_MAP_SEG_B_MASK |
                FM_LCD_MAP_SEG_D_MASK | FM_LCD_MAP_SEG_E_MASK |
                FM_LCD_MAP_SEG_G_MASK;
+    case 'F':
+        return FM_LCD_MAP_SEG_B_MASK | FM_LCD_MAP_SEG_D_MASK |
+               FM_LCD_MAP_SEG_E_MASK | FM_LCD_MAP_SEG_G_MASK;
+    case 'H':
+        return FM_LCD_MAP_SEG_B_MASK | FM_LCD_MAP_SEG_C_MASK |
+               FM_LCD_MAP_SEG_D_MASK | FM_LCD_MAP_SEG_E_MASK |
+               FM_LCD_MAP_SEG_F_MASK;
+    case 'I':
+        return FM_LCD_MAP_SEG_C_MASK | FM_LCD_MAP_SEG_F_MASK;
+    case 'J':
+        return FM_LCD_MAP_SEG_A_MASK | FM_LCD_MAP_SEG_B_MASK |
+               FM_LCD_MAP_SEG_C_MASK | FM_LCD_MAP_SEG_F_MASK;
     case 'L':
-    case 'l':
         return FM_LCD_MAP_SEG_A_MASK | FM_LCD_MAP_SEG_B_MASK |
                FM_LCD_MAP_SEG_E_MASK;
+    case 'n':
+        return FM_LCD_MAP_SEG_B_MASK | FM_LCD_MAP_SEG_C_MASK |
+               FM_LCD_MAP_SEG_D_MASK;
     case 'O':
-    case 'o':
         return FM_LCD_MAP_SEG_A_MASK | FM_LCD_MAP_SEG_B_MASK |
                FM_LCD_MAP_SEG_C_MASK | FM_LCD_MAP_SEG_E_MASK |
                FM_LCD_MAP_SEG_F_MASK | FM_LCD_MAP_SEG_G_MASK;
     case 'P':
-    case 'p':
         return FM_LCD_MAP_SEG_B_MASK | FM_LCD_MAP_SEG_D_MASK |
                FM_LCD_MAP_SEG_E_MASK | FM_LCD_MAP_SEG_F_MASK |
                FM_LCD_MAP_SEG_G_MASK;
+    case 'q':
+        return FM_LCD_MAP_SEG_C_MASK | FM_LCD_MAP_SEG_D_MASK |
+               FM_LCD_MAP_SEG_E_MASK | FM_LCD_MAP_SEG_F_MASK |
+               FM_LCD_MAP_SEG_G_MASK;
+    case 'r':
+        return FM_LCD_MAP_SEG_B_MASK | FM_LCD_MAP_SEG_D_MASK;
     case 'S':
-    case 's':
         return FM_LCD_MAP_SEG_A_MASK | FM_LCD_MAP_SEG_C_MASK |
                FM_LCD_MAP_SEG_D_MASK | FM_LCD_MAP_SEG_E_MASK |
                FM_LCD_MAP_SEG_G_MASK;
+    case 't':
+        return FM_LCD_MAP_SEG_A_MASK | FM_LCD_MAP_SEG_B_MASK |
+               FM_LCD_MAP_SEG_D_MASK | FM_LCD_MAP_SEG_E_MASK;
     case 'U':
-    case 'u':
         return FM_LCD_MAP_SEG_A_MASK | FM_LCD_MAP_SEG_B_MASK |
                FM_LCD_MAP_SEG_C_MASK | FM_LCD_MAP_SEG_E_MASK |
                FM_LCD_MAP_SEG_F_MASK;
+    case 'y':
+        return FM_LCD_MAP_SEG_A_MASK | FM_LCD_MAP_SEG_C_MASK |
+               FM_LCD_MAP_SEG_D_MASK | FM_LCD_MAP_SEG_F_MASK;
     case '_':
         return FM_LCD_MAP_SEG_A_MASK;
     default:
-        return 0U;
+        return FM_LCD_MAP_SEG_D_MASK;
     }
 }
 

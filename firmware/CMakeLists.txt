@@ -40,6 +40,7 @@ set(FM_AVAILABLE_APPS
     template
     panic_demo
     lcd_bringup
+    lcd_blink_bringup
 )
 
 # Default app defined in this file.
