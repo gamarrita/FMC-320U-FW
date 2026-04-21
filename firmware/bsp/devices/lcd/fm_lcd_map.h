@@ -9,6 +9,7 @@
  * Current module intent:
  * - keep the glass mapping pure and explicit
  * - keep encoding/font rules local to the mapping layer
+ * - expose small semantic cell operations when they improve mapping clarity
  * - avoid hardware I/O and runtime ownership concerns
  * - stay aligned with the semantic vocabulary defined in `fm_lcd_layout.h`
  *
@@ -99,6 +100,50 @@ fm_lcd_map_status_t FM_LCD_MAP_ClearRow(uint8_t *p_ram,
  */
 fm_lcd_map_status_t FM_LCD_MAP_ClearAlpha(uint8_t *p_ram,
                                           uint8_t p_ram_size);
+
+/**
+ * @brief Clear one visible numeric cell in the provided buffer.
+ *
+ * This function clears only the segments that belong to the selected visible
+ * numeric cell. Decimal points remain separate semantic row elements and are
+ * not modified by this helper.
+ *
+ * Column indexing follows the visible left-to-right row order defined by
+ * `fm_lcd_layout.h`.
+ *
+ * @param[in,out] p_ram Target RAM buffer.
+ * @param[in]     p_ram_size Size in bytes of `p_ram`.
+ * @param[in]     p_row Target numeric row.
+ * @param[in]     p_col Zero-based visible column index in the selected row.
+ *
+ * @return FM_LCD_MAP_OK on success.
+ * @return FM_LCD_MAP_EINVAL when `p_ram` is NULL.
+ * @return FM_LCD_MAP_ERANGE when the buffer is too small, `p_row` is invalid,
+ *         or `p_col` is outside the visible row domain.
+ */
+fm_lcd_map_status_t FM_LCD_MAP_ClearRowCell(uint8_t *p_ram,
+                                            uint8_t p_ram_size,
+                                            fm_lcd_layout_row_t p_row,
+                                            uint8_t p_col);
+
+/**
+ * @brief Clear one visible alphanumeric digit in the provided buffer.
+ *
+ * This function clears only the selected visible alpha digit in the semantic
+ * alpha pair. The other alpha digit is left unchanged.
+ *
+ * @param[in,out] p_ram Target RAM buffer.
+ * @param[in]     p_ram_size Size in bytes of `p_ram`.
+ * @param[in]     p_digit Target visible alpha digit.
+ *
+ * @return FM_LCD_MAP_OK on success.
+ * @return FM_LCD_MAP_EINVAL when `p_ram` is NULL.
+ * @return FM_LCD_MAP_ERANGE when the buffer is too small or `p_digit` is
+ *         invalid.
+ */
+fm_lcd_map_status_t FM_LCD_MAP_ClearAlphaDigit(uint8_t *p_ram,
+                                               uint8_t p_ram_size,
+                                               fm_lcd_layout_alpha_digit_t p_digit);
 
 /**
  * @brief Write one text string into one numeric row of the provided buffer.

@@ -13,13 +13,17 @@ It should preserve:
 
 For immediate execution, `WORKING_CONTEXT.md` is authoritative.
 This file is the extended technical basis, backlog, and redesign rationale.
+The operative public contract still lives in the active LCD headers.
+If this document drifts from `bsp/devices/lcd/*.h`, the headers win.
+This file should preserve the initial contract intent, composition model, and
+implementation rationale even when the public surface evolves incrementally.
 
 ---
 
 ## Current State
 
 Current stage:
-- validation
+- implementation
 
 Current situation:
 - the new LCD stack already exists
@@ -29,34 +33,20 @@ Current situation:
   evidence exposes a real defect
 - logical blink contracts now exist in the public LCD headers
 - a timer-neutral companion blink-policy module now exists outside `fm_lcd.*`
-- the next useful progress is implementing visible blink masking in `fm_lcd.c`
-  before any bring-up extension
+- minimal pure visible-cell helper contracts now exist in `fm_lcd_map.h`
+- the minimal pure visible-cell helpers are now implemented in `fm_lcd_map.c`
+- visible blink masking is now implemented in `fm_lcd.c`
+- the next useful progress is extending `apps/lcd_bringup/` with blink scenes
+  for hardware validation
 
-Validated hardware target:
-- `apps/lcd_bringup/`
+Canonical human-validation target:
+- `apps/lcd_bringup/fm_lcd_bringup.c`
 
-Validated UART milestones:
-- `LCD_BRINGUP:START`
-- `LCD_BRINGUP:LCD_INIT_OK`
-- `LCD_BRINGUP:LOOP_RESTART`
-- `LCD_BRINGUP:SCENE_CLEAR`
-- `LCD_BRINGUP:SCENE_ALL_DIGITS_ON TOP=88888888 BOT=8888888`
-- `LCD_BRINGUP:SCENE_ALL_DECIMALS_ON`
-- `LCD_BRINGUP:SCENE_DIGIT_PATTERN TOP=12345678 BOT=1234567`
-- `LCD_BRINGUP:SCENE_BASIC_ICONS POINT+BATT`
-- `LCD_BRINGUP:SCENE_UPPER_LEGENDS`
-- `LCD_BRINGUP:SCENE_LOWER_RIGHT_LEGENDS`
-- `LCD_BRINGUP:SCENE_ALL_INDICATORS`
-- `LCD_BRINGUP:SCENE_NOMINAL_USE TOP=12.34 BOT=56.7`
-- `LCD_BRINGUP:IDLE`
-
-Observed validation result:
-- the expected UART sequence matched the visible LCD behavior
-- no correction pass is currently needed for:
-  - top numeric row
-  - bottom numeric row
-  - decimal points
-  - standalone indicators
+Validation evidence rule:
+- the canonical UART scene labels and expected visible behavior should live in
+  the bring-up app, not be duplicated here
+- this document should only track which behavior is already considered
+  validated for the redesign path
 
 Current expected interaction:
 - the agent keeps the next increment small and coherent
@@ -83,10 +73,19 @@ Current expected interaction:
   - lowercase alpha inputs are now explicitly accepted
   - `'#'` is currently encoded as a validation glyph that turns on all 14 alpha
     segments
+  - pure visible-cell clearing helpers now exist for:
+    - one numeric row cell
+    - one alpha digit
 - `bsp/devices/lcd/fm_lcd.c`
   - first public stateful LCD V1 completed over `fm_lcd_map.*` and `fm_pcf8553.*`
   - alpha support now exposed through the public contract
   - blink selection and phase state are now stored in the LCD core
+  - visible LCD composition now uses:
+    - stable desired RAM
+    - composed visible RAM
+    - last flushed visible RAM
+  - blink `OFF` phase now hides selected visible text cells through the
+    mapping helpers before `FM_LCD_Flush()`
 - `bsp/devices/lcd/fm_lcd_blink.c`
   - timer-neutral blink state machine now exists for on/off phase sequencing
 - `apps/lcd_bringup/`
@@ -174,12 +173,12 @@ Relevant controller facts:
 ## Remaining Work
 
 Immediate remaining work:
-1. implement visible blink masking in `fm_lcd.c`
-2. compose the visible LCD image from:
-   - stable desired content
-   - configured blink ranges
-   - current blink phase
-3. keep `fm_lcd_map.*` unchanged and keep timer ownership outside `fm_lcd.*`
+1. extend `apps/lcd_bringup/` with simple blink scenes for:
+   - top row
+   - bottom row
+   - alpha pair
+2. validate the visible blink behavior on hardware
+3. keep timer ownership outside `fm_lcd.*`
 
 Likely next work after that:
 1. extend `apps/lcd_bringup/` only after the visible blink behavior is stable
@@ -211,10 +210,67 @@ Current blink contract direction:
 - keep blink selection ownership inside `fm_lcd.*`
 - keep timer ownership outside `fm_lcd.*`
 - keep the higher-level variable editing flow outside the LCD stack
+- allow minimal pure visible-cell helpers in `fm_lcd_map.*` when they improve
+  semantic clarity for visible-cell operations
 - keep V1 blink limited to text cells:
   - top row
   - bottom row
   - alpha pair
+
+Current visible-cell helper direction:
+- keep the helpers generic and semantic, not blink-specific
+- allow clearing one visible numeric cell without touching its decimal point
+- allow clearing one visible alpha digit without touching the other one
+
+### Blink composition model
+
+The intended visible blink behavior is based on three different notions of LCD
+state:
+- stable desired content
+- current logical blink state
+- last flushed visible image
+
+The model should be understood this way:
+- `desired_ram` is the stable LCD content requested by the application
+- blink selection, enabled state, and current phase are separate logical state
+  owned by `fm_lcd.*`
+- the visible LCD image should be composed from `desired_ram` plus the current
+  blink state before hardware I/O happens
+- `flushed_ram` should represent the last visible image actually written to the
+  controller, not just the stable desired content
+
+Current implementation fact before visible blink masking:
+- `FM_LCD_Flush()` still writes `desired_ram` directly to hardware
+- dirty tracking still compares `desired_ram` against `flushed_ram`
+- this is sufficient for the already validated non-blink path, but it is not
+  yet the final intended model for logical blink
+
+Intended behavior once visible blink masking is implemented:
+- text-writing APIs update `desired_ram`, not hardware
+- blink-selection APIs update logical blink state, not base content
+- phase changes should affect only the composed visible image
+- `FM_LCD_Flush()` should write the composed visible image, not raw
+  `desired_ram`, when blink affects visibility
+- dirty tracking should be driven by the visible composed image versus the last
+  flushed visible image
+
+Capabilities this model is meant to provide:
+- blink can hide and restore text without destroying the underlying content
+- stopping blink or forcing phase `ON` should reveal the original desired text
+  without requiring the caller to rewrite it
+- multiple configured ranges behave as one visible union under the same global
+  blink program
+- the same logical blink selection can be driven by any external timing source
+  because timer ownership stays outside `fm_lcd.*`
+
+Limitations intentionally implied by this model for V1:
+- blink is a logical show/hide effect, not hardware-defined blink semantics
+- no timer primitive is owned by `fm_lcd.*`
+- no independent simultaneous blink programs are planned in V1
+- standalone indicators and decimal points are outside the current V1 blink
+  scope
+- a blink phase change is not visible until the caller reaches the next
+  `FM_LCD_Flush()`
 
 ---
 

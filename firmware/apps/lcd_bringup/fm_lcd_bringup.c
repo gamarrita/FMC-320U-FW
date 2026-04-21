@@ -16,6 +16,11 @@
  * - compare it against the visible LCD scene
  * - report any missing, mirrored, shifted, or cross-coupled segments
  *
+ * This file is the canonical place for LCD bring-up validation evidence:
+ * - UART scene labels for human comparison
+ * - expected visible LCD behavior per scene
+ * - any future scene additions that extend human validation coverage
+ *
  * What the human should see in each scene:
  * - SCENE_CLEAR:
  *   full display off, no ghost segments

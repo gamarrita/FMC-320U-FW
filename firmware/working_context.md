@@ -3,10 +3,10 @@
 ## Current Work
 
 Stage:
-- validation
+- implementation
 
 Active pass:
-- contracts
+- bringup-blink-scenes
 
 Operational context:
 
@@ -25,24 +25,31 @@ Core structure:
   - `docs/contexts/lcd_redesign.md`
 
 Current focus:
-- the last completed step was implementing the public logical-blink contracts
-- the next useful step is composing visible blink masking inside `fm_lcd.c`
-- keep bring-up untouched until the visible blink behavior exists
+- the last completed step was implementing visible blink masking in `fm_lcd.c`
+  using the new visible-cell mapping helpers
+- the next useful step is extending `apps/lcd_bringup/` with simple blink
+  scenes for top row, bottom row, and alpha
+- use bring-up next to validate the new visible blink behavior on hardware
 
 Constraints:
-- keep `fm_lcd_map.*` unchanged during the next blink step
+- keep visible-cell helpers generic and semantic, not blink-specific
+- avoid further `fm_lcd_map.*` changes unless `fm_lcd.c` exposes a real gap in
+  the helper contract
 - keep timer ownership outside `fm_lcd.*`
-- do not edit bring-up until visible blink behavior exists in the LCD core
 - do not spend this iteration on old-path compatibility, broad cleanup, or the higher-level variable editing module
 
 ## Next Step
 
-- implement visible blink masking in `bsp/devices/lcd/fm_lcd.c`
-- apply the stored blink ranges and current blink phase over the stable desired LCD content before `FM_LCD_Flush()`
-- validate by build first, then extend bring-up only after the masking behavior is stable
+- extend `apps/lcd_bringup/` with simple blink scenes that exercise:
+  - top-row visible cell blink
+  - bottom-row visible cell blink
+  - left and right alpha digit blink
+- keep the scenes human-readable from UART and visible LCD output
+- validate by canonical build first, then hardware observation
 
 ## References
 
+- `docs/contexts/lcd_redesign.md`
 - `STYLE.md`
 
 ## Invocation Rule

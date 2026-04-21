@@ -749,6 +749,56 @@ fm_lcd_map_status_t FM_LCD_MAP_ClearAlpha(uint8_t *p_ram,
     return FM_LCD_MAP_OK;
 }
 
+fm_lcd_map_status_t FM_LCD_MAP_ClearRowCell(uint8_t *p_ram,
+                                            uint8_t p_ram_size,
+                                            fm_lcd_layout_row_t p_row,
+                                            uint8_t p_col)
+{
+    fm_lcd_map_status_t status;
+    uint8_t row_columns;
+
+    status = fm_lcd_map_validate_buffer_(p_ram, p_ram_size);
+
+    if (status != FM_LCD_MAP_OK)
+    {
+        return status;
+    }
+
+    row_columns = fm_lcd_map_get_row_columns_(p_row);
+
+    if ((row_columns == 0U) || (p_col >= row_columns))
+    {
+        return FM_LCD_MAP_ERANGE;
+    }
+
+    fm_lcd_map_write_pattern_(p_ram, p_row, p_col, 0U);
+
+    return FM_LCD_MAP_OK;
+}
+
+fm_lcd_map_status_t FM_LCD_MAP_ClearAlphaDigit(uint8_t *p_ram,
+                                               uint8_t p_ram_size,
+                                               fm_lcd_layout_alpha_digit_t p_digit)
+{
+    fm_lcd_map_status_t status;
+
+    status = fm_lcd_map_validate_buffer_(p_ram, p_ram_size);
+
+    if (status != FM_LCD_MAP_OK)
+    {
+        return status;
+    }
+
+    if (fm_lcd_map_get_alpha_segments_(p_digit) == NULL)
+    {
+        return FM_LCD_MAP_ERANGE;
+    }
+
+    fm_lcd_map_write_alpha_pattern_(p_ram, p_digit, 0U);
+
+    return FM_LCD_MAP_OK;
+}
+
 fm_lcd_map_status_t FM_LCD_MAP_WriteText(uint8_t *p_ram,
                                          uint8_t p_ram_size,
                                          fm_lcd_layout_row_t p_row,

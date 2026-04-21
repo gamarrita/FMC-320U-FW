@@ -274,8 +274,22 @@ fm_lcd_status_t FM_LCD_SetIndicator(fm_lcd_layout_indicator_t p_indicator,
 /**
  * @brief Flush the desired LCD state to hardware if needed.
  *
- * The implementation is expected to compare the currently visible state
- * against the last successfully flushed state and avoid unnecessary writes.
+ * The implementation is expected to compare the currently visible LCD result
+ * against the last successfully flushed visible LCD image and avoid
+ * unnecessary writes.
+ *
+ * With no logical blink effect active, the visible LCD result may match the
+ * stable desired content directly.
+ *
+ * When logical blink affects visibility, this operation is expected to flush
+ * the composed visible image derived from:
+ * - stable desired LCD content
+ * - configured logical blink selection
+ * - current logical blink phase
+ *
+ * This preserves the rule that write APIs modify desired state, while
+ * `FM_LCD_Flush()` remains the explicit point that commits the current visible
+ * LCD result to hardware.
  *
  * @return FM_LCD_OK on success.
  * @return FM_LCD_ESTATE when the module is not initialized.
@@ -284,9 +298,19 @@ fm_lcd_status_t FM_LCD_SetIndicator(fm_lcd_layout_indicator_t p_indicator,
 fm_lcd_status_t FM_LCD_Flush(void);
 
 /**
- * @brief Report whether the desired visible LCD state is pending flush.
+ * @brief Report whether a visible LCD result is pending flush.
  *
- * @return true when the visible LCD result differs from the last flushed state.
+ * This reports whether the current visible LCD result differs from the last
+ * successfully flushed visible LCD image.
+ *
+ * When logical blink is inactive, this may reduce to a comparison of stable
+ * desired content versus the last flushed image.
+ *
+ * When logical blink is active, a phase change may make the LCD dirty even if
+ * the stable desired content did not change.
+ *
+ * @return true when the visible LCD result differs from the last flushed
+ *         visible image.
  * @return false otherwise.
  */
 bool FM_LCD_IsDirty(void);
