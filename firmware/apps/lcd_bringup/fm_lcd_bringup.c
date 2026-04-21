@@ -9,6 +9,7 @@
  * - bottom numeric row
  * - decimal points
  * - standalone indicators
+ * - alphanumeric pair
  *
  * The human validation contract for this file is:
  * - read the UART scene label
@@ -34,10 +35,13 @@
  *   every standalone indicator on
  * - SCENE_NOMINAL_USE:
  *   top row "12.34", bottom row "56.7", BATTERY and POWER on
- *
- * Current limitation:
- * - the 14-segment alphanumeric pair is not validated here because the new
- *   public LCD API does not yet expose alpha support
+ * - SCENE_ALPHA_LEFT_FULL:
+ *   left alpha digit fully on, right alpha digit off
+ * - SCENE_ALPHA_RIGHT_FULL:
+ *   right alpha digit fully on, left alpha digit off
+ * - SCENE_ALPHA_CHARSET_SWEEP:
+ *   final long test, both alpha digits walk through the application-facing
+ *   alpha character set currently supported by the public string API
  */
 
 #include "fm_lcd_bringup.h"
@@ -50,6 +54,7 @@
 /* =========================== Private Macros ============================= */
 #define FM_LCD_BRINGUP_SCENE_DELAY_MS       2000U
 #define FM_LCD_BRINGUP_IDLE_DELAY_MS        100U
+#define FM_LCD_BRINGUP_ALPHA_CHAR_DELAY_MS  750U
 
 /* =========================== Private Types ============================== */
 typedef enum
@@ -63,10 +68,16 @@ typedef enum
     FM_LCD_BRINGUP_SCENE_LOWER_RIGHT_LEGENDS,
     FM_LCD_BRINGUP_SCENE_ALL_INDICATORS,
     FM_LCD_BRINGUP_SCENE_NOMINAL_USE,
+    FM_LCD_BRINGUP_SCENE_ALPHA_LEFT_FULL,
+    FM_LCD_BRINGUP_SCENE_ALPHA_RIGHT_FULL,
+    FM_LCD_BRINGUP_SCENE_ALPHA_CHARSET_SWEEP,
     FM_LCD_BRINGUP_SCENE_COUNT
 } fm_lcd_bringup_scene_t;
 
 /* =========================== Private Constants ========================== */
+static const char g_fm_lcd_bringup_alpha_charset[] =
+    "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
 static const fm_lcd_layout_indicator_t g_fm_lcd_bringup_basic_icons[] =
 {
     FM_LCD_LAYOUT_INDICATOR_POINT,
@@ -116,6 +127,7 @@ static void fm_lcd_bringup_panic_(const char *p_msg);
 static void fm_lcd_bringup_require_ok_(fm_lcd_status_t p_status, const char *p_msg);
 static void fm_lcd_bringup_set_indicators_(const fm_lcd_layout_indicator_t *p_indicators,
                                            uint8_t p_count);
+static void fm_lcd_bringup_run_alpha_charset_sweep_(void);
 static void fm_lcd_bringup_prepare_scene_(void);
 static void fm_lcd_bringup_emit_scene_(fm_lcd_bringup_scene_t p_scene);
 static void fm_lcd_bringup_apply_scene_(fm_lcd_bringup_scene_t p_scene);
@@ -143,6 +155,34 @@ static void fm_lcd_bringup_set_indicators_(const fm_lcd_layout_indicator_t *p_in
     {
         fm_lcd_bringup_require_ok_(FM_LCD_SetIndicator(p_indicators[index], true),
                                    "LCD_BRINGUP:INDICATOR_FAIL\n");
+    }
+}
+
+static void fm_lcd_bringup_run_alpha_charset_sweep_(void)
+{
+    uint8_t index;
+    char alpha_pair[3];
+    char uart_msg[] = "LCD_BRINGUP:SCENE_ALPHA_CHARSET_SWEEP CHAR=?\n";
+
+    for (index = 0U;
+         index < (uint8_t) (sizeof(g_fm_lcd_bringup_alpha_charset) - 1U);
+         index++)
+    {
+        alpha_pair[0] = g_fm_lcd_bringup_alpha_charset[index];
+        alpha_pair[1] = g_fm_lcd_bringup_alpha_charset[index];
+        alpha_pair[2] = '\0';
+
+        fm_lcd_bringup_prepare_scene_();
+        fm_lcd_bringup_require_ok_(FM_LCD_WriteAlpha(alpha_pair,
+                                                     FM_LCD_ALIGN_LEFT,
+                                                     true),
+                                   "LCD_BRINGUP:ALPHA_FAIL\n");
+        fm_lcd_bringup_require_ok_(FM_LCD_Flush(), "LCD_BRINGUP:FLUSH_FAIL\n");
+
+        uart_msg[sizeof(uart_msg) - 3U] = alpha_pair[0];
+        (void) FM_DEBUG_UartStr(uart_msg);
+        FM_DEBUG_Flush();
+        FM_PORT_TIME_SleepMs(FM_LCD_BRINGUP_ALPHA_CHAR_DELAY_MS);
     }
 }
 
@@ -189,6 +229,18 @@ static void fm_lcd_bringup_emit_scene_(fm_lcd_bringup_scene_t p_scene)
 
     case FM_LCD_BRINGUP_SCENE_NOMINAL_USE:
         (void) FM_DEBUG_UartStr("LCD_BRINGUP:SCENE_NOMINAL_USE TOP=12.34 BOT=56.7\n");
+        break;
+
+    case FM_LCD_BRINGUP_SCENE_ALPHA_LEFT_FULL:
+        (void) FM_DEBUG_UartStr("LCD_BRINGUP:SCENE_ALPHA_LEFT_FULL\n");
+        break;
+
+    case FM_LCD_BRINGUP_SCENE_ALPHA_RIGHT_FULL:
+        (void) FM_DEBUG_UartStr("LCD_BRINGUP:SCENE_ALPHA_RIGHT_FULL\n");
+        break;
+
+    case FM_LCD_BRINGUP_SCENE_ALPHA_CHARSET_SWEEP:
+        (void) FM_DEBUG_UartStr("LCD_BRINGUP:SCENE_ALPHA_CHARSET_SWEEP\n");
         break;
 
     default:
@@ -285,6 +337,25 @@ static void fm_lcd_bringup_apply_scene_(fm_lcd_bringup_scene_t p_scene)
         fm_lcd_bringup_require_ok_(FM_LCD_SetIndicator(FM_LCD_LAYOUT_INDICATOR_POWER, true),
                                    "LCD_BRINGUP:INDICATOR_FAIL\n");
         break;
+
+    case FM_LCD_BRINGUP_SCENE_ALPHA_LEFT_FULL:
+        fm_lcd_bringup_require_ok_(FM_LCD_WriteAlpha("#",
+                                                     FM_LCD_ALIGN_LEFT,
+                                                     true),
+                                   "LCD_BRINGUP:ALPHA_FAIL\n");
+        break;
+
+    case FM_LCD_BRINGUP_SCENE_ALPHA_RIGHT_FULL:
+        fm_lcd_bringup_require_ok_(FM_LCD_WriteAlpha("#",
+                                                     FM_LCD_ALIGN_RIGHT,
+                                                     true),
+                                   "LCD_BRINGUP:ALPHA_FAIL\n");
+        break;
+
+    case FM_LCD_BRINGUP_SCENE_ALPHA_CHARSET_SWEEP:
+        fm_lcd_bringup_emit_scene_(p_scene);
+        fm_lcd_bringup_run_alpha_charset_sweep_();
+        return;
 
     default:
         fm_lcd_bringup_panic_("LCD_BRINGUP:SCENE_INVALID\n");

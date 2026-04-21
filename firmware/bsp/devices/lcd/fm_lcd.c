@@ -212,6 +212,28 @@ fm_lcd_status_t FM_LCD_ClearRow(fm_lcd_layout_row_t p_row)
     return FM_LCD_OK;
 }
 
+fm_lcd_status_t FM_LCD_ClearAlpha(void)
+{
+    fm_lcd_map_status_t map_status;
+
+    if (!g_fm_lcd_context.initialized)
+    {
+        return FM_LCD_ESTATE;
+    }
+
+    map_status = FM_LCD_MAP_ClearAlpha(g_fm_lcd_context.desired_ram,
+                                       (uint8_t) sizeof(g_fm_lcd_context.desired_ram));
+
+    if (map_status != FM_LCD_MAP_OK)
+    {
+        return fm_lcd_from_map_status_(map_status);
+    }
+
+    fm_lcd_refresh_dirty_flag_();
+
+    return FM_LCD_OK;
+}
+
 fm_lcd_status_t FM_LCD_WriteText(fm_lcd_layout_row_t p_row,
                                  const char *p_text,
                                  fm_lcd_align_t p_align,
@@ -230,6 +252,33 @@ fm_lcd_status_t FM_LCD_WriteText(fm_lcd_layout_row_t p_row,
                                       p_text,
                                       p_align,
                                       p_clear_rest);
+
+    if (map_status != FM_LCD_MAP_OK)
+    {
+        return fm_lcd_from_map_status_(map_status);
+    }
+
+    fm_lcd_refresh_dirty_flag_();
+
+    return FM_LCD_OK;
+}
+
+fm_lcd_status_t FM_LCD_WriteAlpha(const char *p_text,
+                                  fm_lcd_align_t p_align,
+                                  bool p_clear_rest)
+{
+    fm_lcd_map_status_t map_status;
+
+    if (!g_fm_lcd_context.initialized)
+    {
+        return FM_LCD_ESTATE;
+    }
+
+    map_status = FM_LCD_MAP_WriteAlpha(g_fm_lcd_context.desired_ram,
+                                       (uint8_t) sizeof(g_fm_lcd_context.desired_ram),
+                                       p_text,
+                                       p_align,
+                                       p_clear_rest);
 
     if (map_status != FM_LCD_MAP_OK)
     {

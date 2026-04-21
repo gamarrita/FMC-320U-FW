@@ -7,6 +7,14 @@ Tipo de prompt:
 Tarea:
 Hacé una pasada de análisis y plan sobre <módulo o archivo objetivo> para evaluar un posible refactor de código.
 
+Entradas a completar:
+
+- Give Codex the relevant files, directories, or feature area you are trying to understand.
+- Ask it to trace the request flow and explain which modules own the business logic, transport, persistence, or UI.
+- Ask where validation, side effects, or state transitions happen before you edit anything.
+- End by asking which files you should read next and what the risky spots are.
+
+
 Objetivo:
 entender la estructura actual del módulo y proponer un refactor chico, claro y revisable, sin expandir el alcance innecesariamente.
 

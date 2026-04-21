@@ -26,6 +26,13 @@ typedef struct
     uint8_t bit;
 } fm_lcd_map_addr_t;
 
+typedef struct
+{
+    char ch;
+    uint16_t left_pattern;
+    uint16_t right_pattern;
+} fm_lcd_map_alpha_encoding_t;
+
 typedef enum
 {
     FM_LCD_MAP_SEG_A = 0,
@@ -47,6 +54,7 @@ typedef enum
 #define FM_LCD_MAP_SEG_F_MASK            (1U << 5)
 #define FM_LCD_MAP_SEG_G_MASK            (1U << 6)
 #define FM_LCD_MAP_DIGIT_STRIDE_BITS     2U
+#define FM_LCD_MAP_ALPHA_SEG_COUNT       14U
 
 /* =========================== Private Constants ========================== */
 /* Base segment anchors for the top visible row, stored in visible segment
@@ -100,11 +108,131 @@ static const fm_lcd_map_addr_t g_fm_lcd_map_bottom_row_decimal_points[FM_LCD_LAY
     { .reg = 6U, .bit = 0U }
 };
 
+static const fm_lcd_map_addr_t g_fm_lcd_map_alpha_left_segments[FM_LCD_MAP_ALPHA_SEG_COUNT] =
+{
+    { .reg = 0U,  .bit = 2U },
+    { .reg = 0U,  .bit = 3U },
+    { .reg = 0U,  .bit = 4U },
+    { .reg = 0U,  .bit = 5U },
+    { .reg = 5U,  .bit = 2U },
+    { .reg = 5U,  .bit = 4U },
+    { .reg = 5U,  .bit = 5U },
+    { .reg = 10U, .bit = 2U },
+    { .reg = 10U, .bit = 3U },
+    { .reg = 10U, .bit = 4U },
+    { .reg = 15U, .bit = 2U },
+    { .reg = 15U, .bit = 3U },
+    { .reg = 15U, .bit = 4U },
+    { .reg = 15U, .bit = 5U }
+};
+
+static const fm_lcd_map_addr_t g_fm_lcd_map_alpha_right_segments[FM_LCD_MAP_ALPHA_SEG_COUNT] =
+{
+    { .reg = 0U,  .bit = 0U },
+    { .reg = 0U,  .bit = 1U },
+    { .reg = 4U,  .bit = 6U },
+    { .reg = 4U,  .bit = 7U },
+    { .reg = 5U,  .bit = 0U },
+    { .reg = 5U,  .bit = 1U },
+    { .reg = 9U,  .bit = 6U },
+    { .reg = 10U, .bit = 0U },
+    { .reg = 14U, .bit = 6U },
+    { .reg = 14U, .bit = 7U },
+    { .reg = 15U, .bit = 0U },
+    { .reg = 15U, .bit = 1U },
+    { .reg = 19U, .bit = 6U },
+    { .reg = 19U, .bit = 7U }
+};
+
+/*
+ * Keep alpha patterns per visible digit because left and right glass wiring do
+ * not share the same segment ordering.
+ *
+ * Public string-facing policy for special or extended alpha glyphs:
+ * - prefer single-byte printable ASCII inputs
+ * - avoid non-printable control-byte encodings for normal application text
+ * - render unsupported characters as blank
+ *
+ * Lowercase support is intentionally explicit in this table. Where a distinct
+ * lowercase glyph has not been characterized and hardware-validated yet, the
+ * lowercase entry falls back to the validated uppercase rendering.
+ */
+static const fm_lcd_map_alpha_encoding_t g_fm_lcd_map_alpha_encodings[] =
+{
+    { .ch = ' ', .left_pattern = 0x0000U, .right_pattern = 0x0000U },
+    { .ch = '#', .left_pattern = 0x3FFFU, .right_pattern = 0x3FFFU },
+    { .ch = '0', .left_pattern = 0x294AU, .right_pattern = 0x2A2AU },
+    { .ch = '1', .left_pattern = 0x0802U, .right_pattern = 0x2008U },
+    { .ch = '2', .left_pattern = 0x0D4CU, .right_pattern = 0x3223U },
+    { .ch = '3', .left_pattern = 0x0D46U, .right_pattern = 0x3229U },
+    { .ch = '4', .left_pattern = 0x2C06U, .right_pattern = 0x3809U },
+    { .ch = '5', .left_pattern = 0x2542U, .right_pattern = 0x1A29U },
+    { .ch = '6', .left_pattern = 0x254EU, .right_pattern = 0x1A2BU },
+    { .ch = '7', .left_pattern = 0x0902U, .right_pattern = 0x2208U },
+    { .ch = '8', .left_pattern = 0x2D4EU, .right_pattern = 0x3A2BU },
+    { .ch = '9', .left_pattern = 0x2D06U, .right_pattern = 0x3A09U },
+    { .ch = 'A', .left_pattern = 0x2D0EU, .right_pattern = 0x3A0BU },
+    { .ch = 'B', .left_pattern = 0x0B56U, .right_pattern = 0x22E9U },
+    { .ch = 'C', .left_pattern = 0x2148U, .right_pattern = 0x0A22U },
+    { .ch = 'D', .left_pattern = 0x0B52U, .right_pattern = 0x22E8U },
+    { .ch = 'E', .left_pattern = 0x2548U, .right_pattern = 0x1A22U },
+    { .ch = 'F', .left_pattern = 0x2508U, .right_pattern = 0x1A02U },
+    { .ch = 'G', .left_pattern = 0x254EU, .right_pattern = 0x1A2BU },
+    { .ch = 'H', .left_pattern = 0x2C0EU, .right_pattern = 0x380BU },
+    { .ch = 'I', .left_pattern = 0x0350U, .right_pattern = 0x02E0U },
+    { .ch = 'J', .left_pattern = 0x0842U, .right_pattern = 0x2028U },
+    { .ch = 'K', .left_pattern = 0x3428U, .right_pattern = 0x1C12U },
+    { .ch = 'L', .left_pattern = 0x2048U, .right_pattern = 0x0822U },
+    { .ch = 'M', .left_pattern = 0x388AU, .right_pattern = 0x2D0AU },
+    { .ch = 'N', .left_pattern = 0x28AAU, .right_pattern = 0x291AU },
+    { .ch = 'O', .left_pattern = 0x294AU, .right_pattern = 0x2A2AU },
+    { .ch = 'P', .left_pattern = 0x2D0CU, .right_pattern = 0x3A03U },
+    { .ch = 'Q', .left_pattern = 0x296AU, .right_pattern = 0x2A3AU },
+    { .ch = 'R', .left_pattern = 0x2D2CU, .right_pattern = 0x3A13U },
+    { .ch = 'S', .left_pattern = 0x2546U, .right_pattern = 0x1A29U },
+    { .ch = 'T', .left_pattern = 0x0310U, .right_pattern = 0x02C0U },
+    { .ch = 'U', .left_pattern = 0x284AU, .right_pattern = 0x282AU },
+    { .ch = 'V', .left_pattern = 0x3009U, .right_pattern = 0x0C06U },
+    { .ch = 'W', .left_pattern = 0x282BU, .right_pattern = 0x281EU },
+    { .ch = 'X', .left_pattern = 0x10A1U, .right_pattern = 0x0514U },
+    { .ch = 'Y', .left_pattern = 0x1090U, .right_pattern = 0x0540U },
+    { .ch = 'Z', .left_pattern = 0x1545U, .right_pattern = 0x1625U },
+    { .ch = 'a', .left_pattern = 0x2D0EU, .right_pattern = 0x3A0BU },
+    { .ch = 'b', .left_pattern = 0x0B56U, .right_pattern = 0x22E9U },
+    { .ch = 'c', .left_pattern = 0x2148U, .right_pattern = 0x0A22U },
+    { .ch = 'd', .left_pattern = 0x0B52U, .right_pattern = 0x22E8U },
+    { .ch = 'e', .left_pattern = 0x2548U, .right_pattern = 0x1A22U },
+    { .ch = 'f', .left_pattern = 0x2508U, .right_pattern = 0x1A02U },
+    { .ch = 'g', .left_pattern = 0x254EU, .right_pattern = 0x1A2BU },
+    { .ch = 'h', .left_pattern = 0x2C0EU, .right_pattern = 0x380BU },
+    { .ch = 'i', .left_pattern = 0x0350U, .right_pattern = 0x02E0U },
+    { .ch = 'j', .left_pattern = 0x0842U, .right_pattern = 0x2028U },
+    { .ch = 'k', .left_pattern = 0x3428U, .right_pattern = 0x1C12U },
+    { .ch = 'l', .left_pattern = 0x2048U, .right_pattern = 0x0822U },
+    { .ch = 'm', .left_pattern = 0x388AU, .right_pattern = 0x2D0AU },
+    { .ch = 'n', .left_pattern = 0x28AAU, .right_pattern = 0x291AU },
+    { .ch = 'o', .left_pattern = 0x294AU, .right_pattern = 0x2A2AU },
+    { .ch = 'p', .left_pattern = 0x2D0CU, .right_pattern = 0x3A03U },
+    { .ch = 'q', .left_pattern = 0x296AU, .right_pattern = 0x2A3AU },
+    { .ch = 'r', .left_pattern = 0x2D2CU, .right_pattern = 0x3A13U },
+    { .ch = 's', .left_pattern = 0x2546U, .right_pattern = 0x1A29U },
+    { .ch = 't', .left_pattern = 0x0310U, .right_pattern = 0x02C0U },
+    { .ch = 'u', .left_pattern = 0x284AU, .right_pattern = 0x282AU },
+    { .ch = 'v', .left_pattern = 0x3009U, .right_pattern = 0x0C06U },
+    { .ch = 'w', .left_pattern = 0x282BU, .right_pattern = 0x281EU },
+    { .ch = 'x', .left_pattern = 0x10A1U, .right_pattern = 0x0514U },
+    { .ch = 'y', .left_pattern = 0x1090U, .right_pattern = 0x0540U },
+    { .ch = 'z', .left_pattern = 0x1545U, .right_pattern = 0x1625U }
+};
+
 /* =========================== Private Prototypes ========================= */
 static fm_lcd_map_status_t fm_lcd_map_validate_buffer_(const uint8_t *p_ram,
                                                        uint8_t p_ram_size);
+static const fm_lcd_map_addr_t *fm_lcd_map_get_alpha_segments_(fm_lcd_layout_alpha_digit_t p_digit);
 static uint8_t fm_lcd_map_get_row_columns_(fm_lcd_layout_row_t p_row);
 static uint8_t fm_lcd_map_get_row_decimal_points_(fm_lcd_layout_row_t p_row);
+static uint16_t fm_lcd_map_encode_alpha_char_(char p_char,
+                                              fm_lcd_layout_alpha_digit_t p_digit);
 static bool fm_lcd_map_get_decimal_addr_(fm_lcd_layout_row_t p_row,
                                          uint8_t p_col,
                                          uint8_t *p_reg,
@@ -119,6 +247,9 @@ static bool fm_lcd_map_get_numeric_addr_(fm_lcd_layout_row_t p_row,
                                          uint8_t *p_bit);
 static uint8_t fm_lcd_map_encode_char_(char p_char);
 static void fm_lcd_map_set_bit_(uint8_t *p_ram, uint8_t p_reg, uint8_t p_bit, bool p_on);
+static void fm_lcd_map_write_alpha_pattern_(uint8_t *p_ram,
+                                            fm_lcd_layout_alpha_digit_t p_digit,
+                                            uint16_t p_pattern);
 static void fm_lcd_map_write_decimal_point_(uint8_t *p_ram,
                                             fm_lcd_layout_row_t p_row,
                                             uint8_t p_col,
@@ -143,6 +274,19 @@ static fm_lcd_map_status_t fm_lcd_map_validate_buffer_(const uint8_t *p_ram,
     }
 
     return FM_LCD_MAP_OK;
+}
+
+static const fm_lcd_map_addr_t *fm_lcd_map_get_alpha_segments_(fm_lcd_layout_alpha_digit_t p_digit)
+{
+    switch (p_digit)
+    {
+    case FM_LCD_LAYOUT_ALPHA_LEFT:
+        return g_fm_lcd_map_alpha_left_segments;
+    case FM_LCD_LAYOUT_ALPHA_RIGHT:
+        return g_fm_lcd_map_alpha_right_segments;
+    default:
+        return NULL;
+    }
 }
 
 static uint8_t fm_lcd_map_get_row_columns_(fm_lcd_layout_row_t p_row)
@@ -170,6 +314,42 @@ static uint8_t fm_lcd_map_get_row_decimal_points_(fm_lcd_layout_row_t p_row)
     }
 
     return (uint8_t) (row_columns - 1U);
+}
+
+static uint16_t fm_lcd_map_encode_alpha_char_(char p_char,
+                                              fm_lcd_layout_alpha_digit_t p_digit)
+{
+    uint8_t index;
+
+    for (index = 0U;
+         index < (uint8_t) (sizeof(g_fm_lcd_map_alpha_encodings) /
+                            sizeof(g_fm_lcd_map_alpha_encodings[0]));
+         index++)
+    {
+        if (g_fm_lcd_map_alpha_encodings[index].ch == p_char)
+        {
+            if (p_digit == FM_LCD_LAYOUT_ALPHA_LEFT)
+            {
+                return g_fm_lcd_map_alpha_encodings[index].left_pattern;
+            }
+
+            if (p_digit == FM_LCD_LAYOUT_ALPHA_RIGHT)
+            {
+                return g_fm_lcd_map_alpha_encodings[index].right_pattern;
+            }
+
+            return 0U;
+        }
+    }
+
+    if ((p_char >= 'a') && (p_char <= 'z'))
+    {
+        return fm_lcd_map_encode_alpha_char_(
+            (char) (p_char - ('a' - 'A')),
+            p_digit);
+    }
+
+    return 0U;
 }
 
 static bool fm_lcd_map_get_decimal_addr_(fm_lcd_layout_row_t p_row,
@@ -430,6 +610,29 @@ static void fm_lcd_map_set_bit_(uint8_t *p_ram, uint8_t p_reg, uint8_t p_bit, bo
     }
 }
 
+static void fm_lcd_map_write_alpha_pattern_(uint8_t *p_ram,
+                                            fm_lcd_layout_alpha_digit_t p_digit,
+                                            uint16_t p_pattern)
+{
+    const fm_lcd_map_addr_t *p_segments;
+    uint8_t segment;
+
+    p_segments = fm_lcd_map_get_alpha_segments_(p_digit);
+
+    if (p_segments == NULL)
+    {
+        return;
+    }
+
+    for (segment = 0U; segment < FM_LCD_MAP_ALPHA_SEG_COUNT; segment++)
+    {
+        fm_lcd_map_set_bit_(p_ram,
+                            p_segments[segment].reg,
+                            p_segments[segment].bit,
+                            ((p_pattern & ((uint16_t) 1U << segment)) != 0U));
+    }
+}
+
 static void fm_lcd_map_write_decimal_point_(uint8_t *p_ram,
                                             fm_lcd_layout_row_t p_row,
                                             uint8_t p_col,
@@ -528,6 +731,24 @@ fm_lcd_map_status_t FM_LCD_MAP_ClearRow(uint8_t *p_ram,
     return FM_LCD_MAP_OK;
 }
 
+fm_lcd_map_status_t FM_LCD_MAP_ClearAlpha(uint8_t *p_ram,
+                                          uint8_t p_ram_size)
+{
+    fm_lcd_map_status_t status;
+
+    status = fm_lcd_map_validate_buffer_(p_ram, p_ram_size);
+
+    if (status != FM_LCD_MAP_OK)
+    {
+        return status;
+    }
+
+    fm_lcd_map_write_alpha_pattern_(p_ram, FM_LCD_LAYOUT_ALPHA_LEFT, 0U);
+    fm_lcd_map_write_alpha_pattern_(p_ram, FM_LCD_LAYOUT_ALPHA_RIGHT, 0U);
+
+    return FM_LCD_MAP_OK;
+}
+
 fm_lcd_map_status_t FM_LCD_MAP_WriteText(uint8_t *p_ram,
                                          uint8_t p_ram_size,
                                          fm_lcd_layout_row_t p_row,
@@ -619,6 +840,80 @@ fm_lcd_map_status_t FM_LCD_MAP_WriteText(uint8_t *p_ram,
                                             (uint8_t) (start_col + write_index),
                                             decimal_points[write_index]);
         }
+    }
+
+    return FM_LCD_MAP_OK;
+}
+
+fm_lcd_map_status_t FM_LCD_MAP_WriteAlpha(uint8_t *p_ram,
+                                          uint8_t p_ram_size,
+                                          const char *p_text,
+                                          fm_lcd_align_t p_align,
+                                          bool p_clear_rest)
+{
+    fm_lcd_map_status_t status;
+    char rendered_chars[FM_LCD_LAYOUT_ALPHA_DIGIT_COUNT] = { ' ', ' ' };
+    uint8_t rendered_count;
+    uint8_t source_index;
+    uint8_t start_index;
+    uint8_t write_index;
+
+    status = fm_lcd_map_validate_buffer_(p_ram, p_ram_size);
+
+    if (status != FM_LCD_MAP_OK)
+    {
+        return status;
+    }
+
+    if (p_text == NULL)
+    {
+        return FM_LCD_MAP_EINVAL;
+    }
+
+    if ((p_align != FM_LCD_ALIGN_LEFT) && (p_align != FM_LCD_ALIGN_RIGHT))
+    {
+        return FM_LCD_MAP_EINVAL;
+    }
+
+    rendered_count = 0U;
+    source_index = 0U;
+
+    while ((p_text[source_index] != '\0') &&
+           (rendered_count < FM_LCD_LAYOUT_ALPHA_DIGIT_COUNT))
+    {
+        rendered_chars[rendered_count] = p_text[source_index];
+        rendered_count++;
+        source_index++;
+    }
+
+    if (p_clear_rest)
+    {
+        status = FM_LCD_MAP_ClearAlpha(p_ram, p_ram_size);
+
+        if (status != FM_LCD_MAP_OK)
+        {
+            return status;
+        }
+    }
+
+    if ((p_align == FM_LCD_ALIGN_RIGHT) &&
+        (rendered_count < FM_LCD_LAYOUT_ALPHA_DIGIT_COUNT))
+    {
+        start_index = (uint8_t) (FM_LCD_LAYOUT_ALPHA_DIGIT_COUNT - rendered_count);
+    }
+    else
+    {
+        start_index = 0U;
+    }
+
+    for (write_index = 0U; write_index < rendered_count; write_index++)
+    {
+        fm_lcd_map_write_alpha_pattern_(
+            p_ram,
+            (fm_lcd_layout_alpha_digit_t) (start_index + write_index),
+            fm_lcd_map_encode_alpha_char_(
+                rendered_chars[write_index],
+                (fm_lcd_layout_alpha_digit_t) (start_index + write_index)));
     }
 
     return FM_LCD_MAP_OK;

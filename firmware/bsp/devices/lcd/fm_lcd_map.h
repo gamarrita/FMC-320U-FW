@@ -84,6 +84,23 @@ fm_lcd_map_status_t FM_LCD_MAP_ClearRow(uint8_t *p_ram,
                                         fm_lcd_layout_row_t p_row);
 
 /**
+ * @brief Clear the full alphanumeric pair in the provided buffer.
+ *
+ * This clears both visible alpha positions of the semantic alpha field.
+ * This function operates only on the RAM image in `p_ram`.
+ *
+ * @param[in,out] p_ram Target RAM buffer.
+ * @param[in]     p_ram_size Size in bytes of `p_ram`.
+ *
+ * @return FM_LCD_MAP_OK on success.
+ * @return FM_LCD_MAP_EINVAL when `p_ram` is NULL.
+ * @return FM_LCD_MAP_ERANGE when `p_ram_size` is smaller than
+ *         `FM_LCD_MAP_RAM_SIZE`.
+ */
+fm_lcd_map_status_t FM_LCD_MAP_ClearAlpha(uint8_t *p_ram,
+                                          uint8_t p_ram_size);
+
+/**
  * @brief Write one text string into one numeric row of the provided buffer.
  *
  * Supported characters are rendered according to the mapping layer encoding
@@ -114,6 +131,38 @@ fm_lcd_map_status_t FM_LCD_MAP_WriteText(uint8_t *p_ram,
                                          const char *p_text,
                                          fm_lcd_align_t p_align,
                                          bool p_clear_rest);
+
+/**
+ * @brief Write text into the visible alphanumeric pair of the provided buffer.
+ *
+ * The alpha field is modeled as one visible field with two positions:
+ * - left alpha digit
+ * - right alpha digit
+ *
+ * Up to two visible characters are rendered. When a single visible character
+ * is rendered, `p_align` decides whether it lands on the left or right alpha
+ * position. Unsupported characters are rendered as blank.
+ *
+ * This function operates only on the RAM image in `p_ram`.
+ *
+ * @param[in,out] p_ram Target RAM buffer.
+ * @param[in]     p_ram_size Size in bytes of `p_ram`.
+ * @param[in]     p_text Null-terminated input text.
+ * @param[in]     p_align Alignment policy within the alpha pair.
+ * @param[in]     p_clear_rest When true, alpha positions not covered by the
+ *                             rendered text are cleared.
+ *
+ * @return FM_LCD_MAP_OK on success.
+ * @return FM_LCD_MAP_EINVAL when `p_ram` or `p_text` is NULL.
+ * @return FM_LCD_MAP_ERANGE when the buffer is too small.
+ * @return FM_LCD_MAP_ENOTSUP when the requested alpha render feature is part
+ *         of the public contract but intentionally not mapped yet.
+ */
+fm_lcd_map_status_t FM_LCD_MAP_WriteAlpha(uint8_t *p_ram,
+                                          uint8_t p_ram_size,
+                                          const char *p_text,
+                                          fm_lcd_align_t p_align,
+                                          bool p_clear_rest);
 
 /**
  * @brief Set or clear one standalone indicator in the provided buffer.

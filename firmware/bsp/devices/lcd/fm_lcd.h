@@ -13,7 +13,7 @@
  *
  * Current non-goals for this V1 contract:
  * - compatibility with the legacy `fm_lcd.c` API
- * - full alphanumeric support
+ * - rich alphanumeric formatting helpers
  * - integer formatting helpers
  * - hardware-resume and recovery policy details
  * - detailed blink configuration API
@@ -99,6 +99,18 @@ fm_lcd_status_t FM_LCD_Clear(void);
 fm_lcd_status_t FM_LCD_ClearRow(fm_lcd_layout_row_t p_row);
 
 /**
+ * @brief Clear the full alphanumeric pair in desired state.
+ *
+ * This clears both visible alpha positions of the semantic alpha field.
+ *
+ * This function updates desired state only. It does not perform display I/O.
+ *
+ * @return FM_LCD_OK on success.
+ * @return FM_LCD_ESTATE when the module is not initialized.
+ */
+fm_lcd_status_t FM_LCD_ClearAlpha(void);
+
+/**
  * @brief Write text into one numeric row.
  *
  * Supported characters are rendered according to the current numeric field
@@ -126,6 +138,32 @@ fm_lcd_status_t FM_LCD_WriteText(fm_lcd_layout_row_t p_row,
                                  const char *p_text,
                                  fm_lcd_align_t p_align,
                                  bool p_clear_rest);
+
+/**
+ * @brief Write text into the visible alphanumeric pair.
+ *
+ * The alpha field is modeled as one visible field with two positions:
+ * - left alpha digit
+ * - right alpha digit
+ *
+ * Up to two visible characters are rendered. When a single visible character
+ * is rendered, `p_align` decides whether it lands on the left or right alpha
+ * position. Unsupported characters are rendered as blank.
+ *
+ * This function updates desired state only. It does not perform display I/O.
+ *
+ * @param[in] p_text       Null-terminated input text.
+ * @param[in] p_align      Left or right alignment within the alpha pair.
+ * @param[in] p_clear_rest When true, alpha positions not covered by the
+ *                         rendered text are cleared.
+ *
+ * @return FM_LCD_OK on success.
+ * @return FM_LCD_EINVAL when `p_text` is NULL.
+ * @return FM_LCD_ESTATE when the module is not initialized.
+ */
+fm_lcd_status_t FM_LCD_WriteAlpha(const char *p_text,
+                                  fm_lcd_align_t p_align,
+                                  bool p_clear_rest);
 
 /**
  * @brief Set or clear one standalone indicator in desired state.

@@ -20,13 +20,15 @@ Current stage:
 
 Current situation:
 - the new LCD stack already exists
-- the canonical bring-up now runs as a human validation sequence
-- the next useful progress depends on real LCD and UART evidence
+- the canonical bring-up already passed on hardware for the validated scope
+- alpha support now exists in the public contract and in the new stack
+- the next useful progress is to expose alpha in the bring-up and validate it
+  on hardware without destabilizing the validated numeric base
 
-Current validation target:
+Validated hardware target:
 - `apps/lcd_bringup/`
 
-Expected UART milestones:
+Validated UART milestones:
 - `LCD_BRINGUP:START`
 - `LCD_BRINGUP:LCD_INIT_OK`
 - `LCD_BRINGUP:LOOP_RESTART`
@@ -41,9 +43,18 @@ Expected UART milestones:
 - `LCD_BRINGUP:SCENE_NOMINAL_USE TOP=12.34 BOT=56.7`
 - `LCD_BRINGUP:IDLE`
 
+Observed validation result:
+- the expected UART sequence matched the visible LCD behavior
+- no correction pass is currently needed for:
+  - top numeric row
+  - bottom numeric row
+  - decimal points
+  - standalone indicators
+
 Current expected interaction:
-- the agent keeps the stack and bring-up coherent
-- the human runs the hardware and reports what the LCD and UART actually do
+- the agent keeps the next increment small and coherent
+- the human returns to hardware validation when alpha support is exposed by the
+  bring-up
 
 ---
 
@@ -60,11 +71,20 @@ Current expected interaction:
 - `bsp/devices/lcd/pcf8553/fm_pcf8553.c`
   - first backend hardening pass completed
 - `bsp/devices/lcd/fm_lcd_map.c`
-  - first pure mapping pass completed for numeric rows and indicators
+  - first pure mapping pass completed for numeric rows, indicators, and alpha
 - `bsp/devices/lcd/fm_lcd.c`
   - first public stateful LCD V1 completed over `fm_lcd_map.*` and `fm_pcf8553.*`
+  - alpha support now exposed through the public contract
 - `apps/lcd_bringup/`
   - unified human-validation bring-up sequence completed
+
+### Validation already completed
+- `apps/lcd_bringup/`
+  - hardware validation completed for:
+    - top numeric row
+    - bottom numeric row
+    - decimal points
+    - standalone indicators
 
 ### Structural decisions already taken
 - the redesign is not compatibility-first
@@ -136,22 +156,22 @@ Relevant controller facts:
 ## Remaining Work
 
 Immediate remaining work:
-1. validate `apps/lcd_bringup/` end to end on hardware
-2. compare observed UART and LCD behavior against the expected scene sequence
+1. extend `apps/lcd_bringup/` with alpha scenes
+2. validate alpha behavior on hardware using LCD + UART evidence
 3. apply the smallest correction pass supported by that evidence
 
 Likely next work after that:
-1. mapping correction if visible segments or indicators are wrong
-2. alpha support if validation shows the numeric rows, decimal points, and indicators are stable enough
-3. blink or resume-policy work once the base behavior is trusted
+1. mapping correction only if alpha validation exposes issues in the currently
+   unvalidated area
+2. blink or resume-policy work once alpha behavior is trusted
 
-Current validation coverage in this stage:
+Current validated coverage:
 - top numeric row
 - bottom numeric row
 - decimal points
 - standalone indicators
 
-Explicitly not validated yet in this stage:
+Explicitly not validated yet:
 - 14-segment alpha pair
 - logical blink behavior
 - richer resume or recovery policy

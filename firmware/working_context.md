@@ -24,8 +24,9 @@ Use from `docs/workflow/README.md` only what matters for this stage:
 - keep clear what was validated and what was not
 
 Specific implication for the current LCD work:
-- validate on hardware before reopening architecture
-- prefer correction passes driven by LCD and UART evidence
+- treat numeric rows, decimal points, and indicators as validated base behavior
+- focus the next validation on alpha support only
+- extend the bring-up only as much as needed to observe alpha behavior
 - leave closure passes such as comment cleanup for later unless they are the explicit task
 
 ---
@@ -45,13 +46,13 @@ Do not expect `WORKING_CONTEXT.md` to restate their content.
 
 ## Current Priority
 
-- validate the scene sequence in `apps/lcd_bringup/` on hardware
-- compare the LCD and UART behavior against the expected scene sequence and milestones
-- use that evidence to decide the next correction pass
+- use `docs/contexts/lcd_redesign.md` as the active source of truth for the LCD refactor
+- validate the newly implemented alpha support on hardware
+- keep the validated numeric and indicator path untouched unless alpha validation exposes a real issue
 
-Expected next options after validation:
-- mapping correction
-- alpha support
+Expected next options after this validation:
+- alpha mapping correction
+- alpha bring-up refinement
 - blink or resume-policy work
 
 ---
