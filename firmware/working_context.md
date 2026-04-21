@@ -3,71 +3,75 @@
 ## Current Work
 
 Stage:
-- closure
+- analysis
 
 Active pass:
-- stack-closure-docs
+- new_feature
 
 Operational context:
 
 Area:
-- `bsp/devices/lcd/`
-- `bsp/devices/lcd/pcf8553/`
-- `apps/lcd_bringup/`
-- `apps/lcd_blink_bringup/`
+- `AGENTS.md`
+- `docs/workflow/`
+- `docs/workflow/passes/`
+- `docs/contexts/`
 
 Core structure:
-- the redesigned LCD stack is the active path
-- `fm_lcd.*` owns LCD-visible semantics and desired-state behavior
-- `fm_lcd_map.*` remains pure mapping and must stay free of timing or runtime policy
-- `fm_lcd_blink.*` owns timer-neutral blink sequencing outside `fm_lcd.*`
-- the most important active facts for this step live in both:
-  - `WORKING_CONTEXT.md`
-  - `docs/contexts/lcd_redesign.md`
+- `AGENTS.md` defines stable agent policy and the documentation split
+- `working_context.md` is the active execution state for the current workstream
+- `docs/contexts/` holds extended active context and archived closed contexts
+- `docs/workflow/README.md` defines the repository stage model
+- `docs/workflow/passes/new_feature/` and `refactor/` hold the bootstrap tools
+  for starting new work
 
 Current focus:
-- the LCD stack is now considered complete for its intended scope
-- `apps/lcd_bringup/` remains the static base-validation app
-- `apps/lcd_blink_bringup/` remains the temporal validation app for logical
-  blink behavior
-- the current task is closing the documentation around the finished stack state
+- define a reproducible bootstrap process for high-quality `working_context.md`
+  and extended context files
+- use the archived LCD track as the validated reference case
+- limit the industrialization effort to `new_feature` and `refactor`
 
 Constraints:
-- keep visible-cell helpers generic and semantic, not blink-specific
-- do not reopen the base LCD stack unless a real visual defect or a new
-  product requirement appears
-- keep timer ownership outside `fm_lcd.*`
-- keep blink timing outside `fm_lcd.*` even in bring-up
-- allow a simple blocking delay inside `lcd_blink_bringup` for this validation
-  phase
-- keep `apps/lcd_bringup/` focused on static LCD validation
-- prefer one case-insensitive visible result per 7-seg letter intent, not
-  separate uppercase/lowercase runtime behavior
-- do not spend this iteration on old-path compatibility, broad cleanup, or the higher-level variable editing module
+- do not reopen the closed LCD stack context except as reference evidence
+- do not change unrelated passes outside `new_feature` and `refactor`
+- treat `AGENTS.md` as stable unless a true policy gap is proven
+- do not assume undocumented behavior; promote only validated patterns into the
+  bootstrap design
+- optimize for human + agent repeatability, not one-off prompt cleverness
 
 ## Next Step
 
-- keep the stack closed unless new evidence requires a targeted correction
-- move future work to higher-level modules that consume the LCD primitives
+- extract the bootstrap contract from the archived LCD case
+- define acceptance criteria for a high-quality initial `working_context.md` and
+  extended context
+- only then decide which templates, prompts, or helper docs need changes
 
 ## References
 
-- `docs/contexts/lcd_redesign.md`
-- `STYLE.md`
+- `AGENTS.md`
+- `docs/contexts/context_bootstrap_industrialization.md`
+- `docs/contexts/archive/lcd_stack_closed/working_context.md`
+- `docs/contexts/archive/lcd_stack_closed/lcd_redesign.md`
+- `docs/workflow/README.md`
+- `docs/workflow/passes/README.md`
+- `docs/workflow/passes/new_feature/README.md`
+- `docs/workflow/passes/refactor/README.md`
+- `docs/workflow/passes/new_feature/prompts/bootstrap_context.md`
+- `docs/workflow/passes/refactor/prompts/bootstrap_context.md`
 
 ## Invocation Rule
 
 Every time this file is used:
 - confirm stage, active pass, current focus, constraints, and next step
 - for immediate execution, `Constraints` and `Next Step` are authoritative
-- if temporary drift exists with the referenced `docs/contexts/` file, this
-  file wins for the current step and the referenced file remains the extended
-  rationale and backlog
-- if the real work drifted, update this file and its referenced `docs/contexts/` file before continuing
-- if the request falls outside this context, reframe instead of forcing it into the current track
+- use the archived LCD context as reference evidence, not as the active track
+- if the real work drifted, update this file and its referenced `docs/contexts/`
+  file before continuing
+- if the request falls outside this context, reframe instead of forcing it into
+  the current track
 - load only the references needed for the current step
 - if a pass becomes explicit, treat that pass as dominant for the task
-- after any material progress, refresh current focus, constraints, and next step
+- after any material progress, refresh current focus, constraints, and next
+  step
 
 ## Maintenance Rule
 
@@ -79,7 +83,8 @@ Keep this file updated when any of these change:
 - next step
 - referenced active context file
 
-Keep the referenced file under `docs/contexts/` updated when any of these change:
+Keep the referenced file under `docs/contexts/` updated when any of these
+change:
 - extended technical rationale
 - detailed scope
 - validated or pending state
@@ -102,9 +107,9 @@ Refresh this file immediately after:
 This is execution state, not documentation.
 No history.
 No long explanation.
-Detailed rationale stays in `docs/contexts/lcd_redesign.md`.
-Keep `WORKING_CONTEXT.md` and its referenced `docs/contexts/` file aligned.
+Detailed rationale stays in `docs/contexts/context_bootstrap_industrialization.md`.
+Keep `working_context.md` and its referenced `docs/contexts/` file aligned.
 Repeat here only the most important active facts needed to execute the current
 step safely.
 Do not let this file gradually absorb extended design detail that belongs in
-`docs/contexts/lcd_redesign.md`.
+`docs/contexts/context_bootstrap_industrialization.md`.
