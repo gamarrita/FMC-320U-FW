@@ -12,7 +12,10 @@ Use it when a refactor becomes a real line of work and needs explicit framing.
 
 - defines or reframes the current refactor focus
 - can establish or update `WORKING_CONTEXT.md`
-- can leave an active working document aligned with that refactor
+- can leave an active working document aligned with that refactor under
+  `docs/contexts/`
+- should leave `WORKING_CONTEXT.md` with short operational state, not only a
+  pointer
 
 ## What it does NOT do
 
@@ -32,4 +35,7 @@ Yes
 
 ## Output
 
-A reframed or newly established refactor context with clear current focus.
+A reframed or newly established refactor context with:
+- a short operational `WORKING_CONTEXT.md`
+- an active context file under `docs/contexts/`
+- clear current focus, constraints, and next useful steps

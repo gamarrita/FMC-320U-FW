@@ -12,7 +12,10 @@ Use it when a new feature becomes a real line of work and needs explicit framing
 
 - defines the current feature focus
 - can establish or update `WORKING_CONTEXT.md`
-- can leave an active working document aligned with that feature
+- can leave an active working document aligned with that feature under
+  `docs/contexts/`
+- should leave `WORKING_CONTEXT.md` with short operational state, not only a
+  pointer
 
 ## What it does NOT do
 
@@ -32,4 +35,7 @@ Yes
 
 ## Output
 
-A newly established or reframed feature context with clear current focus.
+A newly established or reframed feature context with:
+- a short operational `WORKING_CONTEXT.md`
+- an active context file under `docs/contexts/`
+- clear current focus, constraints, and next useful steps

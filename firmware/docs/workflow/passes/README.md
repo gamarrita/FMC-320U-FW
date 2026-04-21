@@ -30,3 +30,16 @@ Non-bootstrap passes:
 - require an existing `WORKING_CONTEXT.md`
 - operate inside the current context
 - do not create or replace `WORKING_CONTEXT.md`
+
+---
+
+## Prompt Placement
+
+Prompts belong to the pass that owns them.
+
+Examples:
+- bootstrap prompts for `refactor/` live under `refactor/`
+- bootstrap prompts for `new_feature/` live under `new_feature/`
+- support prompts for `comments/` live under `comments/`
+
+Do not rely on a global prompts folder for pass-owned behavior.

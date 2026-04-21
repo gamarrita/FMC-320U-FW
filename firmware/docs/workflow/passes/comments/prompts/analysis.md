@@ -12,7 +12,8 @@ Analizá:
 No modifiques código todavía.
 
 Objetivo:
-decidir cómo debería hacerse una pasada de comentarios en este módulo para dejarlo consistente con el repo.
+decidir cómo debería hacerse una pasada de comentarios en este módulo para
+dejarlo consistente con el repo.
 
 Usá como referencia:
 - `firmware/WORKING_CONTEXT.md`

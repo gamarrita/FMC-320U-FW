@@ -1,65 +1,47 @@
 # WORKING_CONTEXT.md
 
-## Use This File First
+## Current Work
 
-Current working document:
-- `docs/contexts/lcd_redesign.md`
+Stage:
+- validation
 
-Operate there for work touching:
+Active pass:
+- none
+
+Operational context:
+
+Area:
 - `bsp/devices/lcd/`
 - `bsp/devices/lcd/pcf8553/`
 - `apps/lcd_bringup/`
-- `legacy_backup/` only when backup material must be inspected
 
----
+Core structure:
+- the new LCD stack already exists
+- alpha support already exists in the public contract and implementation
+- validated numeric rows, decimal points, and indicators should be treated as stable base behavior
 
-## Current Stage
+Current focus:
+- validate alpha behavior on hardware without destabilizing the validated numeric base
 
-Current workflow stage:
-- validation
-
-Use from `docs/workflow/README.md` only what matters for this stage:
-- verify the implemented result
-- use observed evidence to judge correctness
-- keep clear what was validated and what was not
-
-Specific implication for the current LCD work:
-- treat numeric rows, decimal points, and indicators as validated base behavior
-- focus the next validation on alpha support only
-- extend the bring-up only as much as needed to observe alpha behavior
-- leave closure passes such as comment cleanup for later unless they are the explicit task
-
----
-
-## Inspect These References When Needed
-
-- `STYLE.md`
-- `AGENTS.md`
-- `docs/workflow/README.md`
-- `docs/workflow/passes/README.md`
-- `CONTRIBUTING.md`
-
-Inspect the file that applies.
-Do not expect `WORKING_CONTEXT.md` to restate their content.
-
----
-
-## Current Priority
-
-- use `docs/contexts/lcd_redesign.md` as the active source of truth for the LCD refactor
-- validate the newly implemented alpha support on hardware
+Constraints:
 - keep the validated numeric and indicator path untouched unless alpha validation exposes a real issue
+- extend the bring-up only as much as needed to observe alpha behavior
+- do not spend this iteration on old-path compatibility, broad cleanup, or blink/resume work
 
-Expected next options after this validation:
-- alpha mapping correction
-- alpha bring-up refinement
-- blink or resume-policy work
+## Next Step
 
----
+- extend `apps/lcd_bringup/` with alpha scenes only as much as needed
+- validate alpha behavior using LCD and UART evidence
+- apply the smallest correction only if that validation exposes a real issue
 
-## Rule
+## References
 
-`WORKING_CONTEXT.md` should stay short.
+- `docs/contexts/lcd_redesign.md`
+- `STYLE.md`
 
-If it starts carrying details that belong to the active task,
-move them into the active context file.
+## Strong Rule
+
+This is execution state, not documentation.
+No history.
+No long explanation.
+Detailed rationale stays in `docs/contexts/lcd_redesign.md`.
