@@ -249,16 +249,43 @@ Latest clarified modeling decisions from the review:
 - `TTL` is resettable in the product, but through a more privileged mechanism
   than `ACM`
 - `TTL` remains non-user-resettable in normal operation
+- the model reset primitive does not need a separate authentication mechanism:
+  - UI/service flow protects access to TTL reset
+  - once that flow is reached, the same total reset primitive can reset ACM or
+    TTL according to the selected role
 - `ACM` and `TTL` should remain simple and close to each other in the code
 - in practice, `ACM`, `TTL`, and `RATE` should share the same active volume
   unit in this instrument
 - `RATE` should differ mainly by its time base, not by a separate volume-unit
   ownership
+- `ACM` and `TTL` should not store visible volume as canonical state:
+  - their canonical runtime backing state is the pulse counter
+  - visible volume should be derived from pulses plus the active measurement
+    environment
+- `RATE` remains a first-class FMC semantic element, but the first core model
+  should not store an instantaneous rate value without the acquisition/rate
+  behavior that produced it
+- the legacy `BLANK` unit should be reinterpreted as an unsupported/future-unit
+  placeholder:
+  - it is unsupported by the physical conversion table
+  - it remains operational with conversion factor `1`
+  - whoever configures the instrument must load a calibration factor already
+    expressed as pulses per desired custom unit
+  - presentation may render that state as `--`
+- the barrel unit should use the model name `BBL_US`; the visible label `BR`
+  belongs to presentation
 - legacy `factor_cal` should now be read as a practical calibration truth
   anchored by liters:
   - calibration is performed from total pulses against a reference reading in
     liters
   - factor 1 is used during that calibration step
+- the refactor should make the calibration unit explicit to avoid hiding the
+  liter anchor:
+  - no menu, display, or operator-facing change of calibration unit is
+    implemented now
+  - known physical unit conversions normally use the liter-anchored path
+  - unsupported/custom units rely on a factor already loaded for that unit and
+    therefore use conversion factor `1`
 - `factor_k` should now be read as the operative environment factor:
   - some unit selections derive a new operative factor from calibration
   - others intentionally keep conversion factor 1
@@ -305,19 +332,23 @@ Latest clarified modeling decisions from the review:
   especially if total values may be recomputed after configuration changes
 - `flow_active` and `pulse_activity` were identified as implementation leakage
   and should not stay in the first core model contract
-- ACM, TTL, and RATE are runtime-derived environment values, not editable
-  configuration
+- visible ACM, TTL, and RATE are derived environment views, not editable
+  configuration; ACM and TTL are backed by canonical pulse counters
 
 Recommended simplification from those decisions:
 - define one primitive reusable total state type
 - instantiate it twice:
   - `ACM`
   - `TTL`
-- make reset policy part of the total-role contract, not of the UI mechanism
+- make reset policy part of the total-role contract as information for callers;
+  the UI/service layer enforces access to privileged TTL reset
+- store canonical total pulse counters in the model, not cached visible total
+  volumes
 - keep one shared measurement context for:
   - active volume unit
   - active time base
-  - canonical calibration
+  - calibration value
+  - explicit calibration unit without adding a UI for changing it now
 - expose derived K-factor through query helpers if needed, but avoid storing
   multiple public K-factor variants in the model
 - keep the full model shape copyable so later product layers can hold:
@@ -456,7 +487,9 @@ These should remain visible as first-class FMC elements:
 Reason:
 - they are the values the flow computer exists to expose
 - they have stable meaning for product behavior and later presentation
-- they are runtime-derived state, not parameter-edit state
+- they are runtime-derived visible views, not parameter-edit state
+- ACM and TTL are backed in the model by pulse counters rather than cached
+  visible volume
 
 ### C. Derived public query
 
@@ -549,12 +582,11 @@ This supports keeping the new FMC model focused on:
 
 - the new model module name is now tentatively chosen as `fm_fmc_model.*`
 - the exact public contract still needs refinement after review
-- TTL reset policy still has a source conflict:
-  - resolved interpretation:
-    - `docs/specs/fmc/use_cases.yaml` is still correct that TTL is not
-      user-resettable
-    - the refactor model should still allow a privileged/admin reset path in
-      the future
+- TTL reset policy has a resolved interpretation:
+  - `docs/specs/fmc/use_cases.yaml` is still correct that TTL is not
+    user-resettable
+  - the refactor model exposes a reset primitive that can serve TTL once a
+    privileged UI/service flow has authorized access
 - the first-slice boundary between:
   - FMC model semantics
   - FMC presentation semantics

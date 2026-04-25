@@ -25,6 +25,14 @@ Current decision:
 - `fm_fmc_model` may depend publicly on that library
 - legacy decimal-selection policy (`fm_fmc_fp_sel`) also points toward this
   future numeric library instead of the FMC core model
+- the FMC core model should preserve pulse counters as canonical backing state
+  for totals
+- derived volume/rate calculations may use `double` where appropriate, while
+  editable or persistent decimal quantities may later use exact scaled numeric
+  types
+- when a value is stored as an integer scaled by 1000, use an explicit `_milli`
+  suffix in variable names, for example `factor_k_milli`
+- do not use `_milli` for unscaled `double` values
 
 What this future library is expected to provide:
 - domain-neutral numeric types

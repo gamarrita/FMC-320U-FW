@@ -47,8 +47,16 @@ Current focus:
   - ACM and TTL should stay simple and share the same volume-unit ownership
   - RATE should share the same volume unit and only vary by time base
   - pulse counters remain relevant as the backing state behind totals
+  - ACM and TTL store canonical pulse counters; visible volumes are derived
+  - calibration unit is explicit in the model; normal physical conversions use
+    the liter default, while custom units use a factor already loaded for that
+    unit
+  - unsupported/custom units use a model placeholder, conversion factor 1, and
+    calibration already loaded for the desired custom unit
+  - `BBL_US` is the model unit; `BR` is a later presentation string
 - clarify semantic assumptions before accepting any `.h` as a contract:
-  - ACM, TTL, and RATE are runtime-derived state, not editable configuration
+  - visible ACM, TTL, and RATE are derived views, not editable configuration
+  - ACM and TTL backing state remains canonical pulse counters
   - configuration and runtime ownership must be reviewed explicitly
   - interpretation problems found in the header should be treated as blockers,
     not cosmetic issues
