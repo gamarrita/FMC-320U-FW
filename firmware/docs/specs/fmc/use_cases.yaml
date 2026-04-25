@@ -1,0 +1,736 @@
+document:
+  title: "FMC-320 LCD and UI behavior refactor reference"
+  document_type: "embedded_firmware_design_reference"
+  version: "1.0"
+  status: "working baseline"
+  intent:
+    - "Single source of truth for Codex-assisted firmware refactor of the FMC-320 LCD/UI behavior"
+    - "Translate the use-case document into a structured, implementation-facing specification"
+    - "Preserve what the operator sees, what the firmware stores, and how each screen behaves"
+    - "Separate confirmed requirements from inferred implementation guidance"
+  language: "en"
+  source_language: "es"
+  authoring_style: "engineering"
+  primary_sources:
+    - file: "100 - Casos de uso.docx"
+      role: "behavioral requirements and use cases"
+    - file: "lcd_true_source(2).yaml"
+      role: "reference structure for Codex-friendly engineering YAML"
+  assumptions_policy:
+    rule: "If a fact is not directly supported by the use-case document, mark it as inferred or unresolved"
+    statuses:
+      - "confirmed"
+      - "inferred"
+      - "unresolved"
+
+product:
+  name: "FMC-320"
+  class: "battery-powered flow computer"
+  primary_domain: "flow measurement, totalization, field configuration, logging, ticket printing"
+  major_subsystems:
+    - "LCD user interface"
+    - "mechanical keyboard"
+    - "external pushbuttons"
+    - "pulse input frontend"
+    - "RTC and backup domain"
+    - "flash-backed configuration"
+    - "optional bluetooth and printer workflows"
+
+ui_scope:
+  status: "confirmed"
+  summary: "This file specifies user-visible LCD/UI behavior and related persistence, alarms, and navigation semantics. It does not define LCD segment-to-RAM mapping."
+  explicit_non_scope:
+    - "low-level LCD COM/SEG mapping"
+    - "driver register layout"
+    - "PCB net mapping"
+    - "font segment bitmap tables"
+  design_constraint:
+    - "Refactor must preserve observable behavior before optimizing structure"
+    - "Screen names in code should remain stable or be mapped cleanly from legacy identifiers"
+
+system_requirements:
+  status: "confirmed_with_partial_inference"
+  power:
+    main_battery:
+      user_spec_life_years: 5
+      low_power_threshold_remaining_capacity_percent: 15
+      analyzed_usage_cases:
+        - scenario: "continuous flow 24 h/day, 365 days/year"
+          expected_years_to_low_power: 4.4
+        - scenario: "flow 4 h/day, 5 days/week, 5 tickets/day"
+          expected_years_to_low_power: 5.1
+        - scenario: "8 h/day, only flow measurement"
+          expected_years_to_low_power: 6.4
+      requirement_note: "5 years is the user-facing specification and should be met for more than 95% of customers"
+    backup_battery:
+      expected_years_if_main_batteries_present: 25
+      expected_years_if_main_batteries_absent: 57
+      nominal_capacity_mAh: 220
+      backup_domain_target_current_nA: 440
+      verification_state: "unresolved"
+      note: "Backup-domain current must be measured and confirmed"
+  rtc:
+    max_calendar_drift: "less than 1 minute per year"
+    verification_state: "unresolved"
+  keypad_semantics:
+    mechanical_keys:
+      short_press: "action is executed on release"
+      long_press_threshold_s: 3
+      long_press_behavior: "single action at 3 seconds; no repeat until release and new press"
+    external_pushbuttons:
+      behavior: "single function only"
+      trigger: "on release"
+  energy_budget_logging:
+    autonomy_without_bluetooth_or_printing_min_years: 3
+    weekly_bluetooth_download_budget_percent_after_1_year: 15
+    weekly_printing_budget_percent_after_1_year_for_20_tickets_per_week: 15
+
+persistence_model:
+  status: "confirmed"
+  domains:
+    flash:
+      stores:
+        - "configuration values"
+        - "user-selected units and decimal resolutions"
+        - "calibration factor K"
+        - "linearization points"
+        - "release/factory fallback values"
+    ram_backup:
+      stores:
+        - "runtime environment values preserved by backup battery"
+    rtc:
+      stores:
+        - "calendar date and time"
+  invariants:
+    - "TTL and ACM are derived from accumulated pulses"
+    - "Unit changes or calibration-factor changes update displayed accumulated volumes"
+    - "TTL must survive expected and unexpected resets while either main or backup supply preserves required state"
+
+boot_and_reset_behavior:
+  status: "confirmed"
+  cases:
+    first_power_on_after_programming:
+      condition: "first boot"
+      rtc_action: "set date to 2007-08-29"
+      data_action: "load standard sensor data"
+      rationale: "factory/programming default bootstrap"
+    normal_recovery_with_valid_rtc_and_valid_backup_ram:
+      condition:
+        rtc_year_greater_than_or_equal: 2025
+        backup_ram_boundary_check: "pass"
+      rtc_action: "keep RTC value"
+      data_action: "load environment values from backup RAM"
+      rationale: "main batteries were removed/replaced or system reset occurred"
+    invalid_recovery_rtc_before_reference_date:
+      condition: "not first boot and RTC year earlier than 2007-08-29 reference"
+      rtc_action: "set date to 2000-01-01"
+      data_action: "load standard sensor data"
+      severity: "serious_error"
+  startup_flash_consistency_check:
+    required: true
+    fallback: "recover RELEASE values if flash coherence check fails"
+
+hardware_configuration:
+  status: "confirmed"
+  jumpers_j3:
+    PD1:
+      name: "DEBUG_LED"
+      effect: "enable indicator LEDs LD1..LD3"
+      intended_use: ["production", "repair", "debug"]
+      normal_use: "not installed to save energy"
+    PD2:
+      name: "DEBUG_UART"
+      effect: "enable debug messages on UART1 via ST-LINK"
+      intended_use: ["debug"]
+      normal_use: "not installed to reduce run time and power"
+    PD3:
+      name: "EXT_BUTTON_1"
+      effect: "external button 1 input"
+    PD4:
+      name: "EXT_BUTTON_2"
+      effect: "external button 2 input"
+  sampling_policy:
+    when_read: "at power-on and when exiting configuration screen set"
+    live_reaction_without_reenter_or_reset: false
+
+input_model:
+  status: "confirmed"
+  keys:
+    - KEY_ESC
+    - KEY_ENTER
+    - KEY_UP
+    - KEY_DOWN
+  derived_events:
+    - KEY_ESC_LONG
+    - KEY_ENTER_LONG
+    - KEY_UP_LONG
+    - KEY_DOWN_LONG
+  external_buttons:
+    - EXT_1
+    - EXT_2
+  implementation_guidance:
+    status: "inferred"
+    recommendation:
+      - "Represent input as edge-triggered events, not polled actions"
+      - "Model long-press generation centrally to keep all screens consistent"
+      - "Execute short press only on release if long press was not already fired"
+
+screen_catalog:
+  status: "confirmed_with_partial_inference"
+  startup_sequence:
+    ordered_screens:
+      - SCREEN_STARTUP_ALL_SEGMENTS
+      - SCREEN_FIRMWARE_VERSION
+      - SCREEN_TTL_RATE
+  user_menu_order:
+    baseline_order:
+      - SCREEN_TTL_RATE
+      - SCREEN_ACM_RATE
+      - SCREEN_PRINTER
+      - SCREEN_DATE_TIME
+    optional_or_not_implemented:
+      - SCREEN_ACM_PT100
+      - SCREEN_BLUETOOTH_WINDOW
+  config_menu_order:
+    baseline_order:
+      - CONFIG_PASSWORD
+      - CONFIG_FACTOR_K
+      - CONFIG_LINEARIZATION_K1_F1
+      - CONFIG_LINEARIZATION_K2_F2
+      - CONFIG_LINEARIZATION_K3_F3
+      - CONFIG_LINEARIZATION_K4_F4
+      - CONFIG_LINEARIZATION_K5_F5
+      - CONFIG_ACM_TTL_VOLUME_UNIT
+      - CONFIG_RATE_TIME_UNIT
+      - CONFIG_DATE_TIME
+      - CONFIG_RATE_ALARM_HIGH
+    declared_but_not_implemented:
+      - CONFIG_FACTOR_K_OUT
+      - CONFIG_SPAN
+      - CONFIG_EXPANSION_COEFFICIENT
+
+screens:
+  SCREEN_STARTUP_ALL_SEGMENTS:
+    status: "confirmed"
+    class: "startup"
+    purpose: "show all LCD segments on power-up"
+    display:
+      behavior: "all segments ON"
+      duration_s: 3
+      backlight: "ON for entire screen display"
+    automatic_transition:
+      target: "SCREEN_FIRMWARE_VERSION"
+    key_actions:
+      KEY_ESC: "go to next screen"
+      KEY_ENTER: "no action"
+      KEY_UP: "no action"
+      KEY_DOWN: "no action"
+    external_actions:
+      EXT_1: "no action"
+      EXT_2: "no action"
+    alarms: []
+    startup_special_behavior:
+      - "check flash coherence before continuing"
+      - "restore RELEASE values on detected inconsistency"
+
+  SCREEN_FIRMWARE_VERSION:
+    status: "confirmed"
+    class: "startup"
+    purpose: "display firmware version with VE legend"
+    display:
+      lower_row: "firmware version"
+      suffix_or_legend: "VE"
+      duration_s: 3
+      backlight: "ON for entire screen display"
+    automatic_transition:
+      target: "SCREEN_TTL_RATE"
+    key_actions:
+      KEY_ESC: "go to next screen"
+      KEY_ENTER: "no action"
+      KEY_UP: "no action"
+      KEY_DOWN: "no action"
+    external_actions:
+      EXT_1: "no action"
+      EXT_2: "no action"
+    alarms: []
+
+  SCREEN_TTL_RATE:
+    status: "confirmed"
+    class: "user"
+    purpose: "main measurement screen with totalized historical volume and instantaneous flow"
+    display:
+      upper_row:
+        field: "TTL"
+        meaning: "historical total volume"
+        unit_display: "shares configured volume unit with rate flow context; unit not shown at right side of TTL"
+        user_resettable: false
+        persistence: "must survive reset and expected power events when main or backup retention domain is valid"
+        digit_count: 8
+        decimal_position_options:
+          - "0 to 9999999"
+          - "0.0 to 9999999.9"
+          - "0.00 to 999999.99"
+          - "0.000 to 99999.999"
+      lower_row:
+        field: "RATE"
+        meaning: "instantaneous flow"
+        resolution_editable_from_screen: true
+        units_source: "configured by user and stored in flash"
+      pulse_indicator: "blink when receiving valid primary sensor signal"
+    calculations:
+      source: "accumulated pulses"
+      invariants:
+        - "No repeatable loss of even a single pulse is acceptable"
+        - "Changing units or calibration factor must update displayed TTL and ACM values consistently"
+    navigation:
+      KEY_DOWN: "SCREEN_ACM_RATE"
+      EXT_1: "next screen"
+      cyclic_behavior: "forward via user menu"
+    key_actions:
+      KEY_ESC: "none"
+      KEY_ENTER: "none"
+      KEY_UP: "none"
+      KEY_DOWN: "go to SCREEN_ACM_RATE"
+      KEY_ESC_LONG: "enter programming/config menu"
+      KEY_DOWN_LONG: "change RATE resolution"
+      KEY_UP_LONG: "change TTL and ACM resolution"
+      KEY_ENTER_LONG: "no function"
+    external_actions:
+      EXT_1: "next screen"
+      EXT_2: "none"
+    alarms_source: "GLOBAL_USER_SCREEN_ALARMS"
+    power_constraint:
+      average_current_uA_max_during_tests: 80
+
+  SCREEN_ACM_RATE:
+    status: "confirmed"
+    class: "user"
+    purpose: "measurement screen with resettable accumulated volume and instantaneous flow"
+    display:
+      upper_row:
+        field: "ACM"
+        meaning: "user-resettable accumulated volume"
+        resettable_by_user: true
+      lower_row:
+        field: "RATE"
+        meaning: "instantaneous flow"
+      pulse_indicator: "same as SCREEN_TTL_RATE"
+    behavior_equivalence:
+      RATE: "same as SCREEN_TTL_RATE"
+      measurement_and_units: "same as SCREEN_TTL_RATE except ACM reset behavior"
+    navigation:
+      KEY_UP: "previous screen"
+      KEY_DOWN: "next screen"
+      EXT_1: "next screen"
+    key_actions:
+      KEY_ESC: "reset flow alarm (document says not implemented)"
+      KEY_ENTER: "no action"
+      KEY_UP: "previous screen"
+      KEY_DOWN: "next screen"
+      KEY_ENTER_LONG: "set ACM to 0"
+      KEY_ESC_LONG: "no action"
+    external_actions:
+      EXT_1: "next screen"
+      EXT_2: "set ACM to 0"
+    alarms_source: "GLOBAL_USER_SCREEN_ALARMS"
+    power_constraint:
+      average_current_uA_max_during_tests: 80
+
+  SCREEN_ACM_PT100:
+    status: "not_implemented"
+    class: "user_optional"
+    purpose: "temperature screen with optional compensated-batch control value"
+    display:
+      upper_row:
+        field: "BATCH"
+        meaning: "control value for non-compensated batch volume when temperature compensation is active"
+        user_manual_visibility: "should not be documented as an important value for operator"
+      lower_row:
+        field: "PT100 temperature"
+        ranges:
+          ambient:
+            span_c: [-5, 55]
+            resolution_c: 0.1
+            accuracy_c: 0.3
+          extended:
+            span_c: [-150, 450]
+            resolution_c: 1
+            accuracy_c: 2
+    key_actions:
+      KEY_ESC: "reset temperature alarm"
+      KEY_ENTER: "unspecified"
+      KEY_UP: "go to SCREEN_ACM_RATE"
+      KEY_DOWN: "go to SCREEN_DATE_TIME"
+    external_actions:
+      EXT_1: "next screen"
+      EXT_2: "unspecified"
+    alarms_source: "GLOBAL_USER_SCREEN_ALARMS"
+
+  SCREEN_PRINTER:
+    status: "confirmed"
+    class: "user"
+    purpose: "print ticket containing ACM-related data"
+    display:
+      upper_row: "ACM value to be printed"
+      right_graphic: "print progress indicator"
+      workflow_progress_states:
+        - "3: enable bluetooth module"
+        - "2: connect to printer"
+        - "1: send ticket"
+      completion_result:
+        success: "show --"
+        error: "show E1"
+    actions_to_start_print:
+      mechanical: "KEY_ESC"
+      external: "EXT_2"
+    key_actions:
+      KEY_ESC: "start printing"
+      KEY_ENTER: "none"
+      KEY_UP: "previous screen"
+      KEY_DOWN: "next screen"
+    external_actions:
+      EXT_1: "next screen"
+      EXT_2: "start printing"
+    alarms_source: "GLOBAL_USER_SCREEN_ALARMS"
+
+  SCREEN_BLUETOOTH_WINDOW:
+    status: "not_implemented"
+    class: "user_optional"
+    purpose: "open temporary bluetooth connection window for log download"
+    display:
+      connection_window_s: 15
+      active_session_timeout_s: 90
+      timer_behavior: "countdown shown on screen"
+    protocol_summary:
+      expected_host_action: "discover, connect, then send command to start data transmission"
+      timeout_extension_rule: "90-second window renews whenever a command is received from host via UART/bluetooth path"
+      background_behavior: "window remains active even if user navigates to other screens"
+    key_actions:
+      KEY_ESC: "unspecified"
+      KEY_ENTER: "start new connection window"
+      KEY_UP: "previous screen"
+      KEY_DOWN: "none"
+    external_actions:
+      EXT_1: "go to TTL-RATE in cyclic user flow"
+      EXT_2: "start new connection window"
+    alarms_source: "GLOBAL_USER_SCREEN_ALARMS"
+
+  SCREEN_DATE_TIME:
+    status: "confirmed_with_minor_naming_inconsistency"
+    class: "user"
+    purpose: "show current date and time; enable bluetooth command/data mode according to text"
+    display:
+      upper_row: "date dd.mm.yyyy"
+      lower_row: "time hh.mm.ss"
+    side_effects:
+      - "bluetooth module is enabled on this screen according to the document"
+      - "AT-command capability for data download is enabled on this screen according to the document"
+    timeout:
+      auto_return_after_minutes: 3
+      auto_return_target: "SCREEN_ACM_RATE"
+      rationale: "avoid excessive power consumption"
+    placement_rule:
+      should_be_last_user_screen: true
+    key_actions:
+      KEY_ESC: "unspecified"
+      KEY_ENTER: "unspecified"
+      KEY_UP: "go to SCREEN_ACM_PT100 if implemented"
+      KEY_DOWN: "unspecified"
+    external_actions:
+      EXT_1: "next screen"
+      EXT_2: "none"
+    alarms_source: "GLOBAL_USER_SCREEN_ALARMS"
+
+GLOBAL_USER_SCREEN_ALARMS:
+  status: "not_implemented"
+  malfunction_E:
+    visual_behavior: "blink"
+    triggers:
+      - "measured flow greater than or equal to sensor_rate_100"
+      - "temperature greater than or equal to sensor_temp_100"
+      - "temperature less than or equal to sensor_temp_0"
+      - "unexpected reset"
+  low_battery:
+    visual_behavior: "blink"
+    trigger: "main battery below 20% of useful life"
+  pulse_indicator:
+    visual_behavior: "blink"
+    trigger: "incoming pulses"
+  display_rule:
+    - "If displayed flow or temperature values are in error state, those numeric values blink in sync with malfunction icon E"
+
+configuration_screens:
+  status: "confirmed_with_partial_inference"
+  shared_rules:
+    entry_gate:
+      screen: "CONFIG_PASSWORD"
+      behavior: "configuration menu is always traversed, but modification is only allowed after correct password entry"
+    backlight_policy:
+      status: "confirmed"
+      rule: "Any key action in configuration screens keeps backlight on for 10 seconds unless a specific screen states the same explicitly"
+    external_buttons:
+      behavior: "no programmed actions in configuration screens"
+    save_policy:
+      status: "confirmed"
+      rule: "Before saving to flash, validate data integrity and variable range limits"
+
+  CONFIG_PASSWORD:
+    status: "confirmed"
+    purpose: "capture 4-key password sequence"
+    display:
+      legend: "PASS"
+    behavior:
+      password_length: 4
+      auto_advance_after_full_entry: true
+      effect_of_correct_entry: "enable modification permissions in configuration screens"
+      effect_of_incorrect_entry: "allow traversal but prevent modifications"
+    accepted_inputs:
+      KEY_ESC: "recorded as pressed key"
+      KEY_ENTER: "recorded as pressed key"
+      KEY_UP: "recorded as pressed key"
+      KEY_DOWN: "recorded as pressed key"
+
+  CONFIG_FACTOR_K:
+    status: "confirmed"
+    purpose: "edit primary calibration factor digit by digit"
+    display:
+      editable_row: "upper row"
+      cursor_start: "least significant digit blinks"
+      editing_style: "must replicate FM-500 editing behavior"
+    limits:
+      FACTOR_K: "1.000 to 99999.999"
+    key_actions:
+      KEY_ESC: "advance to next configuration screen"
+      KEY_ENTER: "move editing cursor left; wrap after most significant digit"
+      KEY_UP: "increment selected digit"
+      KEY_DOWN: "decrement selected digit"
+    persistence:
+      store_in_flash: true
+      initial_value_on_entry: "last programmed value currently active in runtime environment"
+
+  CONFIG_LINEARIZATION_GROUP:
+    status: "confirmed_with_inference_for_screen_split"
+    purpose: "edit up to five frequency/K pairs used for linearization"
+    screens:
+      - id: "CONFIG_LINEARIZATION_K1_F1"
+      - id: "CONFIG_LINEARIZATION_K2_F2"
+      - id: "CONFIG_LINEARIZATION_K3_F3"
+      - id: "CONFIG_LINEARIZATION_K4_F4"
+      - id: "CONFIG_LINEARIZATION_K5_F5"
+    behavior:
+      operator_expected_order: "ascending frequency from F1 to F5"
+      enable_linearization_when: "all five frequencies are non-zero"
+      editing_style: "same digit-edit model as CONFIG_FACTOR_K; KEY_ENTER traverses K then F within the same screen"
+    limits:
+      FACTOR_Kx: "1 to 99999.999"
+      FACTOR_Fx: "0 to 999"
+      note: "F=0 means linearization not used"
+    safety_checks:
+      - "Ignore linearization if frequencies are not in ascending order"
+      - "Ignore linearization if any FACTOR_Kx differs more than 20% from FACTOR_K"
+    persistence:
+      store_in_flash: true
+
+  CONFIG_ACM_TTL_VOLUME_UNIT:
+    status: "confirmed"
+    purpose: "configure volume unit and decimal resolution shared by ACM and TTL"
+    options:
+      volume_units: ["LT", "M3", "MC", "KG", "GL", "BR", "--"]
+      decimal_resolutions: [0, 1, 2, 3]
+    key_actions:
+      KEY_ESC: "confirm changes and go to next config screen"
+      KEY_ENTER: "cycle decimal resolution"
+      KEY_UP: "cycle volume units ascending"
+      KEY_DOWN: "cycle volume units descending"
+    limits:
+      resolution_format_examples: ["0", "0.0", "0.00", "0.000"]
+    persistence:
+      store_in_flash: true
+
+  CONFIG_RATE_TIME_UNIT:
+    status: "confirmed"
+    purpose: "configure time unit for rate and its decimal resolution"
+    options:
+      time_units: ["H", "D", "S", "M"]
+      decimal_resolutions: [0, 1, 2, 3]
+    display_rule:
+      blinking_items: "selected time unit and selected decimal point placement"
+    key_actions:
+      KEY_ESC: "confirm changes and go to date/time config screen"
+      KEY_ENTER: "cycle RATE resolution"
+      KEY_UP: "cycle time units ascending"
+      KEY_DOWN: "cycle time units descending"
+    open_question:
+      resolution_computation_rule: "document says see FM-500; exact legacy rule unresolved"
+
+  CONFIG_DATE_TIME:
+    status: "confirmed"
+    purpose: "edit current calendar and time"
+    display:
+      upper_row: "date dd.mm.yyyy"
+      lower_row: "time hh.mm.ss"
+      blinking_field_order:
+        - day
+        - month
+        - year
+        - hour
+        - minute
+        - second
+    key_actions:
+      KEY_ESC: "confirm changes and return to startup all-segments screen"
+      KEY_ENTER: "select next editable field"
+      KEY_UP: "increment selected field"
+      KEY_DOWN: "decrement selected field"
+
+  CONFIG_RATE_ALARM_HIGH:
+    status: "confirmed"
+    purpose: "set high-flow alarm threshold"
+    display_dependency: "uses current configured units and resolution"
+    key_actions:
+      KEY_ESC: "confirm changes and go to next menu"
+      KEY_ENTER: "change edited digit"
+      KEY_UP: "increment selected digit"
+      KEY_DOWN: "decrement selected digit"
+
+  CONFIG_FACTOR_K_OUT:
+    status: "not_implemented"
+    purpose: "configure output pulse scaling Ko"
+    semantics:
+      definition: "number of output pulses required to count one unit of volume, or equivalent pulse-scaling factor"
+      examples:
+        - "If K=141.700 and 1 output pulse per volume unit is desired, Ko=141.700"
+        - "If 1 output pulse per 0.1 volume units is desired, Ko=14.170"
+        - "If one output pulse per input pulse is desired, Ko=1.000"
+
+  CONFIG_SPAN:
+    status: "not_implemented"
+    purpose: "configure 4-20 mA maximum flow span"
+    semantics:
+      4mA_flow: 0
+      20mA_flow: "programmed span value"
+
+  CONFIG_EXPANSION_COEFFICIENT:
+    status: "not_implemented"
+    purpose: "configure thermal expansion coefficient"
+    display:
+      upper_row: "editable coefficient"
+      lower_row: "instantaneous temperature with degree-C context"
+
+printing_and_connectivity:
+  status: "confirmed_with_partial_inference"
+  printing:
+    trigger_sources: ["SCREEN_PRINTER / KEY_ESC", "SCREEN_PRINTER / EXT_2"]
+    transport_dependency: "bluetooth-assisted printer workflow"
+    user_feedback: "progress indicator with explicit staged countdown/steps"
+  communications_protocol:
+    status: "confirmed_high_level_only"
+    requirement: "must be compatible with a low-power system"
+    future_direction: "IoT connection may use MQTT in future"
+    legacy_guidance: "FM-500 protocol is considered a working reference"
+
+data_logging_monitor:
+  status: "not_implemented"
+  function_name_reference: "FM_LOG_Monitor()"
+  goal: "store only informative events to reduce flash wear and energy usage"
+  flash_capacity_reference_mb: 1
+  rules:
+    zero_flow:
+      behavior: "monitor is not called when measured flow is zero"
+    flow_start:
+      emitted_events:
+        - "one zero-flow event timestamped one second before current time"
+        - "one event with current flow at current time"
+    moving_flow_buffer_policy:
+      startup_available_records: 10
+      additional_records_per_continuous_flow_minute: 1
+      significant_change_threshold_percent: 2
+      stop_event: "always recorded even if no record credits remain"
+      pause_recovery_rule: "if flow restarts after stop, inherit remaining record credits plus one per minute of pause, capped at 10"
+      exhaustion_note: "frequent short start-stop cycles can exhaust credits quickly"
+    life_signal:
+      heartbeat_event_every_minutes: 60
+
+measurement_and_test_guidance:
+  status: "confirmed"
+  SCREEN_TTL_RATE_tests:
+    - id: "0x2FB398FC"
+      focus: "current consumption and pulse/flow behavior"
+      requirements:
+        - "average current below 80 uA during all tests"
+        - "pulse indicator blinks when pulses are counted"
+        - "with K=1, time unit S, volume unit LT, TTL resolution 1, RATE resolution 0.1: 1.0 Hz reads 1.0 +/- 0.1 and 100.0 Hz reads 100.0 +/- 0.1"
+        - "with K=60, time unit M, volume unit LT, TTL resolution 0.1, RATE resolution 0.1: displayed flow follows generator frequency variations"
+  SCREEN_ACM_RATE_tests:
+    - id: "0x2FB40A04"
+      focus: "UI behavior, flow and volume accumulation"
+      requirements:
+        - "average current below 80 uA during all tests"
+        - "ACM reset behavior works from long ENTER and EXT_2"
+        - "with K=6000, time unit M, volume unit LT, volume resolution 0.01, RATE resolution 0.001, 60.0 Hz gives 0.600 Lt/m and ACM increments about 0.01 per second"
+        - "with K=60000, time unit M, volume unit LT, volume resolution 0.001, RATE resolution 0.001, 600.0 Hz gives 0.600 Lt/m and ACM increments about 0.01 Lt per second"
+  startup_tests:
+    - id: "0x2FB396C8"
+      focus: "all-segments screen and skip behavior"
+    - id: "0x2FB39787"
+      focus: "firmware version screen and skip behavior"
+    - id: "0x2FB397FE"
+      focus: "full user/configuration menu traversal and usability"
+
+code_refactor_guidance:
+  status: "inferred"
+  architecture_recommendation:
+    - "Separate screen rendering, navigation, actions, and persistence access into independent modules"
+    - "Represent each screen as declarative data plus callbacks rather than large switch/case blocks"
+    - "Keep an explicit UI state machine with startup, user, config, and transient workflow substates"
+    - "Use a centralized alarm model and let screens subscribe to shared status bits"
+    - "Keep measurement model independent from display formatting"
+  suggested_modules:
+    - name: "ui_state_machine"
+      responsibility: "screen IDs, transitions, timers, startup flow, auto-return logic"
+    - name: "ui_input_dispatch"
+      responsibility: "debounce, press/release events, long-press generation, external button routing"
+    - name: "ui_render_model"
+      responsibility: "row content, legends, icons, blink masks, backlight policy"
+    - name: "measurement_model"
+      responsibility: "pulse accumulation, rate, TTL, ACM, compensation hooks"
+    - name: "config_store"
+      responsibility: "validated load/save to flash and backup RAM"
+    - name: "alarm_manager"
+      responsibility: "E alarm, low battery, pulse indicator, per-screen reset semantics"
+    - name: "workflow_printer_bt"
+      responsibility: "printer progress stages, connection windows, auto-timeout"
+  invariants_to_preserve:
+    - "Short-press actions occur on release"
+    - "Long press fires once at 3 seconds and suppresses short action"
+    - "User-visible units and decimal settings persist in flash"
+    - "TTL is not user-resettable"
+    - "ACM is user-resettable"
+    - "Date/time screen auto-exits after 3 minutes"
+    - "Configuration changes require correct password for edit rights"
+    - "Invalid linearization must be ignored safely"
+
+open_questions_and_gaps:
+  status: "confirmed_with_unresolved_items"
+  items:
+    - id: "OQ_001"
+      topic: "LCD segment-level mapping"
+      state: "unresolved"
+      note: "Not present in the use-case document; must be sourced from LCD driver/design artifacts"
+    - id: "OQ_002"
+      topic: "Exact FM-500 editing behavior and resolution rules"
+      state: "unresolved"
+      note: "Several screens reference FM-500 behavior without fully defining it"
+    - id: "OQ_003"
+      topic: "Backup-domain current verification"
+      state: "unresolved"
+    - id: "OQ_004"
+      topic: "RTC drift verification method"
+      state: "unresolved"
+    - id: "OQ_005"
+      topic: "Date-time screen vs bluetooth screen overlap"
+      state: "unresolved"
+      note: "Document assigns bluetooth/AT-command behavior to both SCREEN_BLUETOOTH_WINDOW and SCREEN_DATE_TIME"
+    - id: "OQ_006"
+      topic: "Alarm reset semantics wording"
+      state: "unresolved"
+      note: "ACM-RATE says KEY_ESC resets flow alarm but also marks it not implemented"

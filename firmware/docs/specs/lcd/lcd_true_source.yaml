@@ -1,0 +1,1048 @@
+document:
+  title: "Custom segmented LCD engineering specification"
+  document_type: "embedded_hardware_interface_spec"
+  version: "1.1"
+  status: "working baseline"
+  intent:
+    - "Single source of truth for firmware, validation, and future LCD revisions"
+    - "Independent from any specific legacy driver implementation"
+    - "Usable for driver generation, board bring-up, production test, and LCD redesign review"
+  language: "en"
+  authoring_style: "engineering"
+  assumptions_policy:
+    rule: "If a fact is not directly supported by available evidence, mark it as inferred or unresolved"
+    statuses:
+      - "confirmed"
+      - "inferred"
+      - "unresolved"
+
+display:
+  product_name: "Custom segmented LCD for flow/volume instrument"
+  glass_model_reference:
+    - "FMC-160LDC"
+    - "ENH-SS024197-01"
+  technology: "passive multiplexed segmented LCD"
+  controller_family: "PCF8553-compatible memory map expected"
+  electrical_topology:
+    com_count: 4
+    seg_count: 40
+    total_segments: 160
+    mux: "1/4 duty"
+    bias:
+      value: "1/3 bias"
+      status: "inferred"
+      rationale: "Consistent with 4 COM segmented LCD arrangement and vendor sheet style"
+  panel_function:
+    summary: "Multi-zone segmented LCD with numeric rows, two alphanumeric 14-segment characters, decimal markers, and dedicated status symbols"
+  evidence:
+    mechanical_and_layout_pdf: "bsp/devices/lcd/docs/ENH-SS024197-01-YFPHGN-1.pdf"
+    artwork_with_segment_names: "Available"
+    routing_artwork_with_com_colors: "Available"
+    legacy_functional_driver: "Available"
+
+mechanical:
+  status: "confirmed"
+  source_summary:
+    - "Vendor PDF provides overall dimensions, viewing area, pin pitch, and backlight dimensions"
+    - "Artwork PDF shows physical placement of numeric fields and symbols"
+  dimensions_mm:
+    module_width: 64
+    module_height: 33
+    visible_area_width: 61
+    visible_area_height: 30
+    backlight_width: 69
+    backlight_height: 33
+    thickness: 12
+    backlight_tail_length: 50
+  notes:
+    - "Values above are derived from uploaded mechanical/artwork documentation"
+    - "Use vendor PDF as manufacturing reference, not firmware reference"
+  references:
+    - "FMC-160LDC artwork and dimensions"
+    - "ENH-SS024197-01 mechanical drawing"
+
+electrical_interface:
+  status: "confirmed"
+  electrode_sets:
+    com:
+      - COM0
+      - COM1
+      - COM2
+      - COM3
+    seg:
+      - SEG0
+      - SEG1
+      - SEG2
+      - SEG3
+      - SEG4
+      - SEG5
+      - SEG6
+      - SEG7
+      - SEG8
+      - SEG9
+      - SEG10
+      - SEG11
+      - SEG12
+      - SEG13
+      - SEG14
+      - SEG15
+      - SEG16
+      - SEG17
+      - SEG18
+      - SEG19
+      - SEG20
+      - SEG21
+      - SEG22
+      - SEG23
+      - SEG24
+      - SEG25
+      - SEG26
+      - SEG27
+      - SEG28
+      - SEG29
+      - SEG30
+      - SEG31
+      - SEG32
+      - SEG33
+      - SEG34
+      - SEG35
+      - SEG36
+      - SEG37
+      - SEG38
+      - SEG39
+  electrode_model:
+    description: "Each visible segment is identified by one COM electrode and one SEG electrode"
+    canonical_pixel_identifier: "(com, seg)"
+    rule: "A physical LCD segment is ON when the corresponding COM/SEG waveform pair is driven according to the controller state"
+  common_naming_convention:
+    status: "confirmed_with_translation_note"
+    description: "The vendor artwork and the controller-facing RAM model do not use the same COM numbering for all lines"
+    controller_side:
+      note: "This is the numbering used by the recovered PCF8553 RAM map and by reg/bit formulas in this document"
+      com_order:
+        - COM0
+        - COM1
+        - COM2
+        - COM3
+    glass_side:
+      note: "This is the numbering and color convention shown in the LCD routing artwork"
+      color_reference:
+        COM0: "green"
+        COM1: "yellow"
+        COM2: "blue"
+        COM3: "red"
+    controller_to_glass_mapping:
+      COM0: COM1
+      COM1: COM0
+      COM2: COM2
+      COM3: COM3
+    engineering_note:
+      - "When comparing artwork colors against reg/bit controller mappings, translate controller-side COM numbering to glass-side COM numbering first"
+      - "This COM0/COM1 exchange is important for interpreting the 14-segment artwork and should not be silently collapsed"
+  memory_model:
+    description: "Controller memory is modeled as 20 registers x 8 bits = 160 controllable segment states"
+    register_count: 20
+    bits_per_register: 8
+    register_names:
+      - REG_0
+      - REG_1
+      - REG_2
+      - REG_3
+      - REG_4
+      - REG_5
+      - REG_6
+      - REG_7
+      - REG_8
+      - REG_9
+      - REG_10
+      - REG_11
+      - REG_12
+      - REG_13
+      - REG_14
+      - REG_15
+      - REG_16
+      - REG_17
+      - REG_18
+      - REG_19
+
+ram_map:
+  status: "confirmed"
+  description: "Canonical relationship between controller RAM, COM lines, and SEG lines"
+  canonical_formula:
+    reg: "com * 5 + floor(seg / 8)"
+    bit: "seg % 8"
+  inverse_formula:
+    com: "floor(reg / 5)"
+    seg: "(reg % 5) * 8 + bit"
+  bit_order_policy:
+    description: "Bit 0 corresponds to lowest SEG index in the 8-segment block"
+    examples:
+      - "REG_0 BIT_0 -> COM0 SEG0"
+      - "REG_0 BIT_7 -> COM0 SEG7"
+      - "REG_4 BIT_0 -> COM0 SEG32"
+      - "REG_19 BIT_7 -> COM3 SEG39"
+  registers:
+    - reg: 0
+      com: 0
+      seg_range: [0, 7]
+      bits:
+        0: SEG0
+        1: SEG1
+        2: SEG2
+        3: SEG3
+        4: SEG4
+        5: SEG5
+        6: SEG6
+        7: SEG7
+    - reg: 1
+      com: 0
+      seg_range: [8, 15]
+      bits:
+        0: SEG8
+        1: SEG9
+        2: SEG10
+        3: SEG11
+        4: SEG12
+        5: SEG13
+        6: SEG14
+        7: SEG15
+    - reg: 2
+      com: 0
+      seg_range: [16, 23]
+      bits:
+        0: SEG16
+        1: SEG17
+        2: SEG18
+        3: SEG19
+        4: SEG20
+        5: SEG21
+        6: SEG22
+        7: SEG23
+    - reg: 3
+      com: 0
+      seg_range: [24, 31]
+      bits:
+        0: SEG24
+        1: SEG25
+        2: SEG26
+        3: SEG27
+        4: SEG28
+        5: SEG29
+        6: SEG30
+        7: SEG31
+    - reg: 4
+      com: 0
+      seg_range: [32, 39]
+      bits:
+        0: SEG32
+        1: SEG33
+        2: SEG34
+        3: SEG35
+        4: SEG36
+        5: SEG37
+        6: SEG38
+        7: SEG39
+
+    - reg: 5
+      com: 1
+      seg_range: [0, 7]
+      bits:
+        0: SEG0
+        1: SEG1
+        2: SEG2
+        3: SEG3
+        4: SEG4
+        5: SEG5
+        6: SEG6
+        7: SEG7
+    - reg: 6
+      com: 1
+      seg_range: [8, 15]
+      bits:
+        0: SEG8
+        1: SEG9
+        2: SEG10
+        3: SEG11
+        4: SEG12
+        5: SEG13
+        6: SEG14
+        7: SEG15
+    - reg: 7
+      com: 1
+      seg_range: [16, 23]
+      bits:
+        0: SEG16
+        1: SEG17
+        2: SEG18
+        3: SEG19
+        4: SEG20
+        5: SEG21
+        6: SEG22
+        7: SEG23
+    - reg: 8
+      com: 1
+      seg_range: [24, 31]
+      bits:
+        0: SEG24
+        1: SEG25
+        2: SEG26
+        3: SEG27
+        4: SEG28
+        5: SEG29
+        6: SEG30
+        7: SEG31
+    - reg: 9
+      com: 1
+      seg_range: [32, 39]
+      bits:
+        0: SEG32
+        1: SEG33
+        2: SEG34
+        3: SEG35
+        4: SEG36
+        5: SEG37
+        6: SEG38
+        7: SEG39
+
+    - reg: 10
+      com: 2
+      seg_range: [0, 7]
+      bits:
+        0: SEG0
+        1: SEG1
+        2: SEG2
+        3: SEG3
+        4: SEG4
+        5: SEG5
+        6: SEG6
+        7: SEG7
+    - reg: 11
+      com: 2
+      seg_range: [8, 15]
+      bits:
+        0: SEG8
+        1: SEG9
+        2: SEG10
+        3: SEG11
+        4: SEG12
+        5: SEG13
+        6: SEG14
+        7: SEG15
+    - reg: 12
+      com: 2
+      seg_range: [16, 23]
+      bits:
+        0: SEG16
+        1: SEG17
+        2: SEG18
+        3: SEG19
+        4: SEG20
+        5: SEG21
+        6: SEG22
+        7: SEG23
+    - reg: 13
+      com: 2
+      seg_range: [24, 31]
+      bits:
+        0: SEG24
+        1: SEG25
+        2: SEG26
+        3: SEG27
+        4: SEG28
+        5: SEG29
+        6: SEG30
+        7: SEG31
+    - reg: 14
+      com: 2
+      seg_range: [32, 39]
+      bits:
+        0: SEG32
+        1: SEG33
+        2: SEG34
+        3: SEG35
+        4: SEG36
+        5: SEG37
+        6: SEG38
+        7: SEG39
+
+    - reg: 15
+      com: 3
+      seg_range: [0, 7]
+      bits:
+        0: SEG0
+        1: SEG1
+        2: SEG2
+        3: SEG3
+        4: SEG4
+        5: SEG5
+        6: SEG6
+        7: SEG7
+    - reg: 16
+      com: 3
+      seg_range: [8, 15]
+      bits:
+        0: SEG8
+        1: SEG9
+        2: SEG10
+        3: SEG11
+        4: SEG12
+        5: SEG13
+        6: SEG14
+        7: SEG15
+    - reg: 17
+      com: 3
+      seg_range: [16, 23]
+      bits:
+        0: SEG16
+        1: SEG17
+        2: SEG18
+        3: SEG19
+        4: SEG20
+        5: SEG21
+        6: SEG22
+        7: SEG23
+    - reg: 18
+      com: 3
+      seg_range: [24, 31]
+      bits:
+        0: SEG24
+        1: SEG25
+        2: SEG26
+        3: SEG27
+        4: SEG28
+        5: SEG29
+        6: SEG30
+        7: SEG31
+    - reg: 19
+      com: 3
+      seg_range: [32, 39]
+      bits:
+        0: SEG32
+        1: SEG33
+        2: SEG34
+        3: SEG35
+        4: SEG36
+        5: SEG37
+        6: SEG38
+        7: SEG39
+
+visual_layout:
+  status: "confirmed"
+  description: "Visible elements grouped by functional area"
+  zones:
+    line_1:
+      description: "Upper numeric row"
+      visible_labels: [10, 11, 12, 13, 14, 15, 16, 17]
+      digit_count: 8
+      digit_style: "7-segment numeric"
+      decimal_points_between_digits: 7
+      left_to_right_order: [10, 11, 12, 13, 14, 15, 16, 17]
+    line_2:
+      description: "Lower numeric row"
+      visible_labels: [1, 2, 3, 4, 5, 6, 7]
+      digit_count: 7
+      digit_style: "7-segment numeric"
+      decimal_points_between_digits: 6
+      left_to_right_order: [1, 2, 3, 4, 5, 6, 7]
+    line_3:
+      description: "Two central/right 14-segment alphanumeric characters"
+      visible_labels: [8, 9]
+      digit_count: 2
+      digit_style: "14-segment alphanumeric"
+      left_to_right_order: [8, 9]
+    symbols:
+      description: "Dedicated status symbols and legends"
+      elements:
+        - "POINT"
+        - "BATTERY"
+        - "POWER"
+        - "RATE"
+        - "E"
+        - "BATCH"
+        - "ACM"
+        - "TTL"
+        - "/"
+        - "HD"
+        - "SM"
+  artwork_notes:
+    - "Segment coloring in artwork is a visual aid to distinguish COM association"
+    - "Artwork COM colors follow the glass-side COM numbering, not the controller-side numbering used by the PCF8553 RAM map"
+    - "A single SEG line participates in four physical segments, one per COM"
+    - "Artwork labels A..G for 7-segment and A..N for 14-segment are geometric names, not controller register names"
+
+logical_elements:
+  status: "confirmed_with_partial_inference"
+  description: "Firmware-facing logical model of the LCD"
+  groups:
+    numeric_rows:
+      line_1:
+        digits:
+          - id: "L1_D0"
+            visible_label: 10
+            type: "digit_7seg"
+          - id: "L1_D1"
+            visible_label: 11
+            type: "digit_7seg"
+          - id: "L1_D2"
+            visible_label: 12
+            type: "digit_7seg"
+          - id: "L1_D3"
+            visible_label: 13
+            type: "digit_7seg"
+          - id: "L1_D4"
+            visible_label: 14
+            type: "digit_7seg"
+          - id: "L1_D5"
+            visible_label: 15
+            type: "digit_7seg"
+          - id: "L1_D6"
+            visible_label: 16
+            type: "digit_7seg"
+          - id: "L1_D7"
+            visible_label: 17
+            type: "digit_7seg"
+        decimal_points:
+          - id: "L1_DP0"
+          - id: "L1_DP1"
+          - id: "L1_DP2"
+          - id: "L1_DP3"
+          - id: "L1_DP4"
+          - id: "L1_DP5"
+          - id: "L1_DP6"
+      line_2:
+        digits:
+          - id: "L2_D0"
+            visible_label: 1
+            type: "digit_7seg"
+          - id: "L2_D1"
+            visible_label: 2
+            type: "digit_7seg"
+          - id: "L2_D2"
+            visible_label: 3
+            type: "digit_7seg"
+          - id: "L2_D3"
+            visible_label: 4
+            type: "digit_7seg"
+          - id: "L2_D4"
+            visible_label: 5
+            type: "digit_7seg"
+          - id: "L2_D5"
+            visible_label: 6
+            type: "digit_7seg"
+          - id: "L2_D6"
+            visible_label: 7
+            type: "digit_7seg"
+        decimal_points:
+          - id: "L2_DP0"
+          - id: "L2_DP1"
+          - id: "L2_DP2"
+          - id: "L2_DP3"
+          - id: "L2_DP4"
+          - id: "L2_DP5"
+    alphanumeric_row:
+      digits:
+        - id: "ALPHA_D0"
+          visible_label: 8
+          type: "digit_14seg"
+        - id: "ALPHA_D1"
+          visible_label: 9
+          type: "digit_14seg"
+    standalone_symbols:
+      - id: "POINT"
+      - id: "BATTERY"
+      - id: "POWER"
+      - id: "RATE"
+      - id: "E"
+      - id: "BATCH"
+      - id: "ACM_1"
+      - id: "TTL"
+      - id: "SLASH"
+      - id: "ACM_2"
+      - id: "H"
+      - id: "D"
+      - id: "S"
+      - id: "M"
+
+segment_geometries:
+  status: "confirmed"
+  digit_7seg:
+    description: "Standard 7-segment numeric geometry used in upper and lower rows"
+    segments:
+      - A
+      - B
+      - C
+      - D
+      - E
+      - F
+      - G
+    decimal_point_name: DP
+    artwork_alias:
+      DP: H
+    note: "Artwork uses H for decimal point on numeric digits; firmware should expose it as DP"
+  digit_14seg:
+    description: "Alphanumeric 14-segment geometry used by visible characters 8 and 9"
+    segments:
+      - A
+      - B
+      - C
+      - D
+      - E
+      - F
+      - G
+      - H
+      - I
+      - J
+      - K
+      - L
+      - M
+      - N
+    layout_reference:
+      A: "bottom horizontal"
+      B: "lower-left vertical outer"
+      C: "lower-right vertical outer"
+      D: "left middle horizontal"
+      E: "upper-left vertical outer"
+      F: "upper-right vertical outer"
+      G: "top horizontal"
+      H: "right middle horizontal"
+      I: "lower-left inner diagonal"
+      J: "lower vertical center"
+      K: "lower-right inner diagonal"
+      L: "upper-left inner diagonal"
+      M: "upper vertical center"
+      N: "upper-right inner diagonal"
+    source_note:
+      - "The geometric naming above is confirmed by the artwork image with A..N labels"
+      - "This closes the segment-shape vocabulary, but not yet every reg/bit to segment assignment"
+
+numeric_row_mapping:
+  status: "confirmed"
+  purpose: "Parametric mapping for all 7-segment numeric digits"
+  policy:
+    description: "Each digit is derived from a base mapping plus a column stride"
+    stride_in_bit_positions_per_digit: 2
+    note: "This is a structural property of the glass/controller routing"
+  line_1:
+    status: "confirmed"
+    visible_order_left_to_right:
+      - L1_D0
+      - L1_D1
+      - L1_D2
+      - L1_D3
+      - L1_D4
+      - L1_D5
+      - L1_D6
+      - L1_D7
+    formula:
+      input:
+        digit_index: "0..7, left to right"
+        logical_segment: "A..G or DP"
+      process:
+        - "lookup base entry for logical_segment"
+        - "base_pos = base.bit"
+        - "base_reg = base.reg"
+        - "pos = base_pos + digit_index * 2"
+        - "reg = base_reg + floor(pos / 8)"
+        - "bit = pos % 8"
+      output: "{reg, bit}"
+    base_segments:
+      A:  {reg: 7,  bit: 6}
+      B:  {reg: 2,  bit: 6}
+      C:  {reg: 2,  bit: 7}
+      D:  {reg: 17, bit: 6}
+      E:  {reg: 12, bit: 6}
+      F:  {reg: 17, bit: 7}
+      G:  {reg: 12, bit: 7}
+      DP: {reg: 7,  bit: 7}
+  line_2:
+    status: "confirmed"
+    visible_order_left_to_right:
+      - L2_D0
+      - L2_D1
+      - L2_D2
+      - L2_D3
+      - L2_D4
+      - L2_D5
+      - L2_D6
+    formula:
+      input:
+        digit_index: "0..6, left to right"
+        logical_segment: "A..G or DP"
+      process:
+        - "internal_index = 6 - digit_index"
+        - "lookup base entry for logical_segment"
+        - "base_pos = base.bit"
+        - "base_reg = base.reg"
+        - "pos = base_pos + internal_index * 2"
+        - "reg = base_reg + floor(pos / 8)"
+        - "bit = pos % 8"
+      output: "{reg, bit}"
+    base_segments:
+      A:  {reg: 5,  bit: 7}
+      B:  {reg: 0,  bit: 7}
+      C:  {reg: 0,  bit: 6}
+      D:  {reg: 15, bit: 7}
+      E:  {reg: 10, bit: 7}
+      F:  {reg: 15, bit: 6}
+      G:  {reg: 10, bit: 6}
+      DP: {reg: 5,  bit: 6}
+    important_note:
+      - "Visible left-to-right order is inverse of the internal base progression"
+      - "Any future driver shall preserve visible-order addressing in its public API"
+
+standalone_symbol_mapping:
+  status: "confirmed"
+  description: "Dedicated symbols not encoded through the parametric numeric-row mapping"
+  symbols:
+    POINT:
+      reg: 7
+      bit: 4
+      com_seg:
+        com: 1
+        seg: 20
+    BATTERY:
+      reg: 7
+      bit: 5
+      com_seg:
+        com: 1
+        seg: 21
+    POWER:
+      reg: 2
+      bit: 5
+      com_seg:
+        com: 0
+        seg: 21
+    RATE:
+      reg: 17
+      bit: 5
+      com_seg:
+        com: 3
+        seg: 21
+    E:
+      reg: 2
+      bit: 4
+      com_seg:
+        com: 0
+        seg: 20
+    BATCH:
+      reg: 12
+      bit: 5
+      com_seg:
+        com: 2
+        seg: 21
+    ACM_1:
+      reg: 5
+      bit: 3
+      com_seg:
+        com: 1
+        seg: 3
+      validation_note: "Visually confirmed on hardware during lcd_ll_bringup"
+    TTL:
+      reg: 17
+      bit: 4
+      com_seg:
+        com: 3
+        seg: 20
+    SLASH:
+      reg: 10
+      bit: 1
+      com_seg:
+        com: 2
+        seg: 17
+      artwork_note: "Legacy code names this BACKSLASH, visible artwork suggests slash separator"
+    ACM_2:
+      reg: 12
+      bit: 4
+      com_seg:
+        com: 2
+        seg: 20
+    S:
+      reg: 10
+      bit: 5
+      com_seg:
+        com: 2
+        seg: 21
+    M:
+      reg: 9
+      bit: 7
+      com_seg:
+        com: 1
+        seg: 39
+    H:
+      reg: 5
+      bit: 6
+      com_seg:
+        com: 1
+        seg: 6
+    D:
+      reg: 9
+      bit: 5
+      com_seg:
+        com: 1
+        seg: 37
+
+decimal_point_mapping:
+  status: "confirmed"
+  description: "Dedicated decimal indicators for numeric rows"
+  line_1:
+    count: 7
+    points:
+      - id: L1_DP0
+        semantic_name: "deci"
+        reg: 7
+        bit: 7
+        com_seg: {com: 1, seg: 23}
+      - id: L1_DP1
+        semantic_name: "centi"
+        reg: 8
+        bit: 1
+        com_seg: {com: 1, seg: 25}
+      - id: L1_DP2
+        semantic_name: "mili"
+        reg: 8
+        bit: 3
+        com_seg: {com: 1, seg: 27}
+      - id: L1_DP3
+        semantic_name: "micro"
+        reg: 8
+        bit: 5
+        com_seg: {com: 1, seg: 29}
+      - id: L1_DP4
+        semantic_name: "nano"
+        reg: 8
+        bit: 7
+        com_seg: {com: 1, seg: 31}
+      - id: L1_DP5
+        semantic_name: "pico"
+        reg: 9
+        bit: 1
+        com_seg: {com: 1, seg: 33}
+      - id: L1_DP6
+        semantic_name: "femto"
+        reg: 9
+        bit: 3
+        com_seg: {com: 1, seg: 35}
+  line_2:
+    count: 6
+    points:
+      - id: L2_DP0
+        semantic_name: "deci"
+        reg: 7
+        bit: 2
+        com_seg: {com: 1, seg: 18}
+      - id: L2_DP1
+        semantic_name: "centi"
+        reg: 7
+        bit: 0
+        com_seg: {com: 1, seg: 16}
+      - id: L2_DP2
+        semantic_name: "mili"
+        reg: 6
+        bit: 6
+        com_seg: {com: 1, seg: 14}
+      - id: L2_DP3
+        semantic_name: "micro"
+        reg: 6
+        bit: 4
+        com_seg: {com: 1, seg: 12}
+      - id: L2_DP4
+        semantic_name: "nano"
+        reg: 6
+        bit: 2
+        com_seg: {com: 1, seg: 10}
+      - id: L2_DP5
+        semantic_name: "pico"
+        reg: 6
+        bit: 0
+        com_seg: {com: 1, seg: 8}
+
+alphanumeric_14seg_mapping:
+  status: "partially_confirmed"
+  description: "Two visible 14-segment characters are present and actively driven in available firmware"
+  visible_digits:
+    - id: ALPHA_D0
+      visible_label: 8
+    - id: ALPHA_D1
+      visible_label: 9
+  confirmed_facts:
+    - "Both characters are controlled independently from numeric rows"
+    - "Both characters support a wide subset of ASCII alphanumerics"
+    - "Each character uses 14 physical segments"
+  engineering_note:
+    - "The available firmware proves functional control of the 14-segment characters"
+    - "The artwork now confirms the geometric meaning of A..N"
+    - "The vendor routing drawing also confirms a controller-side to glass-side COM0/COM1 exchange"
+    - "However, the direct one-to-one naming A..N to each reg/bit is still not fully reconstructable with zero ambiguity from present evidence alone"
+  recovered_electrode_sets:
+    ALPHA_D0:
+      status: "confirmed_as_electrode_set"
+      electrodes:
+        - {reg: 0, bit: 2, com_seg: {com: 0, seg: 2}}
+        - {reg: 0, bit: 3, com_seg: {com: 0, seg: 3}}
+        - {reg: 0, bit: 4, com_seg: {com: 0, seg: 4}}
+        - {reg: 0, bit: 5, com_seg: {com: 0, seg: 5}}
+        - {reg: 5, bit: 2, com_seg: {com: 1, seg: 2}}
+        - {reg: 5, bit: 4, com_seg: {com: 1, seg: 4}}
+        - {reg: 5, bit: 5, com_seg: {com: 1, seg: 5}}
+        - {reg: 10, bit: 2, com_seg: {com: 2, seg: 2}}
+        - {reg: 10, bit: 3, com_seg: {com: 2, seg: 3}}
+        - {reg: 10, bit: 4, com_seg: {com: 2, seg: 4}}
+        - {reg: 15, bit: 2, com_seg: {com: 3, seg: 2}}
+        - {reg: 15, bit: 3, com_seg: {com: 3, seg: 3}}
+        - {reg: 15, bit: 4, com_seg: {com: 3, seg: 4}}
+        - {reg: 15, bit: 5, com_seg: {com: 3, seg: 5}}
+      naming_A_to_N:
+        status: "unresolved"
+    ALPHA_D1:
+      status: "confirmed_as_electrode_set"
+      electrodes:
+        - {reg: 0, bit: 0, com_seg: {com: 0, seg: 0}}
+        - {reg: 0, bit: 1, com_seg: {com: 0, seg: 1}}
+        - {reg: 4, bit: 6, com_seg: {com: 0, seg: 38}}
+        - {reg: 4, bit: 7, com_seg: {com: 0, seg: 39}}
+        - {reg: 5, bit: 0, com_seg: {com: 1, seg: 0}}
+        - {reg: 5, bit: 1, com_seg: {com: 1, seg: 1}}
+        - {reg: 9, bit: 6, com_seg: {com: 1, seg: 38}}
+        - {reg: 10, bit: 0, com_seg: {com: 2, seg: 0}}
+        - {reg: 14, bit: 6, com_seg: {com: 2, seg: 38}}
+        - {reg: 14, bit: 7, com_seg: {com: 2, seg: 39}}
+        - {reg: 15, bit: 0, com_seg: {com: 3, seg: 0}}
+        - {reg: 15, bit: 1, com_seg: {com: 3, seg: 1}}
+        - {reg: 19, bit: 6, com_seg: {com: 3, seg: 38}}
+        - {reg: 19, bit: 7, com_seg: {com: 3, seg: 39}}
+      naming_A_to_N:
+        status: "unresolved"
+  recommendation_for_next_revision:
+    - "Add an explicit segment naming table A..N for both ALPHA_D0 and ALPHA_D1"
+    - "Include an engineering screenshot or spreadsheet with one-hot activation per segment"
+  validation:
+    required:
+      - "one-hot test per segment A..N for both ALPHA_D0 and ALPHA_D1"
+      - "visual confirmation against artwork"
+
+character_encoding:
+  status: "confirmed_for_7seg_and_operationally_confirmed_for_14seg"
+  digit_7seg:
+    description: "Canonical encoding for numeric rows"
+    encodings:
+      " ": []
+      "-": [D]
+      "0": [A, B, C, E, F, G]
+      "1": [C, F]
+      "2": [A, B, D, F, G]
+      "3": [A, C, D, F, G]
+      "4": [C, D, E, F]
+      "5": [A, C, D, E, G]
+      "6": [A, B, C, D, E, G]
+      "7": [C, F, G]
+      "8": [A, B, C, D, E, F, G]
+      "9": [C, D, E, F, G]
+      "A": [B, C, D, E, F, G]
+      "E": [A, B, D, E, G]
+      "L": [A, B, E]
+      "O": [A, B, C, E, F, G]
+      "P": [B, D, E, F, G]
+      "S": [A, C, D, E, G]
+      "U": [A, B, C, E, F]
+      "_": [A]
+    remarks:
+      - "Encoding above reflects currently proven behavior, not IEC or ANSI naming"
+      - "Geometric labels follow the artwork convention, not the most common calculator convention"
+  digit_14seg:
+    status: "operational"
+    note: "Legacy firmware demonstrates successful rendering of many alphanumeric characters"
+    recommendation: "Future driver should use explicit per-character bitmap tables after A..N naming is finalized"
+
+firmware_abstraction_recommendation:
+  status: "recommended"
+  philosophy:
+    - "Expose a clean logical API independent of register layout"
+    - "Keep visible ordering stable even if future glass routing changes"
+    - "Represent all physical segments internally as canonical (com, seg) endpoints"
+  public_api_model:
+    pixels:
+      - "lcd_set_pixel(com, seg, on)"
+      - "lcd_get_pixel(com, seg)"
+    numeric_rows:
+      - "lcd_set_line1_digit(index, char)"
+      - "lcd_set_line2_digit(index, char)"
+      - "lcd_set_line1_dp(index, on)"
+      - "lcd_set_line2_dp(index, on)"
+    alphanumeric:
+      - "lcd_set_alpha_digit(index, char)"
+    symbols:
+      - "lcd_set_symbol(symbol_id, on)"
+    bulk:
+      - "lcd_clear()"
+      - "lcd_fill()"
+      - "lcd_flush()"
+  internal_data_model:
+    - "Shadow RAM buffer of 20 bytes"
+    - "Mapping layer from logical element to {reg, bit} or {com, seg}"
+    - "Optional unit-testable renderer isolated from bus driver"
+
+production_test_recommendation:
+  status: "recommended"
+  goals:
+    - "Detect open/short glass routing"
+    - "Validate next LCD revision without legacy firmware dependence"
+  one_hot_tests:
+    - "Sweep every register bit individually"
+    - "Capture human-readable mapping table of visible response"
+    - "For 14-segment digits, record A..N identity with annotated images"
+  grouped_tests:
+    - "All segments off"
+    - "All segments on"
+    - "Line 1 8s with all decimal points on"
+    - "Line 2 8s with all decimal points on"
+    - "Alpha digits showing A, H, N, M, X, 2, 8"
+    - "All standalone symbols on"
+  deliverables:
+    - "Photographic reference per test pattern"
+    - "CSV or YAML export of verified mappings"
+
+known_gaps:
+  status: "explicit"
+  items:
+    - id: "14seg_A_to_N_naming"
+      status: "unresolved"
+      impact: "Future alphanumeric driver may rely on legacy lookup tables unless segment names are finalized"
+      mitigation: "Perform segment-by-segment validation and add explicit naming table"
+    - id: "controller_init_details"
+      status: "out_of_scope"
+      impact: "This document describes the display, not bus initialization timing"
+      mitigation: "Keep controller init in a separate controller-specific spec"
+
+traceability:
+  derived_from:
+    - item: "User-provided COM/SEG register table"
+      purpose: "Canonical RAM map"
+    - item: "LCD artwork with segment coloring and labels"
+      purpose: "Visual grouping and geometric naming"
+    - item: "ENH-SS024197-01-YFPHGN-1 routing PDF"
+      purpose: "Glass-side COM colors and controller-side to glass-side COM0/COM1 translation note"
+    - item: "Vendor mechanical/layout PDFs"
+      purpose: "Physical organization and module dimensions"
+    - item: "Legacy functional low-level driver"
+      purpose: "Confirmed logical groupings, proven symbol mappings, and parametric digit routing"
+  confidence_summary:
+    ram_map: "high"
+    controller_to_glass_com_translation: "high"
+    numeric_row_mapping: "high"
+    symbol_mapping: "high"
+    decimal_points: "high"
+    14seg_presence_and_electrode_sets: "high"
+    14seg_A_to_N_names: "medium/insufficient"
+
+usage_notes:
+  for_new_driver:
+    - "Use this spec as the source of truth"
+    - "Do not copy legacy public API or naming unless needed for backward compatibility"
+    - "Prefer visible-order indices in application-facing functions"
+  for_next_lcd_revision:
+    - "Preserve logical IDs even if physical COM/SEG routing changes"
+    - "Update only mapping sections when artwork changes"
+    - "Add revision field and keep prior mappings archived"
+  for_document_control:
+    - "Store this file in source control next to firmware and hardware documentation"
+    - "Freeze a verified version after production validation"

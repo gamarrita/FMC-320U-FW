@@ -2,7 +2,7 @@
  * @file    fm_lcd_ll.c
  * @brief   LCD glass mapping layer for the FMC segmented display.
  *
- * The mappings in this file follow `lcd_true_source.yaml`.
+ * The mappings in this file follow `docs/specs/lcd/lcd_true_source.yaml`.
  */
 
 #include "fm_lcd_ll.h"
