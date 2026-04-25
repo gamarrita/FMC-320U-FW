@@ -12,9 +12,9 @@ document:
   source_language: "es"
   authoring_style: "engineering"
   primary_sources:
-    - file: "100 - Casos de uso.docx"
+    - file: "docs/specs/fmc/use_cases.docx"
       role: "behavioral requirements and use cases"
-    - file: "lcd_true_source(2).yaml"
+    - file: "docs/specs/lcd/lcd_true_source.yaml"
       role: "reference structure for Codex-friendly engineering YAML"
   assumptions_policy:
     rule: "If a fact is not directly supported by the use-case document, mark it as inferred or unresolved"

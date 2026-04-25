@@ -3,7 +3,7 @@
 ## Purpose
 
 This file is a candidate contract for bootstrapping a new active context pair:
-- `working_context.md`
+- `WORKING_CONTEXT.md`
 - `docs/contexts/<slug>.md`
 
 It is not yet stable policy.
@@ -52,7 +52,7 @@ If one or more of those are missing, the bootstrap should not be finalized yet.
 ## Output Pair
 
 A valid bootstrap must produce both:
-- `working_context.md`
+- `WORKING_CONTEXT.md`
 - `docs/contexts/<slug>.md`
 
 The short file is the execution state.
@@ -60,9 +60,9 @@ The extended file is the technical basis and backlog for that workstream.
 
 ---
 
-## `working_context.md` Contract
+## `WORKING_CONTEXT.md` Contract
 
-`working_context.md` must:
+`WORKING_CONTEXT.md` must:
 
 - behave as short execution state, not long documentation
 - identify the current workstream clearly enough to route the next turn
@@ -86,7 +86,7 @@ The short file should remain short even when the extended context grows.
 
 ### Required Shape
 
-At minimum, `working_context.md` should contain:
+At minimum, `WORKING_CONTEXT.md` should contain:
 
 - `Current Work`
 - `Stage`
@@ -111,7 +111,7 @@ The extended context must:
 - preserve the technical state of the active workstream
 - make the current situation understandable without relying on thread memory
 - keep rationale, risks, and remaining work out of the short file
-- keep the split of responsibility with `working_context.md` explicit
+- keep the split of responsibility with `WORKING_CONTEXT.md` explicit
 - preserve enough structure to support reframing later
 
 ### Required Content Coverage
@@ -144,7 +144,7 @@ The exact section names may vary, but a strong candidate shape is:
 
 The pair must make these rules explicit:
 
-- immediate execution authority lives in `working_context.md`
+- immediate execution authority lives in `WORKING_CONTEXT.md`
 - extended rationale and backlog live in `docs/contexts/<slug>.md`
 - both files must be updated together when they would otherwise diverge
 - the short file must not absorb extended design detail

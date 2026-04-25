@@ -43,7 +43,7 @@ The wizard should:
 - stop as soon as the bootstrap contract can be satisfied for a fresh
   refactor context
 - produce a usable output pair:
-  - `working_context.md`
+  - `WORKING_CONTEXT.md`
   - `docs/contexts/<slug>.md`
 
 The wizard should not:
@@ -215,7 +215,7 @@ The wizard MVP should not:
 
 Once the stop rule is satisfied, the wizard output should be able to produce:
 
-- a short `working_context.md` with:
+- a short `WORKING_CONTEXT.md` with:
   - real current focus
   - real constraints
   - real next step

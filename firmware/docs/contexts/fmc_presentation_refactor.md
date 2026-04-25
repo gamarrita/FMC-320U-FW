@@ -121,7 +121,7 @@ Trusted FMC legacy behavior guides:
 - `legacy_backup/libs/fm_fmc.h`
 - `legacy_backup/libs/fm_user.c`
 - `legacy_backup/libs/fm_setup.c`
-- `legacy_backup/libs/100 - Casos de uso.docx`
+- `docs/specs/fmc/use_cases.docx`
 - `docs/specs/fmc/use_cases.yaml`
 
 Relevant legacy presentation-oriented functions already identified:

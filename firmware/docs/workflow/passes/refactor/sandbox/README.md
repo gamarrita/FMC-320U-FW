@@ -26,5 +26,5 @@ Each trial should stay lightweight and should normally capture:
 
 ## Boundary
 
-Trials here do not create a real active `working_context.md`.
+Trials here do not create a real active `WORKING_CONTEXT.md`.
 They are only evidence for improving the wizard MVP.

@@ -27,7 +27,7 @@ Still missing before safe reframing:
 
 The wizard should ask short reframing questions, for example:
 
-1. ¿Qué `working_context.md` / `docs/contexts/<slug>.md` querés reencuadrar?
+1. ¿Qué `WORKING_CONTEXT.md` / `docs/contexts/<slug>.md` querés reencuadrar?
 2. En el nuevo foco, ¿qué parte querés dejar fuera de alcance: el demo,
    `fm_debug`, o la relación entre ambos?
 3. ¿Cuál sería el siguiente paso concreto después del reencuadre?

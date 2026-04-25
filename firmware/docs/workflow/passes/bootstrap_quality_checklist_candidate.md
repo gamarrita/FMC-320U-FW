@@ -4,7 +4,7 @@
 
 This file is a candidate acceptance checklist for evaluating the quality of a
 newly bootstrapped:
-- `working_context.md`
+- `WORKING_CONTEXT.md`
 - `docs/contexts/<slug>.md`
 
 It is not yet stable policy.
@@ -40,8 +40,8 @@ If any item here is `No`, the bootstrap should be treated as not ready.
 
 ### Entry And Focus
 
-- [ ] `working_context.md` defines the real active work, not general backlog
-- [ ] `working_context.md` defines a concrete next executable step
+- [ ] `WORKING_CONTEXT.md` defines the real active work, not general backlog
+- [ ] `WORKING_CONTEXT.md` defines a concrete next executable step
 - [ ] the bootstrap makes the active scope explicit
 - [ ] the bootstrap makes lateral boundaries explicit
 
@@ -55,7 +55,7 @@ If any item here is `No`, the bootstrap should be treated as not ready.
 
 ### Short Versus Extended Ownership
 
-- [ ] `working_context.md` behaves as short execution state
+- [ ] `WORKING_CONTEXT.md` behaves as short execution state
 - [ ] `docs/contexts/<slug>.md` behaves as extended technical context
 - [ ] the split of responsibility between those two files is explicit
 - [ ] immediate execution authority is explicit
@@ -142,7 +142,7 @@ Use this simple evaluation:
 ```md
 Bootstrap evaluation:
 - Candidate:
-  - `working_context.md`
+  - `WORKING_CONTEXT.md`
   - `docs/contexts/<slug>.md`
 
 Must-Have:
