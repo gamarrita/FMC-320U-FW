@@ -12,7 +12,7 @@ The initial split is:
 
 ## Current Boundary
 
-The current first slice is the FMC model contract only.
+The current first slice is the FMC model contract and implementation only.
 
 It should not own:
 - acquisition or capture timing,

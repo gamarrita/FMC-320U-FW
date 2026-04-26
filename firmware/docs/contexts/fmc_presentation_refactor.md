@@ -66,6 +66,8 @@ Important clarification for this refactor:
   - total-role reset policy
   - structural access helpers
   - no visible volume, operative factor, rate, presentation, or RTOS ownership
+- `fmc_model.c` now implements that first slice and is built as common authored
+  product code for all apps
 
 Observed legacy split today:
 - `fm_fmc.*` mixes:
@@ -695,18 +697,18 @@ The RTOS-facing product direction adds one more boundary:
 
 ---
 
-## Immediate Next Slice
+## Implemented First Slice
 
-Implement `src/product/fmc/fmc_model.c` for the current header only.
+`src/product/fmc/fmc_model.c` implements the current model header only.
 
-The implementation should cover:
+The implementation covers:
 - `FMC_MODEL_Init`
 - `FMC_MODEL_GetResetPolicy`
 - `FMC_MODEL_GetTotalState`
 - `FMC_MODEL_GetTotalStateConst`
 - `FMC_MODEL_ResetTotal`
 
-It should not introduce:
+It intentionally does not introduce:
 - RTOS primitives or singleton ownership
 - unit conversion
 - visible volume calculation
@@ -714,7 +716,7 @@ It should not introduce:
 - LCD or presentation behavior
 - persistence or log layout
 
-After that source exists, the next design choice should be between:
+The next design choice should be between:
 - `fmc_units.*` for unit conversion and operative factor behavior
 - `fmc_rate.*` for rate calculation from pulse/time windows
 
@@ -744,11 +746,12 @@ publication are being modeled explicitly.
    - total-role reset policy
    - ACM/TTL state selection helpers
    - total reset over pulse counters
-2. keep future derived behavior outside the model:
+2. verify and commit the first `fmc_model.*` slice
+3. keep future derived behavior outside the model:
    - visible volume
    - operative factor
    - instantaneous rate
-3. freeze the minimum FMC element model family:
+4. freeze the minimum FMC element model family:
    - totals
    - rate-related time base, not instantaneous rate storage
    - pulses
@@ -756,17 +759,17 @@ publication are being modeled explicitly.
    - units
    - time base
    - reset semantics
-4. define the seam from FMC model to FMC presentation semantics
-5. define the future RTOS-facing ownership boundary:
+5. define the seam from FMC model to FMC presentation semantics
+6. define the future RTOS-facing ownership boundary:
    - live model instance
    - synchronization
    - acquisition updates
    - snapshots for UI/log/persistence
-6. define how presentation semantics map onto:
+7. define how presentation semantics map onto:
    - top row
    - bottom row
    - alpha pair
    - indicators
    without calling `FM_LCD_LL_*`
-7. only after that, decide the LCD adapter that consumes the presentation
+8. only after that, decide the LCD adapter that consumes the presentation
    result through the validated LCD stack

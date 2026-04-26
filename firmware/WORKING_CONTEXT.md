@@ -3,7 +3,7 @@
 ## Current Work
 
 Stage:
-- implementation-prep
+- implementation
 
 Active pass:
 - refactor
@@ -46,8 +46,8 @@ Current focus:
   ACM, TTL, RATE, pulse counts, K/calibration, units, and time base
 - keep the first `src/product/fmc/fmc_model.h` contract limited to canonical
   model state and structural helpers
-- implement only the stabilized `fmc_model.*` first slice before adding
-  unit/rate/runtime behavior
+- `fmc_model.*` first slice is implemented and compiled as common product code
+- avoid adding unit/rate/runtime behavior to `fmc_model.*`
 - separate:
   - FMC model semantics
   - FMC unit/rate calculation policy
@@ -110,28 +110,19 @@ Constraints:
 
 ## Next Step
 
-- implement `src/product/fmc/fmc_model.c` for the current header only:
-  - `FMC_MODEL_Init`
-  - `FMC_MODEL_GetResetPolicy`
-  - `FMC_MODEL_GetTotalState`
-  - `FMC_MODEL_GetTotalStateConst`
-  - `FMC_MODEL_ResetTotal`
-- keep that implementation pure:
-  - no RTOS ownership
-  - no unit conversion
-  - no visible volume calculation
-  - no rate calculation
-  - no LCD/presentation code
+- review and commit the `fmc_model.*` implementation if accepted
+- then decide the next FMC slice:
+  - `fmc_units.*` for unit conversion and operative factor behavior
+  - or `fmc_rate.*` for rate calculation from pulse/time windows
+  - keep `fmc_service.*` until RTOS ownership is ready to be modeled
+- keep future slices pure and separate until their boundary is explicit:
+  - no RTOS ownership in model/units/rate helpers
+  - no LCD/presentation code in model/units/rate helpers
+  - no persistence or log layout in the model
 - use these references while implementing:
   - `docs/specs/fmc/fm_fmc_legacy_field_inventory.md`
   - `docs/specs/fmc/use_cases.yaml`
   - `docs/specs/math/fm_numeric_library_candidate.md`
-- after implementation, verify with the canonical build flow if the source is
-  added to a compiled target
-- after `fmc_model.*` is implemented, decide the next slice:
-  - `fmc_units.*` for unit conversion and operative factor behavior
-  - or `fmc_rate.*` for rate calculation from pulse/time windows
-  - keep `fmc_service.*` until RTOS ownership is ready to be modeled
 
 ## References
 

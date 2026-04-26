@@ -93,6 +93,7 @@ set(FM_COMMON_SOURCES
     ${FM_SRC_DIR}/bsp/devices/lcd/fm_lcd_blink.c
     ${FM_SRC_DIR}/bsp/devices/lcd/fm_lcd_map.c
     ${FM_SRC_DIR}/bsp/devices/lcd/pcf8553/fm_pcf8553.c
+    ${FM_SRC_DIR}/product/fmc/fmc_model.c
     ${FM_SRC_DIR}/port/fm_port_dwt.c
     ${FM_SRC_DIR}/port/fm_port_gpio.c
     ${FM_SRC_DIR}/port/fm_port_pcf8553_ctrl.c
@@ -114,6 +115,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     ${FM_APP_INCLUDES}
     ${FM_SRC_DIR}/libs
     ${FM_SRC_DIR}/bsp
+    ${FM_SRC_DIR}/product/fmc
     ${FM_SRC_DIR}/port
 )
 
