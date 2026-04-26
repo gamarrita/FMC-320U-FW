@@ -15,7 +15,7 @@ Contain reusable system services with a clear technical responsibility.
 - platform adaptation.
 
 ## Relationship with other folders
-`services/` should act as a reusable technical layer.  
+`src/services/` should act as a reusable technical layer.
 It may rely on `../bsp/`, `../port/`, or `../cube/` in a controlled way, but should not be polluted with application logic.
 
 ## Practical guideline

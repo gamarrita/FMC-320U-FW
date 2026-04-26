@@ -19,8 +19,8 @@ Usá como referencia:
 - `firmware/WORKING_CONTEXT.md`
 - `firmware/STYLE.md`
 - `firmware/docs/workflow/passes/comments/README.md`
-- `firmware/libs/fm_debug.h`
-- `firmware/libs/fm_debug.c`
+- `firmware/src/libs/fm_debug.h`
+- `firmware/src/libs/fm_debug.c`
 
 Evaluá explícitamente:
 1. qué comentarios actuales sirven

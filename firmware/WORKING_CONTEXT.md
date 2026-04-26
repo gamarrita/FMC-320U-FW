@@ -15,17 +15,18 @@ Area:
 - `legacy_backup/libs/fm_fmc.h`
 - `legacy_backup/libs/fm_user.c`
 - `legacy_backup/libs/fm_setup.c`
-- `libs/`
-- `libs/fm_fmc_model.h`
-- `bsp/devices/lcd/`
+- `src/product/fmc/`
+- `src/product/fmc/fm_fmc_model.h`
+- `src/bsp/devices/lcd/`
 
 Core structure:
 - `legacy_backup/libs/fm_fmc.*` is legacy behavior reference, not a direct
   port target
 - `legacy_backup/` is frozen reference evidence; normalized product specs live
   under `docs/specs/`
-- the closed LCD stack under `bsp/devices/lcd/` is the display foundation to
+- the closed LCD stack under `src/bsp/devices/lcd/` is the display foundation to
   preserve
+- FMC product-domain modules live under `src/product/fmc/`, not `src/libs/`
 - this refactor now targets:
   - an FMC model layer
   - then an FMC presentation-semantics layer above it
@@ -36,7 +37,7 @@ Current focus:
 - extract the FMC semantic elements that the instrument actually exposes:
   ACM, TTL, RATE, pulse counts, K/calibration, units, and time base
 - run an item-by-item clarification loop over the legacy inventory before
-  accepting more contract in `libs/fm_fmc_model.h`
+  accepting more contract in `src/product/fmc/fm_fmc_model.h`
 - separate:
   - FMC model semantics
   - FMC presentation semantics
@@ -70,7 +71,8 @@ Current focus:
   contract to `ufp3_t`
 
 Constraints:
-- do not port `legacy_backup/` modules directly into `libs/`
+- do not port `legacy_backup/` modules directly into `src/product/fmc/` or `src/libs/`
+- do not place FMC product-domain modules in `src/libs/`
 - do not duplicate normalized specs under `legacy_backup/`
 - do not include pulse/capture math in the first slice
 - do not pull in `FM_LCD_LL_*`, setup screens, user menu flow, Bluetooth, RTC,
@@ -92,14 +94,14 @@ Constraints:
   - `docs/specs/fmc/fm_fmc_legacy_field_inventory.md`
   - `docs/specs/fmc/use_cases.yaml`
   - `docs/specs/math/fm_numeric_library_candidate.md`
-- keep `libs/fm_fmc_model.h` in candidate status until this loop closes the
-  current group of doubts
+- keep `src/product/fmc/fm_fmc_model.h` in candidate status until this loop closes
+  the current group of doubts
 - for each item under review:
   - clarify intended product meaning
   - separate canonical/config/runtime/presentation roles
   - record whether it survives and in which layer
 - only after this loop stabilizes:
-  - refine the minimum contract for `libs/fm_fmc_model.h`
+  - refine the minimum contract for `src/product/fmc/fm_fmc_model.h`
 - define the seam between:
   - FMC model semantics
   - FMC presentation semantics

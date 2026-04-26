@@ -2,18 +2,18 @@
 
 ## User-Style Request
 
-Necesito un refactor chico en `port/fm_port_time.*`.
+Necesito un refactor chico en `src/port/fm_port_time.*`.
 Quiero mantener el comportamiento actual de `FM_PORT_TIME_SleepMs()` basado en
 `HAL_Delay()`, pero dejar mejor separado el punto donde vive el helper de sleep
 de cualquier futura consulta de tiempo.
-Fuera de alcance: el resto de `port/`.
-El siguiente paso puede ser revisar `port/fm_port_time.*` y buscar sus call
+Fuera de alcance: el resto de `src/port/`.
+El siguiente paso puede ser revisar `src/port/fm_port_time.*` y buscar sus call
 sites.
 
 ## Safe Repo Evidence
 
-- `port/fm_port_time.c` hoy expone un helper mínimo de sleep en plataforma
-- `port/README.md` define `port/` como adaptación dependiente de plataforma
+- `src/port/fm_port_time.c` hoy expone un helper mínimo de sleep en plataforma
+- `src/port/README.md` define `src/port/` como adaptación dependiente de plataforma
 - el pedido ya nombra target, comportamiento a preservar, problema
   estructural, límite fuera de alcance y siguiente paso
 

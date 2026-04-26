@@ -22,7 +22,7 @@ The simplest trigger is the keyword:
 - `wizard`
 
 Examples:
-- `wizard para iniciar un refactor sobre port/fm_port_time.*`
+- `wizard para iniciar un refactor sobre src/port/fm_port_time.*`
 - `wizard para reencuadrar este track`
 - `wizard para crear un nuevo working context`
 

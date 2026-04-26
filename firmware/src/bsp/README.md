@@ -15,7 +15,7 @@ Encapsulate concrete board and physical hardware details.
 - regenerable logic that should clearly remain in `../cube/`.
 
 ## Relationship with other folders
-`bsp/` knows the board.  
+`src/bsp/` knows the board.
 Higher layers should not carry these details directly if they can be abstracted.
 
 ## Practical guideline

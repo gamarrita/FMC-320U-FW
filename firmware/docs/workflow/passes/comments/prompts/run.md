@@ -26,8 +26,8 @@ Referencias:
 - `firmware/WORKING_CONTEXT.md`
 - `firmware/STYLE.md`
 - `firmware/docs/workflow/passes/comments/README.md`
-- `firmware/libs/fm_debug.h`
-- `firmware/libs/fm_debug.c`
+- `firmware/src/libs/fm_debug.h`
+- `firmware/src/libs/fm_debug.c`
 
 Aplicá además estas decisiones específicas del análisis:
 Todas las recomendadas

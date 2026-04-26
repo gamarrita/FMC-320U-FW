@@ -14,7 +14,8 @@ proceso en proyectos nuevos.
 Este es el documento operativo canónico para este repo.
 
 Documento relacionado:
-- guía reusable para proyectos nuevos: `docs/build_canonical_new_projects.md`
+- guía reusable para proyectos nuevos:
+  `docs/canonical-build/build_canonical_new_projects.md`
 
 ---
 
@@ -373,7 +374,7 @@ Configuración observada en `Core/Src/usart.c`:
 - parity: `none`
 - stop bits: `1`
 
-En `port/fm_port_usart1.c` también quedó explícito:
+En `src/port/fm_port_usart1.c` también quedó explícito:
 - el backend de debug es `USART1`
 - el host recibe eso por ST-LINK VCP
 

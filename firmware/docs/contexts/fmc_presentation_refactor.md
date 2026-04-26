@@ -41,7 +41,7 @@ Important clarification for this refactor:
   - `legacy_backup/libs/fm_user.c`
   - `legacy_backup/libs/fm_setup.c`
 - the current repo already has a validated LCD stack under:
-  - `bsp/devices/lcd/`
+  - `src/bsp/devices/lcd/`
 - the requested first slice is presentation-semantics only
 - pulse accumulation, capture timing, and flow math are intentionally out of
   this first slice
@@ -93,7 +93,7 @@ In scope:
   the refactor
 - use `legacy_backup/libs/fm_fmc.*`, `fm_user.c`, and `fm_setup.c` as behavior
   guides only for domain discovery and contrast
-- define the first new module boundary in `libs/`
+- define the first new product-domain module boundary under `src/product/fmc/`
 - keep the design oriented to a flow-computer instrument, not generic display
   abstraction for every future use case
 
@@ -114,7 +114,7 @@ Out of scope for the first slice:
 
 Trusted display foundation:
 - `docs/contexts/archive/lcd_stack_closed/lcd_redesign.md`
-- the closed LCD stack under `bsp/devices/lcd/`
+- the closed LCD stack under `src/bsp/devices/lcd/`
 
 Trusted FMC legacy behavior guides:
 - `legacy_backup/libs/fm_fmc.c`
@@ -211,7 +211,7 @@ The clean split for this refactor is:
      stack
 
 Current candidate public entrypoint for the first layer:
-- [libs/fm_fmc_model.h](/d:/githubs/FMC-320U-FW/firmware/libs/fm_fmc_model.h)
+- [src/product/fmc/fm_fmc_model.h](/d:/githubs/FMC-320U-FW/firmware/src/product/fmc/fm_fmc_model.h)
 
 This keeps the first slice coherent with the user request:
 - no pulse/capture math yet
@@ -447,7 +447,7 @@ correction direction is:
 ## Intermediate Pass: Header Classification
 
 Current candidate file under review:
-- [libs/fm_fmc_model.h](/d:/githubs/FMC-320U-FW/firmware/libs/fm_fmc_model.h)
+- [src/product/fmc/fm_fmc_model.h](/d:/githubs/FMC-320U-FW/firmware/src/product/fmc/fm_fmc_model.h)
 - [docs/specs/fmc/fm_fmc_legacy_field_inventory.md](/d:/githubs/FMC-320U-FW/firmware/docs/specs/fmc/fm_fmc_legacy_field_inventory.md)
 
 This intermediate pass classifies each current concept into:
@@ -461,7 +461,7 @@ The editable working inventory now lives in:
 - `docs/specs/fmc/fm_fmc_legacy_field_inventory.md`
 
 That file is intended as the mutable review artifact before freezing more
-decisions into `libs/fm_fmc_model.h`.
+decisions into `src/product/fmc/fm_fmc_model.h`.
 
 ### A. Canonical model state
 

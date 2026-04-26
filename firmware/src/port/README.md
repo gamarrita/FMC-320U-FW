@@ -15,7 +15,7 @@ Contain platform-dependent adaptation (MCU, toolchain, or runtime environment).
 - higher-level reusable services.
 
 ## Relationship with other folders
-`port/` resolves platform dependencies.  
+`src/port/` resolves platform dependencies.
 It should not become a layer for product functional logic.
 
 ## Practical guideline

@@ -35,7 +35,7 @@ display:
   panel_function:
     summary: "Multi-zone segmented LCD with numeric rows, two alphanumeric 14-segment characters, decimal markers, and dedicated status symbols"
   evidence:
-    mechanical_and_layout_pdf: "bsp/devices/lcd/docs/ENH-SS024197-01-YFPHGN-1.pdf"
+    mechanical_and_layout_pdf: "src/bsp/devices/lcd/docs/ENH-SS024197-01-YFPHGN-1.pdf"
     artwork_with_segment_names: "Available"
     routing_artwork_with_com_colors: "Available"
     legacy_functional_driver: "Available"

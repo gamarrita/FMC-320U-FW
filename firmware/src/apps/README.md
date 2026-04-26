@@ -3,7 +3,7 @@
 ## Intent
 Contain selectable firmware applications used through `FM_ACTIVE_APP`.
 
-Each folder under `apps/` represents one runnable application profile for the
+Each folder under `src/apps/` represents one runnable application profile for the
 same firmware base.
 
 ## Naming convention
@@ -21,10 +21,10 @@ same firmware base.
   Use only when the app represents a repeatable test scenario, not a generic sandbox.
 
 ## Practical rule
-Keep `apps/` flat until the number of applications makes discovery difficult.
+Keep `src/apps/` flat until the number of applications makes discovery difficult.
 
 Prefer app names that express purpose, not folder type.
-Since the parent folder is already `apps/`, avoid redundant suffixes like `_app`.
+Since the parent folder is already `src/apps/`, avoid redundant suffixes like `_app`.
 
 ## Minimal structure
 Each app should normally contain:

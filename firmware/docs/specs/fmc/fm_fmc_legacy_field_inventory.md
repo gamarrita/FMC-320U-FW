@@ -216,6 +216,6 @@ Reviewer clarification:
 
 - This file is intentionally writable and provisional.
 - Prefer editing classifications here before freezing changes into
-  `libs/fm_fmc_model.h`.
+  `src/product/fmc/fm_fmc_model.h`.
 - If an item seems to belong to more than one category, that is usually a sign
   that the old module mixed responsibilities and the item should be split.

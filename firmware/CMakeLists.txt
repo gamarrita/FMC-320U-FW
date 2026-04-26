@@ -50,8 +50,6 @@ set(FM_ACTIVE_APP_DEFAULT "lcd_bringup")
 
 if(NOT DEFINED FM_ACTIVE_APP)
     set(FM_ACTIVE_APP "${FM_ACTIVE_APP_DEFAULT}" CACHE STRING "Active firmware app")
-elseif(NOT DEFINED FM_ACTIVE_APP_LAST_DEFAULT)
-    set(FM_ACTIVE_APP "${FM_ACTIVE_APP_DEFAULT}" CACHE STRING "Active firmware app" FORCE)
 elseif(DEFINED FM_ACTIVE_APP_LAST_DEFAULT)
     if((FM_ACTIVE_APP STREQUAL FM_ACTIVE_APP_LAST_DEFAULT) AND
        NOT (FM_ACTIVE_APP_DEFAULT STREQUAL FM_ACTIVE_APP_LAST_DEFAULT))
@@ -59,6 +57,7 @@ elseif(DEFINED FM_ACTIVE_APP_LAST_DEFAULT)
     endif()
 endif()
 
+set(FM_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(FM_ACTIVE_APP_LAST_DEFAULT "${FM_ACTIVE_APP_DEFAULT}" CACHE INTERNAL
     "Last FM_ACTIVE_APP default value from CMakeLists.txt" FORCE)
 
@@ -69,7 +68,7 @@ if(NOT FM_ACTIVE_APP IN_LIST FM_AVAILABLE_APPS)
     )
 endif()
 
-set(FM_APP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/apps/${FM_ACTIVE_APP}")
+set(FM_APP_DIR "${FM_SRC_DIR}/apps/${FM_ACTIVE_APP}")
 message(STATUS "Active app: ${FM_ACTIVE_APP}")
 
 # Execute child CMakeLists.txt of the active project
@@ -88,20 +87,20 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 # Shared sources for every app.
 set(FM_COMMON_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/libs/fm_debug.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/bsp/fm_board.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/bsp/devices/lcd/fm_lcd.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/bsp/devices/lcd/fm_lcd_blink.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/bsp/devices/lcd/fm_lcd_map.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/bsp/devices/lcd/pcf8553/fm_pcf8553.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_dwt.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_gpio.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_pcf8553_ctrl.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_rcc.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_rtc.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_spi1.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_time.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/port/fm_port_usart1.c
+    ${FM_SRC_DIR}/libs/fm_debug.c
+    ${FM_SRC_DIR}/bsp/fm_board.c
+    ${FM_SRC_DIR}/bsp/devices/lcd/fm_lcd.c
+    ${FM_SRC_DIR}/bsp/devices/lcd/fm_lcd_blink.c
+    ${FM_SRC_DIR}/bsp/devices/lcd/fm_lcd_map.c
+    ${FM_SRC_DIR}/bsp/devices/lcd/pcf8553/fm_pcf8553.c
+    ${FM_SRC_DIR}/port/fm_port_dwt.c
+    ${FM_SRC_DIR}/port/fm_port_gpio.c
+    ${FM_SRC_DIR}/port/fm_port_pcf8553_ctrl.c
+    ${FM_SRC_DIR}/port/fm_port_rcc.c
+    ${FM_SRC_DIR}/port/fm_port_rtc.c
+    ${FM_SRC_DIR}/port/fm_port_spi1.c
+    ${FM_SRC_DIR}/port/fm_port_time.c
+    ${FM_SRC_DIR}/port/fm_port_usart1.c
 )
 
 # Add sources to executable
@@ -113,9 +112,9 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     ${FM_APP_INCLUDES}
-    ${CMAKE_CURRENT_SOURCE_DIR}/libs
-    ${CMAKE_CURRENT_SOURCE_DIR}/bsp
-    ${CMAKE_CURRENT_SOURCE_DIR}/port
+    ${FM_SRC_DIR}/libs
+    ${FM_SRC_DIR}/bsp
+    ${FM_SRC_DIR}/port
 )
 
 # Add project symbols (macros)

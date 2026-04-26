@@ -2,16 +2,16 @@
 
 ## User-Style Request
 
-Quiero reencuadrar un refactor sobre `libs/fm_debug.*` y `apps/panic_demo/`.
+Quiero reencuadrar un refactor sobre `src/libs/fm_debug.*` y `src/apps/panic_demo/`.
 Me preocupa mezclar calibración de panic con los servicios debug.
 Quiero preservar el comportamiento visible actual del demo y de los helpers de
 debug, pero cambiar el foco del track.
 
 ## Safe Repo Evidence
 
-- `libs/fm_debug.c` already mixes panic paths, UART helpers, LED control and
+- `src/libs/fm_debug.c` already mixes panic paths, UART helpers, LED control and
   event queue behavior
-- `apps/panic_demo/fm_panic_demo.c` is a tutorial app focused on panic/fault
+- `src/apps/panic_demo/fm_panic_demo.c` is a tutorial app focused on panic/fault
   calibration
 - the request explicitly says "reencuadrar", not just "iniciar"
 

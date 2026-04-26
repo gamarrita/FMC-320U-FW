@@ -4,8 +4,8 @@ This is an illustrative example.
 It is not a required output template.
 
 Reviewed scope:
-- `port/fm_port_rtc.c`
-- `libs/fm_debug.c`
+- `src/port/fm_port_rtc.c`
+- `src/libs/fm_debug.c`
 
 Findings:
 - `HAL_RTCEx_WakeUpTimerEventCallback()` forwards into project code from IRQ context

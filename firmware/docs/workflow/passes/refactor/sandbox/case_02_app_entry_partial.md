@@ -2,15 +2,15 @@
 
 ## User-Style Request
 
-Necesito un refactor chico alrededor de `apps/main/` y `apps/template/`.
+Necesito un refactor chico alrededor de `src/apps/main/` y `src/apps/template/`.
 Los entry points y los módulos app-locales se están volviendo difíciles de
 mantener parejos.
 
 ## Safe Repo Evidence
 
-- `apps/README.md` expects `app_entry.c` to stay thin and delegate to an
+- `src/apps/README.md` expects `app_entry.c` to stay thin and delegate to an
   app-local module
-- `apps/main/app_entry.c` and `apps/template/app_entry.c` both look like thin
+- `src/apps/main/app_entry.c` and `src/apps/template/app_entry.c` both look like thin
   delegates already
 - the target area is plausible and narrow enough to inspect
 

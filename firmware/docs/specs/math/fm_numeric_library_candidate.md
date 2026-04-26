@@ -81,5 +81,5 @@ Why this exists now:
 Reviewer notes:
 - free-form comments are welcome here
 - once the numeric direction stabilizes, this file can be replaced by:
-  - a real `libs/fm_num.h`
+  - a real `src/libs/fm_num.h`
   - or a tighter YAML/contract artifact if that becomes more useful
