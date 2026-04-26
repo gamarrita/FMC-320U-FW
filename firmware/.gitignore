@@ -4,5 +4,8 @@ build/
 # STM32CubeIDE scratch workspace data.
 mx.scratch
 
+# Local agent/user scratch prompt.
+prompt.txt
+
 # Keep shared workspace settings under version control.
 !.settings

@@ -3,7 +3,7 @@
 Purpose:
 - capture decisions about the future numeric/fixed-point support library before
   freezing a public code API
-- avoid forcing `fm_fmc_model` to keep legacy numeric types such as `ufp3_t`
+- avoid forcing `fmc_model` to keep legacy numeric types such as `ufp3_t`
 - keep a writable place for review comments while the FMC model is still under
   semantic clarification
 
@@ -16,13 +16,13 @@ Context:
 - the legacy FMC module used `ufp3_t` as a practical fixed-point strategy
 - the refactor direction now prefers:
   - a dedicated numeric library
-  - `fm_fmc_model` depending on that library if needed
+  - `fmc_model` depending on that library if needed
   - LCD formatting living in another layer
 
 Current decision:
-- `ufp3_t` should not remain owned by `fm_fmc_model`
+- `ufp3_t` should not remain owned by `fmc_model`
 - a separate numeric library is preferred
-- `fm_fmc_model` may depend publicly on that library
+- `fmc_model` may depend publicly on that library
 - legacy decimal-selection policy (`fm_fmc_fp_sel`) also points toward this
   future numeric library instead of the FMC core model
 - the FMC core model should preserve pulse counters as canonical backing state
@@ -63,9 +63,9 @@ Open questions:
 Candidate layering:
 1. `fm_num.*`
    - generic numeric support
-2. `fm_fmc_model.*`
+2. `fmc_model.*`
    - FMC domain semantics
-3. `fm_fmc_presentation.*`
+3. `fmc_presentation.*`
    - FMC-to-display semantics
 4. LCD adapter
    - rendering onto the validated LCD stack

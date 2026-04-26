@@ -12,7 +12,7 @@ model and present:
 - TTL volume
 - RATE
 - pulse counters
-- calibration and K-factor
+- calibration and operative factor behavior
 - volume units
 - rate time base
 - reset semantics
@@ -23,6 +23,11 @@ model and present:
 - alpha usage
 
 and rebuild that behavior as cleaner layers above the validated LCD stack.
+
+This workstream is also intentionally educational in the product-engineering
+sense: legacy code is evidence, not authority. A legacy name, shape, or behavior
+should survive only when it remains the best current product decision, not
+because it already exists.
 
 Important clarification for this refactor:
 - `fm_user.*` and `fm_setup.*` are not semantic sources of truth
@@ -55,6 +60,12 @@ Important clarification for this refactor:
   - ask until intended meaning and ownership are clear
   - treat unresolved interpretation as a blocker for contract refinement
   - only then advance to the next item
+- the current first `fmc_model.h` contract is narrow enough to implement:
+  - canonical measurement configuration
+  - ACM/TTL backing pulse counters
+  - total-role reset policy
+  - structural access helpers
+  - no visible volume, operative factor, rate, presentation, or RTOS ownership
 
 Observed legacy split today:
 - `fm_fmc.*` mixes:
@@ -195,10 +206,33 @@ LCD stack.
 
 The clean split for this refactor is:
 
-1. `fm_fmc_model.*`
+1. `fmc_model.*`
    - defines FMC domain elements and their relationships
    - does not know about LCD rows or `FM_LCD_*`
-2. `fm_fmc_presentation.*`
+   - remains plain copyable value state plus pure structural helpers
+   - does not expose visible volume, operative pulses-per-active-unit, or
+     instantaneous rate as first-slice model queries
+   - does not own RTOS synchronization or live shared state
+2. `fmc_units.*`
+   - owns product unit conversion policy
+   - is not a generic portable unit library
+   - can remain pure and independently reviewable
+3. `fmc_rate.*`
+   - owns rate calculation policy from pulse/time windows
+   - can start pure, even though it will later be consumed by an RTOS task or
+     service
+4. `fmc_service.*` or `fmc_runtime.*`
+   - owns live FMC state in the RTOS firmware
+   - owns synchronization primitives, queues/event flags/timers if needed
+   - receives acquisition updates or snapshots
+   - exposes coherent snapshots to UI, logging, persistence, and presentation
+5. `fmc_config.*`
+   - applies product configuration to the model:
+     - calibration input
+     - active unit
+     - time base
+   - may later consume storage/persistence services
+6. `fmc_presentation.*`
    - decides how one FMC snapshot is rendered semantically for this
      instrument:
      - which value goes on top row
@@ -206,18 +240,38 @@ The clean split for this refactor is:
      - which alpha cues are shown
      - which legends/indicators are active
    - still does not write to LCD
-3. FMC-to-LCD adapter
+7. FMC-to-LCD adapter
    - consumes the semantic presentation result and calls the validated LCD
      stack
 
 Current candidate public entrypoint for the first layer:
-- [src/product/fmc/fm_fmc_model.h](/d:/githubs/FMC-320U-FW/firmware/src/product/fmc/fm_fmc_model.h)
+- [src/product/fmc/fmc_model.h](/d:/githubs/FMC-320U-FW/firmware/src/product/fmc/fmc_model.h)
+
+Naming decision:
+- FMC product modules under `src/product/fmc/` use `fmc_*` filenames
+- public C symbols use the `FMC_*` module namespace
+- this avoids duplicating the repository prefix inside product-domain module
+  names
 
 This keeps the first slice coherent with the user request:
 - no pulse/capture math yet
 - no direct LCD writes
 - no loss of FMC instrument semantics
 - no inheritance of old `fm_user` / `fm_setup` screen semantics as a contract
+- no RTOS ownership inside the model contract
+
+Important RTOS/product decision:
+- these modules are product firmware modules, not portable flow-computer
+  libraries
+- portability is not the goal; clear ownership under the chosen RTOS is the
+  goal
+- however, product specificity does not mean every module should include RTOS
+  primitives
+- `model`, `units`, and early `rate` code should remain pure where possible
+- `service` or `runtime` is the intended boundary for mutexes, queues, event
+  flags, timers, task ownership, live-state mutation, and coherent snapshots
+- this keeps the RTOS from contaminating the core semantics while still
+  designing for the actual firmware architecture
 
 ### 2. Elements that belong in the FMC model
 
@@ -232,8 +286,8 @@ The minimum FMC model should define at least:
   - pulse count feeding ACM
   - pulse count feeding TTL
 - calibration ownership:
-  - canonical calibration factor as pulses per liter
-  - derived K-factor view when needed
+  - canonical calibration factor as pulses per calibration unit
+  - no stored operative pulses-per-active-unit factor in the core model
 - unit semantics:
   - active volume unit
   - active time base for rate
@@ -263,8 +317,8 @@ Latest clarified modeling decisions from the review:
   - visible volume should be derived from pulses plus the active measurement
     environment
 - `RATE` remains a first-class FMC semantic element, but the first core model
-  should not store an instantaneous rate value without the acquisition/rate
-  behavior that produced it
+  should not store or return an instantaneous rate value without the
+  acquisition/rate behavior that produced it
 - the legacy `BLANK` unit should be reinterpreted as an unsupported/future-unit
   placeholder:
   - it is unsupported by the physical conversion table
@@ -279,6 +333,10 @@ Latest clarified modeling decisions from the review:
   - calibration is performed from total pulses against a reference reading in
     liters
   - factor 1 is used during that calibration step
+  - the editable product range remains `1.000` to `99999.999`, inherited from
+    the legacy eight-digit, three-decimal representation
+  - the refactor may expose this as `double`, but should preserve the product
+    range as semantic validation rather than as a fixed-point type leak
 - the refactor should make the calibration unit explicit to avoid hiding the
   liter anchor:
   - no menu, display, or operator-facing change of calibration unit is
@@ -326,14 +384,19 @@ Latest clarified modeling decisions from the review:
     point that turns `factor_cal` into `factor_k`
   - a future cleaner design may separate that conversion-anchor role from the
     public unit enum
-- any secondary or tertiary K-factor used to avoid repeated calculations should
-  be treated as an internal optimization, not as a public semantic element
+- any secondary or tertiary operative factor used to avoid repeated calculations
+  should be treated as an internal optimization, not as a public semantic
+  element
 - pulse counters remain important candidates as backing state behind totals,
   especially if total values may be recomputed after configuration changes
 - `flow_active` and `pulse_activity` were identified as implementation leakage
   and should not stay in the first core model contract
 - visible ACM, TTL, and RATE are derived environment views, not editable
   configuration; ACM and TTL are backed by canonical pulse counters
+- visible volume and operative pulses-per-active-unit views are derived
+  behavior over model state plus unit/rate policy; they should be introduced in
+  later helpers rather than as `fmc_model.*` stored state or direct model
+  queries
 
 Recommended simplification from those decisions:
 - define one primitive reusable total state type
@@ -349,8 +412,9 @@ Recommended simplification from those decisions:
   - active time base
   - calibration value
   - explicit calibration unit without adding a UI for changing it now
-- expose derived K-factor through query helpers if needed, but avoid storing
-  multiple public K-factor variants in the model
+- expose visible volume, operative pulses-per-active-unit, and rate later
+  through unit/rate helpers or presentation/runtime views, not through the core
+  model contract
 - keep the full model shape copyable so later product layers can hold:
   - active environment
   - edit copy
@@ -413,7 +477,7 @@ These domain ideas appear meaningful and should survive in some form:
 - separate total roles with different reset policies
 - rate as a first-class FMC element
 - explicit volume unit and time-base ownership
-- pulse-to-quantity conversion through calibration/K-factor
+- pulse-to-quantity conversion through calibration plus unit policy
 - decimals as presentation policy, not domain math
 
 These legacy details should not survive as-is:
@@ -434,11 +498,11 @@ correction direction is:
   - reset policy
   - shared unit/time-base ownership
   - canonical calibration
-  - optional access to derived K-factor
   - pulse counters as meaningful backing state
 - remove or reduce:
   - duplicated unit ownership inside every quantity type
-  - public storage of multiple derived K-factor variants
+  - public storage of multiple derived operative-factor variants
+  - direct model queries for visible volume or operative factor
 - generic runtime snapshot shape that looks like a legacy environment dump
 - `flow_active` / `pulse_activity` in the first core contract
 
@@ -447,13 +511,13 @@ correction direction is:
 ## Intermediate Pass: Header Classification
 
 Current candidate file under review:
-- [src/product/fmc/fm_fmc_model.h](/d:/githubs/FMC-320U-FW/firmware/src/product/fmc/fm_fmc_model.h)
+- [src/product/fmc/fmc_model.h](/d:/githubs/FMC-320U-FW/firmware/src/product/fmc/fmc_model.h)
 - [docs/specs/fmc/fm_fmc_legacy_field_inventory.md](/d:/githubs/FMC-320U-FW/firmware/docs/specs/fmc/fm_fmc_legacy_field_inventory.md)
 
 This intermediate pass classifies each current concept into:
 - canonical model state
 - semantic public state
-- derived public query
+- derived behavior for later helpers
 - presentation leakage
 - questionable runtime state
 
@@ -461,12 +525,12 @@ The editable working inventory now lives in:
 - `docs/specs/fmc/fm_fmc_legacy_field_inventory.md`
 
 That file is intended as the mutable review artifact before freezing more
-decisions into `src/product/fmc/fm_fmc_model.h`.
+decisions into `src/product/fmc/fmc_model.h`.
 
 ### A. Canonical model state
 
 These are good candidates to remain as the instrument source of truth:
-- canonical calibration as pulses per liter
+- canonical calibration as pulses per calibration unit
 - shared active volume unit
 - shared active time base
 - pulse counters backing totals
@@ -491,17 +555,19 @@ Reason:
 - ACM and TTL are backed in the model by pulse counters rather than cached
   visible volume
 
-### C. Derived public query
+### C. Derived behavior for later helpers
 
-These may be public as queries, but should not necessarily be canonical stored
-state:
-- `K-factor` for the active volume unit
+These may become public through later unit/rate/presentation helpers, but should
+not be canonical stored state or first-slice `fmc_model.*` queries:
+- operative pulses-per-active-unit factor
 - any optimized rate conversion factor derived from calibration and time base
+- visible volume derived from total pulses
 
 Reason:
 - they are useful engineering views
 - they are derivable from canonical state
-- keeping them as queries preserves clarity and avoids duplicated ownership
+- keeping them outside the core model preserves clarity and avoids duplicated
+  ownership
 
 ### D. Presentation leakage
 
@@ -542,7 +608,8 @@ This reinforces the next cleanup target:
 - reduce duplication
 - prefer one primitive total state type reused by `ACM` and `TTL`
 - keep calibration canonical
-- expose K-factor as a query helper, not as equal-rank stored truth
+- move operative factor and visible-volume derivation to later helpers, not
+  equal-rank stored truth
 - keep the model as plain value state instead of singleton-oriented state
 
 Interpretation risk still present in the candidate header:
@@ -574,14 +641,31 @@ This supports keeping the new FMC model focused on:
 - canonical calibration
 - quantities and total roles
 - shared unit/time-base ownership
-- derived engineering queries only where they help clarity
+- canonical pulse backing state for totals
+
+Derived engineering views such as operative factor, visible volume, and rate
+remain important product behavior, but they should be introduced through later
+unit/rate/runtime/presentation helpers rather than as first-slice model storage.
+
+The RTOS-facing product direction adds one more boundary:
+- the FMC core is not a portable library, but `fmc_model.*` should still not
+  become the live singleton or synchronization owner
+- `fmc_service.*` or `fmc_runtime.*` should own the active instance,
+  concurrency, pulse/acquisition updates, and snapshot publication
+- UI, logging, persistence, and presentation should consume coherent snapshots
+  or service APIs rather than directly sharing mutable model storage
 
 ---
 
 ## Known Gaps
 
-- the new model module name is now tentatively chosen as `fm_fmc_model.*`
-- the exact public contract still needs refinement after review
+- the new model module name is `fmc_model.*`
+- the first `fmc_model.h` contract is ready for a minimal `.c`
+  implementation, but the broader FMC module family contract will continue to
+  evolve slice by slice
+- the RTOS-facing owner module name is not frozen:
+  - `fmc_service.*`
+  - or `fmc_runtime.*`
 - TTL reset policy has a resolved interpretation:
   - `docs/specs/fmc/use_cases.yaml` is still correct that TTL is not
     user-resettable
@@ -589,15 +673,53 @@ This supports keeping the new FMC model focused on:
     privileged UI/service flow has authorized access
 - the first-slice boundary between:
   - FMC model semantics
+  - FMC units/rate helpers
+  - FMC service/runtime ownership
   - FMC presentation semantics
   - LCD adapter
   is not frozen yet
 - alpha usage for units in the new LCD stack needs an explicit mapping decision
+- equivalent cubic-meter label is clarified:
+  - model name `FMC_MODEL_VOLUME_UNIT_EQUIV_M3` is acceptable
+  - conceptual name is equivalent cubic meter
+  - visible label should be `MC`
+  - normal cubic meter remains a separate unit with visible label `M3` and
+    physical conversion `1 m3 = 1000 L`
+  - equivalent cubic meter uses the special product relation
+    `1 L = 1 equivalent m3`
 - it is still open whether the new layer should accept:
   - a domain snapshot struct
   - or a more granular set of typed semantic fields
 - it is still open whether ACM/TTL names remain public API vocabulary or become
   product-level aliases over more generic total roles
+
+---
+
+## Immediate Next Slice
+
+Implement `src/product/fmc/fmc_model.c` for the current header only.
+
+The implementation should cover:
+- `FMC_MODEL_Init`
+- `FMC_MODEL_GetResetPolicy`
+- `FMC_MODEL_GetTotalState`
+- `FMC_MODEL_GetTotalStateConst`
+- `FMC_MODEL_ResetTotal`
+
+It should not introduce:
+- RTOS primitives or singleton ownership
+- unit conversion
+- visible volume calculation
+- instantaneous rate calculation
+- LCD or presentation behavior
+- persistence or log layout
+
+After that source exists, the next design choice should be between:
+- `fmc_units.*` for unit conversion and operative factor behavior
+- `fmc_rate.*` for rate calculation from pulse/time windows
+
+`fmc_service.*` or `fmc_runtime.*` should wait until RTOS ownership and snapshot
+publication are being modeled explicitly.
 
 ---
 
@@ -610,30 +732,41 @@ This supports keeping the new FMC model focused on:
 - preserving formatting details without preserving row-level meaning
 - freezing `ufp3_t` or current derived fields into the public contract too
   early
+- letting future RTOS ownership leak into `fmc_model.*` and obscure the
+  pure model semantics
 
 ---
 
 ## Minimum Plan
 
-1. complete the current semantic clarification loop over the active group of
-   legacy items:
-   - use the inventory as working prompt, not as truth
-   - capture clarified intent, ownership, and destination layer
-   - keep the new header in candidate status during this loop
-2. freeze the minimum FMC element model:
+1. implement the first `fmc_model.*` slice:
+   - canonical model initialization
+   - total-role reset policy
+   - ACM/TTL state selection helpers
+   - total reset over pulse counters
+2. keep future derived behavior outside the model:
+   - visible volume
+   - operative factor
+   - instantaneous rate
+3. freeze the minimum FMC element model family:
    - totals
-   - rate
+   - rate-related time base, not instantaneous rate storage
    - pulses
-   - calibration/K-factor
+   - calibration, not operative-factor storage
    - units
    - time base
    - reset semantics
-3. define the seam from FMC model to FMC presentation semantics
-4. define how presentation semantics map onto:
+4. define the seam from FMC model to FMC presentation semantics
+5. define the future RTOS-facing ownership boundary:
+   - live model instance
+   - synchronization
+   - acquisition updates
+   - snapshots for UI/log/persistence
+6. define how presentation semantics map onto:
    - top row
    - bottom row
    - alpha pair
    - indicators
    without calling `FM_LCD_LL_*`
-5. only after that, decide the LCD adapter that consumes the presentation
+7. only after that, decide the LCD adapter that consumes the presentation
    result through the validated LCD stack

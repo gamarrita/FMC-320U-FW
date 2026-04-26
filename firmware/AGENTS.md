@@ -25,6 +25,19 @@ Do not:
 
 ---
 
+## Learning And Product Quality
+
+This firmware is also a learning-oriented product engineering project.
+
+Treat legacy code as evidence, not authority. Preserve inherited behavior only
+when it is a deliberate current product decision, not because it already exists.
+
+Prefer maintainable, understandable product design over copying legacy shapes.
+When a decision is architectural or educationally important, make the tradeoff
+visible instead of silently encoding it.
+
+---
+
 ## Scope
 
 The user request defines the task scope.

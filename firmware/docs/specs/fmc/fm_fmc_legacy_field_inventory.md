@@ -92,7 +92,7 @@ Los valores FM_FACTORY_RAM_BACKUP y FM_FACTORY_LAST_SETUP, no recuedo ahora para
 | `FM_FMC_FP_SEL_0..3` | numeric policy shared by math and presentation | legacy fixed-point selection affects both visible decimal placement and pulse-to-volume arithmetic strategy | yes, but not in `fmc model` core | numeric library candidate, with presentation consuming the rendered meaning later | keep legacy "everything behaves like 3 decimals, presentation changes" simplification, or replace it with a clearer numeric contract? |
 
 Reviewer clarification:
-- this should not remain inside `fm_fmc_model`
+- this should not remain inside `fmc_model`
 - it is closer to a future numeric library boundary than to pure FMC semantics
 - it also should not be owned by the LCD adapter directly
 - legacy used one simplification:
@@ -115,7 +115,7 @@ Reviewer clarification:
 | `VOL_UNIT_KG` | active environment config with intentional hack semantics | product supports KG as a selectable unit, but without density handling; legacy resolves it by calibrating through the liters-based process and then keeping a 1:1 operative conversion path | yes for the first slice, as a supported unit carried by the current hack | `fmc model` | keep as hack for now; re-evaluate later if explicit calibration-unit support is introduced |
 | `VOL_UNIT_LT` | active environment config and normal calibration default | physical unit offered to the user like any other; the refactor should make the calibration-unit anchor explicit, with liters as the normal physical-conversion default and custom/unsupported units using a loaded factor for that unit | yes | fmc model | none for first slice |
 | `VOL_UNIT_M3` | active environment config | normal physical unit supported through real conversion from liters in the legacy table | yes | fmc model | none at this stage |
-| `VOL_UNIT_ME` | active environment config with intentional hack semantics | product-specific unit that enters the legacy table through the liters path and then uses conversion value `1`, like the current hack cases | yes for the first slice if the product still exposes it | fmc model | keep as current hack for now; re-evaluate later if explicit calibration-unit or unit-policy support is introduced |
+| `VOL_UNIT_ME` | active environment config with intentional hack semantics | equivalent cubic meter; separate from normal `M3`; uses the special product relation `1 L = 1 equivalent m3`, so conversion factor stays `1`; visible label should be `MC` even if the conceptual abbreviation `ME` is more descriptive | yes as `FMC_MODEL_VOLUME_UNIT_EQUIV_M3` | fmc model | keep as current special calibrated-unit relation for now; re-evaluate later if explicit calibration-unit or unit-policy support is introduced |
 | `VOL_UNIT_END` | enum sentinel | implementation helper only | no as semantic item | internal only | none |
 
 
@@ -143,7 +143,7 @@ Reviewer clarification:
 
 | Item | Current classification | Why | Should survive refactor | Suggested destination | Open questions |
 |---|---|---|---|---|---|
-| `factor_r` | derived helper | active rate conversion helper from K + time base | maybe as helper, not as primary public state | helper/query in model or acquisition layer | should active derived factor become explicit in model environment? |
+| `factor_r` | derived helper | active rate conversion helper from operative factor + time base | maybe as helper, not as primary public state | future rate/unit helper or acquisition layer | should active derived factor become explicit in the later runtime/rate seam? |
 | `delta_t` | acquisition/runtime support | recent capture interval used to compute rate | not in first slice core contract | acquisition layer | does model need to know capture details at all? |
 | `delta_p` | acquisition/runtime support | pulse delta used to compute rate | not in first slice core contract | acquisition layer | same |
 | `rate` | runtime-derived | displayed/consumed flow value produced by acquisition/rate behavior | yes as FMC semantic, but not stored in the first core model | derived runtime view or later acquisition/rate seam | define the rate view when the acquisition/rate slice starts |
@@ -157,13 +157,13 @@ Reviewer clarification:
 
 | Item | Current classification | Why | Should survive refactor | Suggested destination | Open questions |
 |---|---|---|---|---|---|
-| `acm` | runtime-derived visible value over canonical pulses | accumulated total displayed to operator; visible volume should be derived from `pulse_acm` and active measurement config | yes as semantic role, not cached canonical state | fmc model query / presentation view | none |
-| `ttl` | runtime-derived visible value over canonical pulses | historical/privileged-reset total displayed to operator; visible volume should be derived from `pulse_ttl` and active measurement config | yes as semantic role, not cached canonical state | fmc model query / presentation view | reset policy now clarified as privileged, not user-level |
+| `acm` | semantic role over canonical pulses | accumulated total displayed to operator; visible volume should be derived from `pulse_acm` and active measurement config | yes as total role and backing pulse state, not cached visible volume | fmc model state plus later unit/presentation view | none |
+| `ttl` | semantic role over canonical pulses | historical/privileged-reset total displayed to operator; visible volume should be derived from `pulse_ttl` and active measurement config | yes as total role and backing pulse state, not cached visible volume | fmc model state plus later unit/presentation view | reset policy now clarified as privileged, not user-level |
 | `vol_pf_sel` | presentation | decimal placement for ACM/TTL display | yes, but not in core model | fmc presentation | should ACM/TTL share one precision policy or be separable later? |
 | `pulse_acm` | runtime backing state | backing pulses for ACM recomputation | yes | fmc model | none |
 | `pulse_ttl` | runtime backing state | backing pulses for TTL recomputation | yes | fmc model | none |
-| `factor_cal` | strong calibration input with explicit calibration unit | the deployed legacy scheme keeps one practical liter-anchored path for known conversions, while unsupported/custom units use factor `1` and require a calibration already expressed in the desired unit; no UI/menu support for changing calibration unit is part of the first slice | yes | fmc model | none for first slice |
-| `factor_k` | derived helper / operative factor view with low-power purpose | precomputes `factor_cal * conversion_value` so runtime arithmetic is cheaper in an ultra-low-power embedded target; for conversion factor `1`, `factor_k == factor_cal` | yes as query, not stored public truth | helper/query in model | none for first slice |
+| `factor_cal` | strong calibration input with explicit calibration unit | the deployed legacy scheme keeps one practical liter-anchored path for known conversions, while unsupported/custom units use factor `1` and require a calibration already expressed in the desired unit; no UI/menu support for changing calibration unit is part of the first slice; editable range is `1.000` to `99999.999` | yes | fmc model | none for first slice |
+| `factor_k` | derived helper / operative factor view with low-power purpose | precomputes `factor_cal * conversion_value` so runtime arithmetic is cheaper in an ultra-low-power embedded target; for conversion factor `1`, `factor_k == factor_cal` | yes as later helper/view, not stored public truth | future unit/rate helper | none for first slice |
 | `vol_unit` | active environment config | active shared volume unit; unsupported/custom selections should use the model placeholder and conversion factor `1` | yes | fmc model | none |
 | `time_unit` | active environment config | active rate time base | yes | fmc model | none |
 | `rate` | mixed type, needs split | bundles runtime-derived rate with acquisition, thresholds, and presentation | partially | split across model, presentation, acquisition, status | this is the main legacy knot to open |
@@ -177,7 +177,6 @@ Reviewer clarification:
 |---|---|
 | `acm` | first-class total role |
 | `ttl` | first-class total role |
-| `rate.value` | first-class flow role |
 | `pulse_acm` | backing state for total recomputation |
 | `pulse_ttl` | backing state for total recomputation |
 | `factor_cal` | canonical calibration source |
@@ -185,12 +184,14 @@ Reviewer clarification:
 | `time_unit` | active environment config |
 | reset policy by total role | domain semantic |
 
-### Keep as derived query/helper, not equal-rank public truth
+### Keep as derived behavior/helper outside the first model
 
 | Item | Reason |
 |---|---|
+| visible ACM/TTL volume | derived from canonical pulses + measurement context |
+| `rate.value` | first-class flow role, but produced by acquisition/rate behavior |
 | `factor_k` | derived from canonical calibration + active unit |
-| `factor_r` | derived from active K + time base |
+| `factor_r` | derived from active operative factor + time base |
 
 ### Move out of core model
 
@@ -216,6 +217,6 @@ Reviewer clarification:
 
 - This file is intentionally writable and provisional.
 - Prefer editing classifications here before freezing changes into
-  `src/product/fmc/fm_fmc_model.h`.
+  `src/product/fmc/fmc_model.h`.
 - If an item seems to belong to more than one category, that is usually a sign
   that the old module mixed responsibilities and the item should be split.

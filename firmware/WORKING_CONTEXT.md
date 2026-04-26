@@ -3,7 +3,7 @@
 ## Current Work
 
 Stage:
-- analysis
+- implementation-prep
 
 Active pass:
 - refactor
@@ -16,7 +16,7 @@ Area:
 - `legacy_backup/libs/fm_user.c`
 - `legacy_backup/libs/fm_setup.c`
 - `src/product/fmc/`
-- `src/product/fmc/fm_fmc_model.h`
+- `src/product/fmc/fmc_model.h`
 - `src/bsp/devices/lcd/`
 
 Core structure:
@@ -27,8 +27,16 @@ Core structure:
 - the closed LCD stack under `src/bsp/devices/lcd/` is the display foundation to
   preserve
 - FMC product-domain modules live under `src/product/fmc/`, not `src/libs/`
+- FMC product modules are not generic portable libraries; they may assume this
+  product, IDE, and chosen RTOS direction
+- this is a learning-oriented product refactor:
+  - legacy is evidence, not authority
+  - inherited behavior is preserved only when it is a deliberate current product
+    decision
 - this refactor now targets:
   - an FMC model layer
+  - later pure unit and rate helpers where useful
+  - later an RTOS-facing FMC service/runtime owner
   - then an FMC presentation-semantics layer above it
   - then a later LCD adapter over the validated LCD stack
 - the first slice excludes pulse math, capture logic, and legacy UI flow
@@ -36,10 +44,14 @@ Core structure:
 Current focus:
 - extract the FMC semantic elements that the instrument actually exposes:
   ACM, TTL, RATE, pulse counts, K/calibration, units, and time base
-- run an item-by-item clarification loop over the legacy inventory before
-  accepting more contract in `src/product/fmc/fm_fmc_model.h`
+- keep the first `src/product/fmc/fmc_model.h` contract limited to canonical
+  model state and structural helpers
+- implement only the stabilized `fmc_model.*` first slice before adding
+  unit/rate/runtime behavior
 - separate:
   - FMC model semantics
+  - FMC unit/rate calculation policy
+  - FMC runtime/service ownership
   - FMC presentation semantics
   - LCD adapter concerns
 - incorporate the latest domain decisions:
@@ -55,7 +67,11 @@ Current focus:
   - unsupported/custom units use a model placeholder, conversion factor 1, and
     calibration already loaded for the desired custom unit
   - `BBL_US` is the model unit; `BR` is a later presentation string
-- clarify semantic assumptions before accepting any `.h` as a contract:
+  - `fmc_model.*` stores canonical state only; visible volume and operative
+    pulses-per-active-unit views belong to later unit/rate/presentation helpers
+  - FMC product modules under `src/product/fmc/` use `fmc_*` filenames and
+    `FMC_*` public symbol prefixes, avoiding the redundant `fm_fmc_*` prefix
+- clarify semantic assumptions before accepting any more contract:
   - visible ACM, TTL, and RATE are derived views, not editable configuration
   - ACM and TTL backing state remains canonical pulse counters
   - configuration and runtime ownership must be reviewed explicitly
@@ -75,6 +91,8 @@ Constraints:
 - do not place FMC product-domain modules in `src/libs/`
 - do not duplicate normalized specs under `legacy_backup/`
 - do not include pulse/capture math in the first slice
+- do not put RTOS ownership, mutexes, queues, timers, or live shared-state
+  service behavior in `fmc_model.*`
 - do not pull in `FM_LCD_LL_*`, setup screens, user menu flow, Bluetooth, RTC,
   ticketing, or backup persistence
 - use `legacy_backup/libs/fm_fmc.*`, `fm_user.c`, and `fm_setup.c` only as
@@ -83,6 +101,8 @@ Constraints:
   the semantic boundary of the new module
 - do not keep `flow_active` or `pulse_activity` as core model state unless a
   later requirement proves they are first-class FMC elements
+- do not keep a legacy name, shape, or behavior only because it exists; keep it
+  only when it is the best current product decision
 - keep the model shape copyable so the product can later hold:
   - active environment
   - edit buffer
@@ -90,22 +110,28 @@ Constraints:
 
 ## Next Step
 
-- continue the semantic clarification loop using:
+- implement `src/product/fmc/fmc_model.c` for the current header only:
+  - `FMC_MODEL_Init`
+  - `FMC_MODEL_GetResetPolicy`
+  - `FMC_MODEL_GetTotalState`
+  - `FMC_MODEL_GetTotalStateConst`
+  - `FMC_MODEL_ResetTotal`
+- keep that implementation pure:
+  - no RTOS ownership
+  - no unit conversion
+  - no visible volume calculation
+  - no rate calculation
+  - no LCD/presentation code
+- use these references while implementing:
   - `docs/specs/fmc/fm_fmc_legacy_field_inventory.md`
   - `docs/specs/fmc/use_cases.yaml`
   - `docs/specs/math/fm_numeric_library_candidate.md`
-- keep `src/product/fmc/fm_fmc_model.h` in candidate status until this loop closes
-  the current group of doubts
-- for each item under review:
-  - clarify intended product meaning
-  - separate canonical/config/runtime/presentation roles
-  - record whether it survives and in which layer
-- only after this loop stabilizes:
-  - refine the minimum contract for `src/product/fmc/fm_fmc_model.h`
-- define the seam between:
-  - FMC model semantics
-  - FMC presentation semantics
-  - LCD adapter usage of the validated LCD stack
+- after implementation, verify with the canonical build flow if the source is
+  added to a compiled target
+- after `fmc_model.*` is implemented, decide the next slice:
+  - `fmc_units.*` for unit conversion and operative factor behavior
+  - or `fmc_rate.*` for rate calculation from pulse/time windows
+  - keep `fmc_service.*` until RTOS ownership is ready to be modeled
 
 ## References
 
