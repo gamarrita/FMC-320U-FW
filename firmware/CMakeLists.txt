@@ -41,6 +41,7 @@ set(FM_AVAILABLE_APPS
     panic_demo
     lcd_bringup
     lcd_blink_bringup
+    fmc_model_units_test
 )
 
 # Default app defined in this file.
@@ -94,6 +95,7 @@ set(FM_COMMON_SOURCES
     ${FM_SRC_DIR}/bsp/devices/lcd/fm_lcd_map.c
     ${FM_SRC_DIR}/bsp/devices/lcd/pcf8553/fm_pcf8553.c
     ${FM_SRC_DIR}/product/fmc/fmc_model.c
+    ${FM_SRC_DIR}/product/fmc/fmc_units.c
     ${FM_SRC_DIR}/port/fm_port_dwt.c
     ${FM_SRC_DIR}/port/fm_port_gpio.c
     ${FM_SRC_DIR}/port/fm_port_pcf8553_ctrl.c

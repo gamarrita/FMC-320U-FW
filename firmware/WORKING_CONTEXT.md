@@ -1,6 +1,6 @@
 # WORKING_CONTEXT.md
 
-## Current Work
+## Active Workstream
 
 Stage:
 - implementation
@@ -8,168 +8,100 @@ Stage:
 Active pass:
 - refactor
 
-Operational context:
+Short name:
+- FMC model and presentation refactor
 
-Area:
-- `legacy_backup/libs/fm_fmc.c`
-- `legacy_backup/libs/fm_fmc.h`
-- `legacy_backup/libs/fm_user.c`
-- `legacy_backup/libs/fm_setup.c`
+Extended context:
+- `docs/contexts/fmc_presentation_refactor.md`
+
+## Scope Now
+
+Active files/folders:
 - `src/product/fmc/`
-- `src/product/fmc/fmc_model.h`
-- `src/bsp/devices/lcd/`
+- `src/apps/fmc_model_units_test/`
+- `src/libs/fm_status.h`
+- `legacy_backup/libs/fm_fmc.*` as evidence only
+- `legacy_backup/libs/fm_user.c` and `legacy_backup/libs/fm_setup.c` as
+  behavior-discovery evidence only
+- `docs/specs/fmc/`
+- `src/bsp/devices/lcd/` as the already validated display foundation
 
-Core structure:
-- `legacy_backup/libs/fm_fmc.*` is legacy behavior reference, not a direct
-  port target
-- `legacy_backup/` is frozen reference evidence; normalized product specs live
-  under `docs/specs/`
-- the closed LCD stack under `src/bsp/devices/lcd/` is the display foundation to
-  preserve
-- FMC product-domain modules live under `src/product/fmc/`, not `src/libs/`
-- FMC product modules are not generic portable libraries; they may assume this
-  product, IDE, and chosen RTOS direction
-- this is a learning-oriented product refactor:
-  - legacy is evidence, not authority
-  - inherited behavior is preserved only when it is a deliberate current product
-    decision
-- this refactor now targets:
-  - an FMC model layer
-  - later pure unit and rate helpers where useful
-  - later an RTOS-facing FMC service/runtime owner
-  - then an FMC presentation-semantics layer above it
-  - then a later LCD adapter over the validated LCD stack
-- the first slice excludes pulse math, capture logic, and legacy UI flow
+Current target:
+- finish the first pure FMC product slices before introducing runtime,
+  presentation, or LCD adapter behavior.
 
-Current focus:
-- extract the FMC semantic elements that the instrument actually exposes:
-  ACM, TTL, RATE, pulse counts, K/calibration, units, and time base
-- keep the first `src/product/fmc/fmc_model.h` contract limited to canonical
-  model state and structural helpers
-- `fmc_model.*` first slice is implemented and compiled as common product code
-- avoid adding unit/rate/runtime behavior to `fmc_model.*`
-- separate:
-  - FMC model semantics
-  - FMC unit/rate calculation policy
-  - FMC runtime/service ownership
-  - FMC presentation semantics
-  - LCD adapter concerns
-- incorporate the latest domain decisions:
-  - TTL is resettable, but by a more privileged mechanism than ACM
-  - TTL remains non-user-resettable in normal operation
-  - ACM and TTL should stay simple and share the same volume-unit ownership
-  - RATE should share the same volume unit and only vary by time base
-  - pulse counters remain relevant as the backing state behind totals
-  - ACM and TTL store canonical pulse counters; visible volumes are derived
-  - calibration unit is explicit in the model; normal physical conversions use
-    the liter default, while custom units use a factor already loaded for that
-    unit
-  - unsupported/custom units use a model placeholder, conversion factor 1, and
-    calibration already loaded for the desired custom unit
-  - `BBL_US` is the model unit; `BR` is a later presentation string
-  - `fmc_model.*` stores canonical state only; visible volume and operative
-    pulses-per-active-unit views belong to later unit/rate/presentation helpers
-  - FMC product modules under `src/product/fmc/` use `fmc_*` filenames and
-    `FMC_*` public symbol prefixes, avoiding the redundant `fm_fmc_*` prefix
-- clarify semantic assumptions before accepting any more contract:
-  - visible ACM, TTL, and RATE are derived views, not editable configuration
-  - ACM and TTL backing state remains canonical pulse counters
-  - configuration and runtime ownership must be reviewed explicitly
-  - interpretation problems found in the header should be treated as blockers,
-    not cosmetic issues
-- use the working loop:
-  - inspect one legacy item
-  - ask until intent and ownership are clear
-  - record the clarified meaning in the working artifacts
-  - only then move to the next item
-- keep the first slice oriented to a flow-computer instrument while improving
-  semantics and coherence instead of copying legacy structure or locking the
-  contract to `ufp3_t`
+## Current State
 
-Constraints:
-- do not port `legacy_backup/` modules directly into `src/product/fmc/` or `src/libs/`
-- do not place FMC product-domain modules in `src/libs/`
-- do not duplicate normalized specs under `legacy_backup/`
-- do not include pulse/capture math in the first slice
-- do not put RTOS ownership, mutexes, queues, timers, or live shared-state
-  service behavior in `fmc_model.*`
-- do not pull in `FM_LCD_LL_*`, setup screens, user menu flow, Bluetooth, RTC,
-  ticketing, or backup persistence
-- use `legacy_backup/libs/fm_fmc.*`, `fm_user.c`, and `fm_setup.c` only as
-  references for domain discovery and contrast, not as semantics to preserve
-- use scaled/fixed-point only if it remains an implementation detail, not as
-  the semantic boundary of the new module
-- do not keep `flow_active` or `pulse_activity` as core model state unless a
-  later requirement proves they are first-class FMC elements
-- do not keep a legacy name, shape, or behavior only because it exists; keep it
-  only when it is the best current product decision
-- keep the model shape copyable so the product can later hold:
-  - active environment
-  - edit buffer
-  - factory/default copies
+- `fmc_model.*` is implemented as canonical copyable FMC state plus structural
+  helpers.
+- `fmc_units.*` is implemented in the working tree as pure product unit policy.
+- `fm_status.h` now owns common lightweight status codes for authored modules.
+- `fmc_units.*` has been added to the common build sources.
+- `fmc_model_units_test` now provides a repeatable app-level verification path
+  for the pure model and unit-policy slices.
+- Canonical builds passed for:
+  - `main`
+  - `template`
+  - `panic_demo`
+  - `lcd_bringup`
+  - `lcd_blink_bringup`
+  - `fmc_model_units_test`
+
+## Decisions In Force
+
+- FMC product modules live under `src/product/fmc/`, not `src/libs/`.
+- FMC modules are product firmware modules, not portable flow-computer
+  libraries.
+- `fmc_model.*`, `fmc_units.*`, and early `fmc_rate.*` should remain pure where
+  practical.
+- RTOS ownership belongs later in `fmc_service.*` or `fmc_runtime.*`.
+- LCD formatting and display writes belong later in presentation/adapter layers.
+- `fmc_model.*` stores canonical state only:
+  - measurement configuration
+  - ACM/TTL pulse counters
+  - reset policy and structural helpers
+- Visible volume, operative factor views, and rate values are derived behavior,
+  not stored truth in `fmc_model.*`.
+- ACM and TTL are backed by pulse counters.
+- TTL is resettable only through a privileged product flow; the model reset
+  primitive itself does not authenticate callers.
+- Calibration unit is explicit; current supported calculation path is liter
+  calibration.
+- `CUSTOM`, `KG`, and `EQUIV_M3` are valid 1:1 unit cases.
+- Invalid/corrupt volume-unit enum values recover to liters.
+- `BBL_US` is the model unit name; `BR` is a later presentation label.
+- `FMC_MODEL_VOLUME_UNIT_EQUIV_M3` is the model name for equivalent cubic meter;
+  `MC` is the later display label.
+- Public FMC product symbols use `FMC_*`; filenames use `fmc_*`.
+
+## Boundaries
+
+Do not add to the current pure slices:
+- pulse capture or interrupt acquisition
+- RTOS mutexes, queues, timers, event flags, or task ownership
+- UI/menu authorization
+- LCD rendering or `FM_LCD_LL_*`
+- Bluetooth, RTC, ticketing, backup persistence, or log layout
+- direct ports from `legacy_backup/`
+- fixed-point/scaled types as public semantics
+- `flow_active` or `pulse_activity` as core model state without a new explicit
+  requirement
+
+Protected/generated-code policy remains in `AGENTS.md`.
 
 ## Next Step
 
-- review and commit the `fmc_model.*` implementation if accepted
-- then decide the next FMC slice:
-  - `fmc_units.*` for unit conversion and operative factor behavior
-  - or `fmc_rate.*` for rate calculation from pulse/time windows
-  - keep `fmc_service.*` until RTOS ownership is ready to be modeled
-- keep future slices pure and separate until their boundary is explicit:
-  - no RTOS ownership in model/units/rate helpers
-  - no LCD/presentation code in model/units/rate helpers
-  - no persistence or log layout in the model
-- use these references while implementing:
-  - `docs/specs/fmc/fm_fmc_legacy_field_inventory.md`
-  - `docs/specs/fmc/use_cases.yaml`
-  - `docs/specs/math/fm_numeric_library_candidate.md`
+1. Commit or preserve the accepted FMC model/units/test baseline.
+2. Start the next pure slice: `fmc_rate.*` for rate calculation from
+   pulse/time windows.
+3. Keep `fmc_service.*` or `fmc_runtime.*` deferred until RTOS ownership and
+   snapshot publication are explicit.
 
 ## References
 
 - `AGENTS.md`
-- `docs/contexts/fmc_presentation_refactor.md`
-- `docs/specs/fmc/use_cases.yaml`
-- `docs/specs/fmc/fm_fmc_legacy_field_inventory.md`
-- `docs/specs/math/fm_numeric_library_candidate.md`
 - `STYLE.md`
-
-## Invocation Rule
-
-Every time this file is used:
-- confirm stage, active pass, current focus, constraints, and next step
-- for immediate execution, `Constraints` and `Next Step` are authoritative
-- use `legacy_backup/` only as behavior reference, not as direct architecture
-- if the real work drifted, update this file and its referenced
-  `docs/contexts/` file before continuing
-
-## Maintenance Rule
-
-Keep this file updated when any of these change:
-- stage
-- active pass
-- operational focus
-- constraints
-- next step
-- referenced active context file
-
-Keep the referenced file under `docs/contexts/` updated when any of these
-change:
-- extended technical rationale
-- detailed scope
-- validated or pending state
-- remaining work
-- active technical decisions
-
-Update both together when:
-- the short execution state and the extended context would otherwise diverge
-- the active line of work changes materially
-
-## Strong Rule
-
-This is execution state, not documentation.
-No history.
-No long explanation.
-Detailed rationale stays in `docs/contexts/fmc_presentation_refactor.md`.
-Keep `WORKING_CONTEXT.md` and its referenced `docs/contexts/` file aligned.
-Do not let this file absorb extended design detail that belongs in the
-referenced context file.
+- `docs/contexts/fmc_presentation_refactor.md`
+- `docs/specs/fmc/fm_fmc_legacy_field_inventory.md`
+- `docs/specs/fmc/use_cases.yaml`
+- `docs/specs/math/fm_numeric_library_candidate.md`

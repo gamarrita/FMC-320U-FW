@@ -12,9 +12,11 @@ The initial split is:
 
 ## Current Boundary
 
-The current first slice is the FMC model contract and implementation only.
+The current implemented slices are:
+- `fmc_model.*`: canonical model state and structural helpers,
+- `fmc_units.*`: product unit policy and operative factor helpers.
 
-It should not own:
+These modules should not own:
 - acquisition or capture timing,
 - RTOS synchronization,
 - UI/menu authorization,
@@ -23,3 +25,7 @@ It should not own:
 
 Those responsibilities should be added as separate product modules when their
 slice becomes active.
+
+For the active refactor context, use:
+- `WORKING_CONTEXT.md`
+- `docs/contexts/fmc_presentation_refactor.md`

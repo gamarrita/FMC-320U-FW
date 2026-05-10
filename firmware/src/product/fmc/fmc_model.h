@@ -37,14 +37,7 @@
 
 #include <stdint.h>
 
-typedef enum
-{
-    FMC_MODEL_OK = 0,
-    FMC_MODEL_EINVAL,
-    FMC_MODEL_ERANGE,
-    FMC_MODEL_ESTATE,
-    FMC_MODEL_ENOTSUP
-} fmc_model_status_t;
+#include "fm_status.h"
 
 /**
  * @brief Named total roles exposed by the instrument.
@@ -80,14 +73,14 @@ typedef enum
  * Display strings such as `BR` or `--` are presentation concerns and are not
  * owned by this model enum.
  *
- * `FMC_MODEL_VOLUME_UNIT_UNSUPPORTED` preserves the product-level placeholder
- * for a selected unit that is not supported by the physical conversion table.
- * It is still operational: the active conversion factor is `1`, and the loaded
- * calibration is expected to already match the desired custom unit.
+ * `FMC_MODEL_VOLUME_UNIT_CUSTOM` preserves the product-level placeholder for a
+ * custom unit that is not named by the firmware. It is still operational: the
+ * active conversion factor is `1`, and the loaded calibration is expected to
+ * already match the desired custom unit. Presentation may render it as `--`.
  */
 typedef enum
 {
-    FMC_MODEL_VOLUME_UNIT_UNSUPPORTED = 0,
+    FMC_MODEL_VOLUME_UNIT_CUSTOM = 0,
     FMC_MODEL_VOLUME_UNIT_L,
     FMC_MODEL_VOLUME_UNIT_M3,
     FMC_MODEL_VOLUME_UNIT_GAL_US,
@@ -164,8 +157,8 @@ typedef struct
  * - time base qualifies RATE
  * - known physical conversions are normally derived from a liter-anchored
  *   calibration
- * - unsupported/custom units use conversion factor `1`; in that case the
- *   loaded calibration is expected to already be pulses per desired custom unit
+ * - 1:1 units use conversion factor `1`; in that case the loaded calibration
+ *   is expected to already be pulses per desired unit
  *
  * Derived operative pulses-per-active-unit views should not be stored here.
  * They belong to unit/rate calculation helpers over this model state.
@@ -259,7 +252,7 @@ const fmc_model_total_state_t *FMC_MODEL_GetTotalStateConst(
  * practice, the same primitive reset operation can serve ACM and TTL once the
  * caller has reached the correct UI/service flow.
  */
-fmc_model_status_t FMC_MODEL_ResetTotal(fmc_model_t *p_model,
-                                        fmc_model_total_t p_total);
+fm_status_t FMC_MODEL_ResetTotal(fmc_model_t *p_model,
+                                 fmc_model_total_t p_total);
 
 #endif /* FMC_MODEL_H */

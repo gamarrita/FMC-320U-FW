@@ -46,6 +46,7 @@ Examples:
 - `cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=template`
 - `cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=panic_demo`
 - `cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=lcd_bringup`
+- `cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=fmc_model_units_test`
 
 The default app is defined in the repository `CMakeLists.txt`.
 When switching between apps, prefer a fresh configure so the build cache does

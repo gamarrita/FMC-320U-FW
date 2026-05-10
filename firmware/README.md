@@ -2,37 +2,40 @@
 
 New firmware for FMC-320U.
 
-Initial objective:
-- incremental rewrite of the firmware
-- authored firmware source under `src/`
-- layered separation: `src/port`, `src/bsp`, `src/product`, `src/services`,
-  `src/apps`
-- progressive migration from the previous project
-- maintainable workflow for humans and agents
+## Objective
 
-Repository boundary:
-- CubeMX-generated and vendor-managed folders remain at repository root in the
-  layout expected by CubeMX
-- authored firmware code belongs under `src/`
+Incrementally rebuild the FMC-320U firmware with clear ownership, small
+reviewable changes, and a workflow that works for both humans and agents.
 
-Current canonical capabilities:
-- layered architecture with explicit responsibilities
-- work oriented to small, reviewable changes consistent with repository documentation
-- reproducible STM32 build outside of VS Code
-- explicit environment bootstrap for terminal usage
-- staged workflow usable by both humans and agents
-- documented and verifiable canonical build entry
-- explicit comment-pass workflow for incremental comment cleanup
+## Repository Boundary
 
-Operational entrypoint:
-- `WORKING_CONTEXT.md`
+CubeMX-generated and vendor-managed folders remain at repository root in the
+layout expected by CubeMX. This keeps CubeMX usable for RTOS changes,
+middleware, peripherals, and regeneration.
 
-Stable supporting references:
-- `STYLE.md`
-- `docs/workflow/README.md`
+Authored firmware code belongs under `src/`.
 
-Specialized pass reference:
-- `docs/workflow/passes/README.md` when the task enters a methodological pass
+## Authored Source Layout
+
+- `src/apps/`: selectable firmware application profiles.
+- `src/bsp/`: board and device-facing hardware details.
+- `src/port/`: MCU, toolchain, and RTOS/base-runtime adaptation.
+- `src/product/`: FMC-320U product semantics and behavior.
+- `src/services/`: reusable technical services.
+- `src/libs/`: small support libraries that are not product semantics.
+
+## Working With The Repo
+
+For agents:
+- start with `AGENTS.md`
+- use `WORKING_CONTEXT.md` for the active workstream
+- use the referenced file under `docs/contexts/` for detailed rationale
+- use `STYLE.md` for naming and code structure
+
+For humans:
+- use local `README.md` files to understand folder ownership
+- use `CONTRIBUTING.md` for commit and changelog hygiene
+- use `docs/workflow/README.md` for the stage model and pass references
 
 STM32 build and environment:
 - `docs/canonical-build/stm32cube-cli-workflow.md`

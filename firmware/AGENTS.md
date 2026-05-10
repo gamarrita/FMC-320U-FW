@@ -12,6 +12,22 @@ Use:
 
 ---
 
+## Operational Reading Order
+
+For active work, read in this order:
+1. the user request
+2. `AGENTS.md`
+3. `WORKING_CONTEXT.md`, when present and relevant
+4. the active extended context referenced by `WORKING_CONTEXT.md`
+5. local `README.md` files for the touched folders
+6. `STYLE.md` for naming and code structure questions
+
+`WORKING_CONTEXT.md` should stay short and operational.
+The referenced file under `docs/contexts/` should hold rationale, decisions,
+history, risks, and backlog for the active workstream.
+
+---
+
 ## Operating Rule
 
 Make small, correct, reviewable, repository-consistent changes.
@@ -119,10 +135,15 @@ Keep one source of truth per topic.
 
 Use this split:
 - stable policy in `AGENTS.md`
-- active execution state in `WORKING_CONTEXT.md` when is requiered, not lateral prompts
-- extended rationale and detailed context in `docs/contexts/` when is requiered, not lateral prompts
+- active execution state in `WORKING_CONTEXT.md` when required, not lateral prompts
+- extended rationale and detailed context in `docs/contexts/` when required, not lateral prompts
+- onboarding and repository maps in `README.md` files
+- naming and code structure in `STYLE.md`
 
 Do not duplicate stable policy across multiple files.
+
+When `WORKING_CONTEXT.md` and its referenced extended context would diverge,
+update both in the same change.
 
 ---
 

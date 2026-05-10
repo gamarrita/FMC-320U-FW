@@ -36,6 +36,11 @@ Recommended format:
 
 ## Entries
 
+## 2026-05-10
+- Added the first pure FMC model/unit-policy validation app.
+- Kept FMC runtime, presentation, LCD adapter, and pulse acquisition out of the
+  model/units baseline while making the slice build-verifiable.
+
 ## 2026-04-17
 - Introduced staged workflow model under `docs/workflow/`.
 - Added `comment_pass.md` as canonical method for comment consistency.

@@ -109,7 +109,7 @@ Reviewer clarification:
 
 
 
-| `VOL_UNIT_BLANK` | unsupported/custom unit placeholder | legacy placeholder intended to represent units not supported by the physical conversion table; conversion factor is `1`, and the loaded calibration must already be pulses per desired custom unit; presentation may render it as `--` | yes, renamed conceptually | fmc model placeholder | none |
+| `VOL_UNIT_BLANK` | custom unit placeholder | legacy placeholder intended to represent a valid custom unit with no firmware label; conversion factor is `1`, and the loaded calibration must already be pulses per desired custom unit; presentation may render it as `--` | yes, as `FMC_MODEL_VOLUME_UNIT_CUSTOM` | fmc model placeholder | none |
 | `VOL_UNIT_BR` | active environment config | product unit for US barrels; the model name should be `BBL_US` while the visible string remains `BR` in presentation | yes | fmc model | none |
 | `VOL_UNIT_GL` | active environment config | normal physical unit supported through real conversion from liters in the legacy table | yes | fmc model | none at this stage |
 | `VOL_UNIT_KG` | active environment config with intentional hack semantics | product supports KG as a selectable unit, but without density handling; legacy resolves it by calibrating through the liters-based process and then keeping a 1:1 operative conversion path | yes for the first slice, as a supported unit carried by the current hack | `fmc model` | keep as hack for now; re-evaluate later if explicit calibration-unit support is introduced |
@@ -162,9 +162,9 @@ Reviewer clarification:
 | `vol_pf_sel` | presentation | decimal placement for ACM/TTL display | yes, but not in core model | fmc presentation | should ACM/TTL share one precision policy or be separable later? |
 | `pulse_acm` | runtime backing state | backing pulses for ACM recomputation | yes | fmc model | none |
 | `pulse_ttl` | runtime backing state | backing pulses for TTL recomputation | yes | fmc model | none |
-| `factor_cal` | strong calibration input with explicit calibration unit | the deployed legacy scheme keeps one practical liter-anchored path for known conversions, while unsupported/custom units use factor `1` and require a calibration already expressed in the desired unit; no UI/menu support for changing calibration unit is part of the first slice; editable range is `1.000` to `99999.999` | yes | fmc model | none for first slice |
+| `factor_cal` | strong calibration input with explicit calibration unit | the deployed legacy scheme keeps one practical liter-anchored path for known conversions, while 1:1 units such as `CUSTOM`, `KG`, and `EQUIV_M3` use factor `1` and require calibration already expressed in the desired unit; no UI/menu support for changing calibration unit is part of the first slice; editable range is `1.000` to `99999.999` | yes | fmc model | none for first slice |
 | `factor_k` | derived helper / operative factor view with low-power purpose | precomputes `factor_cal * conversion_value` so runtime arithmetic is cheaper in an ultra-low-power embedded target; for conversion factor `1`, `factor_k == factor_cal` | yes as later helper/view, not stored public truth | future unit/rate helper | none for first slice |
-| `vol_unit` | active environment config | active shared volume unit; unsupported/custom selections should use the model placeholder and conversion factor `1` | yes | fmc model | none |
+| `vol_unit` | active environment config | active shared volume unit; `CUSTOM`, `KG`, and `EQUIV_M3` use conversion factor `1`; invalid/corrupt enum values should be recovered to liters by a future unit helper | yes | fmc model | none |
 | `time_unit` | active environment config | active rate time base | yes | fmc model | none |
 | `rate` | mixed type, needs split | bundles runtime-derived rate with acquisition, thresholds, and presentation | partially | split across model, presentation, acquisition, status | this is the main legacy knot to open |
 | `ticket_number` | lateral/out-of-core | reporting workflow state, not FMC core measurement meaning | probably no in first slice | workflow/reporting or persistence | should it leave FMC entirely? |

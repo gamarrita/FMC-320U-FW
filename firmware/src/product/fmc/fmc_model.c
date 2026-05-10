@@ -10,8 +10,15 @@
 
 #include <stddef.h>
 
+/* Returns mutable access to the backing state for the given total role,
+ * or NULL if the model pointer or total role is invalid.
+ */
 static fmc_model_total_state_t *fmc_model_get_total_state_(fmc_model_t *p_model,
                                                            fmc_model_total_t p_total);
+
+/* Returns read-only access to the backing state for the given total role,
+ * or NULL if the model pointer or total role is invalid.
+ */
 static const fmc_model_total_state_t *fmc_model_get_total_state_const_(
     const fmc_model_t *p_model,
     fmc_model_total_t p_total);
@@ -60,20 +67,20 @@ const fmc_model_total_state_t *FMC_MODEL_GetTotalStateConst(
     return fmc_model_get_total_state_const_(p_model, p_total);
 }
 
-fmc_model_status_t FMC_MODEL_ResetTotal(fmc_model_t *p_model,
-                                        fmc_model_total_t p_total)
+fm_status_t FMC_MODEL_ResetTotal(fmc_model_t *p_model,
+                                 fmc_model_total_t p_total)
 {
     fmc_model_total_state_t *total = fmc_model_get_total_state_(p_model,
                                                                 p_total);
 
     if (total == NULL)
     {
-        return FMC_MODEL_EINVAL;
+        return FM_STATUS_EINVAL;
     }
 
     total->pulses = 0U;
 
-    return FMC_MODEL_OK;
+    return FM_STATUS_OK;
 }
 
 static fmc_model_total_state_t *fmc_model_get_total_state_(fmc_model_t *p_model,
