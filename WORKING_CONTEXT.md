@@ -35,10 +35,11 @@ Current target:
 - `fmc_model.*` is implemented as canonical copyable FMC state plus structural
   helpers.
 - `fmc_units.*` is implemented in the working tree as pure product unit policy.
+- `fmc_rate.*` is implemented as pure rate calculation from pulse/time windows.
 - `fm_status.h` now owns common lightweight status codes for authored modules.
 - `fmc_units.*` has been added to the common build sources.
 - `fmc_model_units_test` now provides a repeatable app-level verification path
-  for the pure model and unit-policy slices.
+  for the pure model, unit-policy, and rate slices.
 - Canonical builds passed for:
   - `main`
   - `template`
@@ -91,10 +92,8 @@ Protected/generated-code policy remains in `AGENTS.md`.
 
 ## Next Step
 
-1. Commit or preserve the accepted FMC model/units/test baseline.
-2. Start the next pure slice: `fmc_rate.*` for rate calculation from
-   pulse/time windows.
-3. Keep `fmc_service.*` or `fmc_runtime.*` deferred until RTOS ownership and
+1. Validate and preserve the pure `fmc_rate.*` slice.
+2. Keep `fmc_service.*` or `fmc_runtime.*` deferred until RTOS ownership and
    snapshot publication are explicit.
 
 ## References

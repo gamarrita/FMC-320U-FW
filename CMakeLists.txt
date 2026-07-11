@@ -95,6 +95,7 @@ set(FM_COMMON_SOURCES
     ${FM_SRC_DIR}/bsp/devices/lcd/fm_lcd_map.c
     ${FM_SRC_DIR}/bsp/devices/lcd/pcf8553/fm_pcf8553.c
     ${FM_SRC_DIR}/product/fmc/fmc_model.c
+    ${FM_SRC_DIR}/product/fmc/fmc_rate.c
     ${FM_SRC_DIR}/product/fmc/fmc_units.c
     ${FM_SRC_DIR}/port/fm_port_dwt.c
     ${FM_SRC_DIR}/port/fm_port_gpio.c

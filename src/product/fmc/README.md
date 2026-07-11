@@ -7,14 +7,15 @@ Contain FMC flow-computer product logic.
 The initial split is:
 - `fmc_model.*`: copyable FMC canonical state and structural helpers,
 - `fmc_units.*`: unit and conversion policy for this product,
-- `fmc_rate.*`: future instantaneous-rate calculation behavior,
+- `fmc_rate.*`: pure instantaneous-rate calculation from pulse/time windows,
 - `fmc_service.*`: future RTOS-facing owner of live FMC state.
 
 ## Current Boundary
 
 The current implemented slices are:
 - `fmc_model.*`: canonical model state and structural helpers,
-- `fmc_units.*`: product unit policy and operative factor helpers.
+- `fmc_units.*`: product unit policy and operative factor helpers,
+- `fmc_rate.*`: active-unit rate derived from captured pulse/time windows.
 
 These modules should not own:
 - acquisition or capture timing,

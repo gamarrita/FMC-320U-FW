@@ -12,6 +12,7 @@
 #include "fm_debug.h"
 #include "fm_port_time.h"
 #include "fmc_model.h"
+#include "fmc_rate.h"
 #include "fmc_units.h"
 
 #define FM_FMC_MODEL_UNITS_TEST_IDLE_MS   1000U
@@ -26,6 +27,8 @@ typedef enum
     FM_FMC_MODEL_UNITS_TEST_CASE_LITERS_PER_UNIT,
     FM_FMC_MODEL_UNITS_TEST_CASE_PULSES_PER_ACTIVE_UNIT,
     FM_FMC_MODEL_UNITS_TEST_CASE_ERROR_PATHS,
+    FM_FMC_MODEL_UNITS_TEST_CASE_RATE_WINDOWS,
+    FM_FMC_MODEL_UNITS_TEST_CASE_RATE_ERROR_PATHS,
     FM_FMC_MODEL_UNITS_TEST_CASE_COUNT
 } fm_fmc_model_units_test_case_t;
 
@@ -45,6 +48,8 @@ static bool fm_fmc_model_units_test_unit_kind_(void);
 static bool fm_fmc_model_units_test_liters_per_unit_(void);
 static bool fm_fmc_model_units_test_pulses_per_active_unit_(void);
 static bool fm_fmc_model_units_test_error_paths_(void);
+static bool fm_fmc_model_units_test_rate_windows_(void);
+static bool fm_fmc_model_units_test_rate_error_paths_(void);
 static bool fm_fmc_model_units_test_run_case_(fm_fmc_model_units_test_case_t p_case);
 static void fm_fmc_model_units_test_emit_case_(fm_fmc_model_units_test_case_t p_case,
                                                bool p_passed);
@@ -379,6 +384,98 @@ static bool fm_fmc_model_units_test_error_paths_(void)
             FM_STATUS_EINVAL);
 }
 
+static bool fm_fmc_model_units_test_rate_windows_(void)
+{
+    static const fmc_model_time_base_t time_bases[] =
+    {
+        FMC_MODEL_TIME_BASE_SECOND,
+        FMC_MODEL_TIME_BASE_MINUTE,
+        FMC_MODEL_TIME_BASE_HOUR,
+        FMC_MODEL_TIME_BASE_DAY
+    };
+    static const double expected_rates[] =
+    {
+        1.0,
+        60.0,
+        3600.0,
+        86400.0
+    };
+    fmc_model_measurement_t measurement;
+    uint8_t index;
+    double rate;
+
+    measurement.calibration_pulses_per_unit = 2.0;
+    measurement.calibration_volume_unit = FMC_MODEL_VOLUME_UNIT_L;
+    measurement.active_volume_unit = FMC_MODEL_VOLUME_UNIT_L;
+
+    for (index = 0U;
+         index < (uint8_t) (sizeof(time_bases) / sizeof(time_bases[0]));
+         index++)
+    {
+        measurement.active_time_base = time_bases[index];
+
+        if ((FMC_RATE_Calc(&measurement, 4U, 2.0, &rate) != FM_STATUS_OK) ||
+            !fm_fmc_model_units_test_double_eq_(rate,
+                                                expected_rates[index]))
+        {
+            return false;
+        }
+    }
+
+    measurement.active_time_base = FMC_MODEL_TIME_BASE_MINUTE;
+    measurement.active_volume_unit = FMC_MODEL_VOLUME_UNIT_M3;
+
+    if ((FMC_RATE_Calc(&measurement, 2000U, 10.0, &rate) != FM_STATUS_OK) ||
+        !fm_fmc_model_units_test_double_eq_(rate, 6.0))
+    {
+        return false;
+    }
+
+    measurement.calibration_pulses_per_unit = 6000.0;
+    measurement.active_volume_unit = FMC_MODEL_VOLUME_UNIT_L;
+
+    if ((FMC_RATE_Calc(&measurement, 60U, 1.0, &rate) != FM_STATUS_OK) ||
+        !fm_fmc_model_units_test_double_eq_(rate, 0.6))
+    {
+        return false;
+    }
+
+    return (FMC_RATE_Calc(&measurement, 0U, 10.0, &rate) == FM_STATUS_OK) &&
+           fm_fmc_model_units_test_double_eq_(rate, 0.0);
+}
+
+static bool fm_fmc_model_units_test_rate_error_paths_(void)
+{
+    fmc_model_measurement_t measurement;
+    double rate;
+
+    measurement.calibration_pulses_per_unit =
+        FMC_MODEL_CALIBRATION_PULSES_PER_UNIT_DEFAULT;
+    measurement.calibration_volume_unit = FMC_MODEL_VOLUME_UNIT_L;
+    measurement.active_volume_unit = FMC_MODEL_VOLUME_UNIT_L;
+    measurement.active_time_base = FMC_MODEL_TIME_BASE_SECOND;
+
+    if ((FMC_RATE_Calc(NULL, 1U, 1.0, &rate) != FM_STATUS_EINVAL) ||
+        (FMC_RATE_Calc(&measurement, 1U, 1.0, NULL) != FM_STATUS_EINVAL) ||
+        (FMC_RATE_Calc(&measurement, 1U, 0.0, &rate) != FM_STATUS_ERANGE) ||
+        (FMC_RATE_Calc(&measurement, 1U, -1.0, &rate) != FM_STATUS_ERANGE))
+    {
+        return false;
+    }
+
+    measurement.active_time_base = (fmc_model_time_base_t) 99;
+    if (FMC_RATE_Calc(&measurement, 1U, 1.0, &rate) != FM_STATUS_EINVAL)
+    {
+        return false;
+    }
+
+    measurement.active_time_base = FMC_MODEL_TIME_BASE_SECOND;
+    measurement.calibration_pulses_per_unit =
+        FMC_MODEL_CALIBRATION_PULSES_PER_UNIT_MIN - 0.1;
+
+    return FMC_RATE_Calc(&measurement, 1U, 1.0, &rate) == FM_STATUS_ERANGE;
+}
+
 static bool fm_fmc_model_units_test_run_case_(fm_fmc_model_units_test_case_t p_case)
 {
     switch (p_case)
@@ -403,6 +500,12 @@ static bool fm_fmc_model_units_test_run_case_(fm_fmc_model_units_test_case_t p_c
 
     case FM_FMC_MODEL_UNITS_TEST_CASE_ERROR_PATHS:
         return fm_fmc_model_units_test_error_paths_();
+
+    case FM_FMC_MODEL_UNITS_TEST_CASE_RATE_WINDOWS:
+        return fm_fmc_model_units_test_rate_windows_();
+
+    case FM_FMC_MODEL_UNITS_TEST_CASE_RATE_ERROR_PATHS:
+        return fm_fmc_model_units_test_rate_error_paths_();
 
     default:
         return false;
@@ -440,6 +543,14 @@ static void fm_fmc_model_units_test_emit_case_(fm_fmc_model_units_test_case_t p_
 
     case FM_FMC_MODEL_UNITS_TEST_CASE_ERROR_PATHS:
         (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:ERROR_PATHS:");
+        break;
+
+    case FM_FMC_MODEL_UNITS_TEST_CASE_RATE_WINDOWS:
+        (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:RATE_WINDOWS:");
+        break;
+
+    case FM_FMC_MODEL_UNITS_TEST_CASE_RATE_ERROR_PATHS:
+        (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:RATE_ERROR_PATHS:");
         break;
 
     default:

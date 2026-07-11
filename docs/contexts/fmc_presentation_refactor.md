@@ -19,6 +19,7 @@ decisions, history, risks, and backlog. Immediate execution state belongs in
 Implemented in the active working tree:
 - `src/product/fmc/fmc_model.*`
 - `src/product/fmc/fmc_units.*`
+- `src/product/fmc/fmc_rate.*`
 - `src/libs/fm_status.h`
 - `src/apps/fmc_model_units_test/`
 
@@ -26,11 +27,11 @@ Current pure slices:
 - `fmc_model.*`: canonical copyable FMC state and structural helpers.
 - `fmc_units.*`: product unit policy and operative pulses-per-active-unit
   calculation.
+- `fmc_rate.*`: pure active-unit rate calculation from pulse/time windows.
 - `fmc_model_units_test`: repeatable app-level verification for the pure
-  model and unit-policy boundary.
+  model, unit-policy, and rate boundaries.
 
 Not implemented yet:
-- `fmc_rate.*`
 - `fmc_service.*` or `fmc_runtime.*`
 - `fmc_config.*`
 - `fmc_presentation.*`
@@ -81,7 +82,7 @@ The intended FMC module family is:
    - does not own labels, LCD strings, persistence, or RTOS state
 
 3. `fmc_rate.*`
-   - future pure helper for rate calculation from pulse/time windows
+   - pure helper for rate calculation from pulse/time windows
    - should not own acquisition interrupts or RTOS scheduling
 
 4. `fmc_service.*` or `fmc_runtime.*`
@@ -299,7 +300,7 @@ These signals support the local direction:
 
 1. Preserve the current `fmc_model.*`, `fmc_units.*`, `fm_status.h`, validation
    app, and documentation baseline.
-2. Start the next pure slice: `fmc_rate.*`.
+2. Preserve the pure `fmc_rate.*` slice after canonical validation.
 3. Keep derived behavior outside the model:
    - visible volume
    - operative factor views
