@@ -27,19 +27,12 @@ Hoy este repo ya tiene resuelto:
 - debug funcional con ST-LINK GDB Server + `arm-none-eabi-gdb`
 - salida UART por el Virtual COM Port del ST-LINK
 
-El app canónico actual para validación rápida del firmware es:
-- `FM_ACTIVE_APP=lcd_bringup`
-
 El artefacto principal generado en `Debug` es:
 - `build/Debug/fmc-320u-v2.elf`
 
-El entorno STM32 efectivo de esta máquina, según `.settings/bundles.store.json`,
-es:
-- `cmake` = `4.2.3+st.1`
-- `ninja` = `1.13.2+st.1`
-- `gnu-tools-for-stm32` = `14.3.1+st.2`
-- `programmer` = `2.22.0+st.1`
-- `stlink-gdbserver` = `7.13.0+st.3`
+La aplicación default es la definida por `FM_ACTIVE_APP_DEFAULT` en
+`CMakeLists.txt`. Este documento no replica ese valor para evitar dos fuentes
+de verdad.
 
 ---
 
@@ -74,16 +67,14 @@ En PowerShell:
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\tools\stm32cube-env.ps1
-cube-cmake --preset Debug -DFM_ACTIVE_APP=lcd_bringup
+cube-cmake --preset Debug
 cube-cmake --build --preset Debug
 ```
 
 Notas:
 - `Set-ExecutionPolicy -Scope Process Bypass` solo afecta la shell actual.
-- `-DFM_ACTIVE_APP=lcd_bringup` deja el flujo explícito y reproducible aunque el
-  cache de CMake venga de otro app anterior.
-- si querés usar el app default actual del repo, podés omitir
-  `-DFM_ACTIVE_APP=lcd_bringup`, pero para reproducibilidad conviene dejarlo.
+- para usar una aplicación distinta del default, agregá
+  `-DFM_ACTIVE_APP=<app>` al comando de configuración.
 
 Resultado esperado:
 - `build/Debug/fmc-320u-v2.elf`
@@ -104,27 +95,9 @@ El bootstrap `tools/stm32cube-env.ps1` hace lo siguiente:
   - `CUBE_PROGRAMMER_PATH`
   - `PATH`
 
-En esta máquina, después del bootstrap, los binarios relevantes quedan en:
-
-```text
-cube.exe
-C:\Users\dhs\.vscode\extensions\stmicroelectronics.stm32cube-ide-core-1.2.1-win32-x64\resources\binaries\win32\x86_64\cube.exe
-
-cube-cmake.exe
-C:\Users\dhs\.vscode\extensions\stmicroelectronics.stm32cube-ide-build-cmake-1.44.0-win32-x64\resources\cube-cmake\win32\x86_64\cube-cmake.exe
-
-bundle root
-C:\Users\dhs\AppData\Local\stm32cube\bundles
-
-GNU toolchain
-C:\Users\dhs\AppData\Local\stm32cube\bundles\gnu-tools-for-stm32\14.3.1+st.2\bin
-
-STM32CubeProgrammer CLI
-C:\Users\dhs\AppData\Local\stm32cube\bundles\programmer\2.22.0+st.1\bin\STM32_Programmer_CLI.exe
-
-ST-LINK GDB Server
-C:\Users\dhs\AppData\Local\stm32cube\bundles\stlink-gdbserver\7.13.0+st.3\bin\ST-LINK_gdbserver.exe
-```
+Las rutas y versiones instaladas se descubren mediante el bootstrap y el
+resolvedor de STM32. No se fijan aquí porque cambian al actualizar extensiones
+o bundles.
 
 ### 1.4 Variables y archivos relevantes
 
@@ -179,7 +152,7 @@ Ejemplo:
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\tools\stm32cube-env.ps1
-cube-cmake --preset Debug -DFM_ACTIVE_APP=lcd_bringup
+cube-cmake --preset Debug
 cube-cmake --build --preset Debug
 ```
 
@@ -313,7 +286,8 @@ Ambas salen del entorno STM32 del repo:
 Con el bootstrap ya cargado:
 
 ```powershell
-$GdbServer = Join-Path $env:CUBE_BUNDLE_PATH "stlink-gdbserver\7.13.0+st.3\bin\ST-LINK_gdbserver.exe"
+$GdbServer = Get-ChildItem "$env:CUBE_BUNDLE_PATH\stlink-gdbserver\*\bin\ST-LINK_gdbserver.exe" |
+  Sort-Object FullName -Descending | Select-Object -First 1 -ExpandProperty FullName
 & $GdbServer -p 61234 -d -v -cp $env:CUBE_PROGRAMMER_PATH
 ```
 
@@ -338,9 +312,11 @@ Dentro de GDB:
 
 ```gdb
 target extended-remote localhost:61234
-monitor reset halt
+monitor reset
+monitor halt
 load
-monitor reset halt
+monitor reset
+monitor halt
 continue
 ```
 
@@ -353,9 +329,10 @@ desde GDB, podés omitir `load`.
 2. arrancar `ST-LINK_gdbserver`
 3. abrir `arm-none-eabi-gdb` con el `.elf`
 4. conectar con `target extended-remote`
-5. `monitor reset halt`
-6. `load` si querés programar desde GDB
-7. `continue`
+5. `monitor reset`
+6. `monitor halt`
+7. `load` si querés programar desde GDB
+8. `continue`
 
 ---
 
@@ -416,7 +393,7 @@ Eso es intencional:
 - evita esperar mensajes UART que nunca van a aparecer
 - deja evidencia inmediata de si el jumper de mensajes está habilitado
 
-### 4.4 Qué esperar con el bringup actual
+### 4.4 Qué esperar con el bringup de LCD
 
 Con `FM_ACTIVE_APP=lcd_bringup`, la UART debería mostrar:
 
@@ -602,7 +579,7 @@ Plantilla mínima de operación en PowerShell:
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\tools\stm32cube-env.ps1
-cube-cmake --preset Debug -DFM_ACTIVE_APP=lcd_bringup
+cube-cmake --preset Debug
 cube-cmake --build --preset Debug
 & "$env:CUBE_PROGRAMMER_PATH\STM32_Programmer_CLI.exe" -c port=SWD mode=NORMAL reset=HWrst -w build/Debug/fmc-320u-v2.elf -v -rst
 python -m serial.tools.miniterm COMx 115200
@@ -611,7 +588,8 @@ python -m serial.tools.miniterm COMx 115200
 Y para debug:
 
 ```powershell
-$GdbServer = Join-Path $env:CUBE_BUNDLE_PATH "stlink-gdbserver\7.13.0+st.3\bin\ST-LINK_gdbserver.exe"
+$GdbServer = Get-ChildItem "$env:CUBE_BUNDLE_PATH\stlink-gdbserver\*\bin\ST-LINK_gdbserver.exe" |
+  Sort-Object FullName -Descending | Select-Object -First 1 -ExpandProperty FullName
 & $GdbServer -p 61234 -d -v -cp $env:CUBE_PROGRAMMER_PATH
 & "$env:GCC_TOOLCHAIN_ROOT\arm-none-eabi-gdb.exe" build/Debug/fmc-320u-v2.elf
 ```
@@ -627,7 +605,7 @@ Si hoy querés repetir por CLI lo que hace el entorno STM32 de este proyecto:
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\tools\stm32cube-env.ps1
-cube-cmake --preset Debug -DFM_ACTIVE_APP=lcd_bringup
+cube-cmake --preset Debug
 cube-cmake --build --preset Debug
 ```
 
@@ -640,7 +618,8 @@ cube-cmake --build --preset Debug
 ### Debug
 
 ```powershell
-$GdbServer = Join-Path $env:CUBE_BUNDLE_PATH "stlink-gdbserver\7.13.0+st.3\bin\ST-LINK_gdbserver.exe"
+$GdbServer = Get-ChildItem "$env:CUBE_BUNDLE_PATH\stlink-gdbserver\*\bin\ST-LINK_gdbserver.exe" |
+  Sort-Object FullName -Descending | Select-Object -First 1 -ExpandProperty FullName
 & $GdbServer -p 61234 -d -v -cp $env:CUBE_PROGRAMMER_PATH
 & "$env:GCC_TOOLCHAIN_ROOT\arm-none-eabi-gdb.exe" build/Debug/fmc-320u-v2.elf
 ```

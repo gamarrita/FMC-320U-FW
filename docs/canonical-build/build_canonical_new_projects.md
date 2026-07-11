@@ -136,19 +136,7 @@ cube --get-current-value cube_bundle_path
 cube --resolve cmake
 ```
 
-On this machine, after the bootstrap, the observed output was:
-
-```text
-C:\Users\dhs\.vscode\extensions\stmicroelectronics.stm32cube-ide-core-1.2.1-win32-x64\resources\binaries\win32\x86_64\cube.exe
-C:\Users\dhs\.vscode\extensions\stmicroelectronics.stm32cube-ide-build-cmake-1.44.0-win32-x64\resources\cube-cmake\win32\x86_64\cube-cmake.exe
-C:\Users\dhs\AppData\Local\stm32cube\bundles\cmake\4.2.3+st.1\bin\cmake.exe
-C:\Users\dhs\AppData\Local\stm32cube\bundles\ninja\1.13.2+st.1\bin\ninja.exe
-C:\Users\dhs\AppData\Local\stm32cube\bundles\gnu-tools-for-stm32\14.3.1+st.2\bin\arm-none-eabi-gcc.exe
-C:\Users\dhs\AppData\Local\stm32cube\bundles
-cube_bundle_path=C:\Users\dhs\AppData\Local\stm32cube\bundles
-```
-
-What matters about that result:
+What matters about the resolved environment:
 - the effective `PATH` no longer depends on guessing paths manually
 - `cube` remains the source of truth for bundle and environment resolution
 - the exact paths may change with another extension or bundle version
@@ -185,8 +173,7 @@ Concrete reasons:
   - `CMAKE_TOOLCHAIN_FILE = cmake/gcc-arm-none-eabi.cmake`
   - `CMAKE_COMMAND` pointing to the STM32 bundle `cmake.exe`
   - `CMAKE_MAKE_PROGRAM` pointing to the STM32 bundle `ninja.exe`
-- both builds finished on this machine with the same `build/Debug/fmc-320u-v2.elf`
-- the observed artifact size was `1807308` bytes in both cases
+- both builds must produce the same expected artifact
 
 Practical conclusion:
 - `cube-cmake` is the main entrypoint because it matches the current workspace contract more directly
@@ -486,19 +473,7 @@ cube --get-current-value cube_bundle_path
 cube --resolve cmake
 ```
 
-En esta máquina, después del bootstrap, se observó:
-
-```text
-C:\Users\dhs\.vscode\extensions\stmicroelectronics.stm32cube-ide-core-1.2.1-win32-x64\resources\binaries\win32\x86_64\cube.exe
-C:\Users\dhs\.vscode\extensions\stmicroelectronics.stm32cube-ide-build-cmake-1.44.0-win32-x64\resources\cube-cmake\win32\x86_64\cube-cmake.exe
-C:\Users\dhs\AppData\Local\stm32cube\bundles\cmake\4.2.3+st.1\bin\cmake.exe
-C:\Users\dhs\AppData\Local\stm32cube\bundles\ninja\1.13.2+st.1\bin\ninja.exe
-C:\Users\dhs\AppData\Local\stm32cube\bundles\gnu-tools-for-stm32\14.3.1+st.2\bin\arm-none-eabi-gcc.exe
-C:\Users\dhs\AppData\Local\stm32cube\bundles
-cube_bundle_path=C:\Users\dhs\AppData\Local\stm32cube\bundles
-```
-
-Qué importa de ese resultado:
+Qué importa del entorno resuelto:
 - el `PATH` efectivo ya no depende de adivinar rutas manuales
 - `cube` sigue siendo la fuente de verdad para bundle y entorno
 - las rutas exactas pueden cambiar con otra versión de la extensión o del bundle
@@ -535,8 +510,7 @@ Razones concretas:
   - `CMAKE_TOOLCHAIN_FILE = cmake/gcc-arm-none-eabi.cmake`
   - `CMAKE_COMMAND` apuntando al `cmake.exe` del bundle STM32
   - `CMAKE_MAKE_PROGRAM` apuntando al `ninja.exe` del bundle STM32
-- ambos builds terminaron en esta máquina con el mismo `build/Debug/fmc-320u-v2.elf`
-- el tamaño observado del artefacto fue `1807308` bytes en ambos casos
+- ambos builds deben producir el mismo artefacto esperado
 
 Conclusión práctica:
 - `cube-cmake` es la entrada principal porque coincide más directamente con el contrato actual del workspace
