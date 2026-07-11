@@ -2,24 +2,14 @@
 
 ## Purpose
 
-This directory contains stage-specific workflow documents.
+This file keeps the repo's default stage vocabulary small and stable.
 
-Its job is simple:
-- define the default stage model used in this repo
-- explain what each stage is for
-- point to more specific pass documents when needed
-- expose the wizard entrypoint for starting or reframing a new workstream
+Use `WORKING_CONTEXT.md` first when an active workstream exists.
+Use this file only to interpret stage names consistently.
 
-This directory is not always the task entrypoint.
-Use `WORKING_CONTEXT.md` first for active work.
-Use `docs/workflow/wizard/README.md` when the user is starting or reframing a
-new workstream.
+## Default Stages
 
----
-
-## Default Stage Model
-
-Routine work in this repo should normally be understood through these stages:
+Routine work normally moves through:
 
 1. analysis
 2. plan
@@ -27,115 +17,26 @@ Routine work in this repo should normally be understood through these stages:
 4. validation
 5. closure
 
-This is the default sequence, not a rigid ceremony.
-
 Small tasks may combine stages.
-Example:
-- a tiny fix may combine analysis and plan
-- a very local change may go from implementation directly to validation
-
----
 
 ## Stage Meanings
 
-### 1. Analysis
+- `analysis`: understand the current code, ownership, and risks.
+- `plan`: define the smallest correct change.
+- `implementation`: make the requested change.
+- `validation`: verify the result and report what was or was not checked.
+- `closure`: converge documentation, naming, or small polish after behavior is stable.
 
-Use this stage to understand the current code before changing it.
+## Context Rule
 
-Typical outputs:
-- current responsibility
-- local patterns already in use
-- risks
-- what should stay untouched
+When a request starts a new track or no longer fits the current one:
+- refresh `WORKING_CONTEXT.md`
+- refresh one matching file under `docs/contexts/`
+- keep the short file operational and the long file explanatory
 
-### 2. Plan
+## Related Docs
 
-Use this stage to define the smallest correct change.
-
-Typical outputs:
-- target files
-- desired outcome
-- out-of-scope boundaries
-- recommended implementation sequence
-
-### 3. Implementation
-
-Use this stage to make the code or documentation change.
-
-Typical outputs:
-- the requested change
-- a small summary of what changed
-- explicit note of what remains for later passes
-
-### 4. Validation
-
-Use this stage to verify that the result is acceptable.
-
-Typical outputs:
-- what was validated
-- how it was validated
-- what remains unvalidated
-
-### 5. Closure
-
-Use this stage after the main behavior is stable.
-
-Closure passes are for convergence work, not for inventing new behavior.
-
-Typical closure examples:
-- comment pass
-- small naming cleanup
-- final documentation adjustment
-- focused polish that depends on the implementation already being stable
-
----
-
-## Methodological Passes
-
-Methodological passes live under:
-- `docs/workflow/passes/`
-
-Current pass families:
-- `comments/`
-- `naming_style/`
-- `contracts/`
-- `safety/`
-- `refactor/`
-- `new_feature/`
-
-Bootstrap passes may create or reframe `WORKING_CONTEXT.md`.
-Non-bootstrap passes operate inside the existing context.
-
-Use a pass document only when that pass is the actual task.
-
----
-
-## Practical Rule
-
-Do not assume every request must do all stages at once.
-
-Prefer explicit requests such as:
-- analyze this module
-- analyze and propose a plan
-- implement this change
-- validate this change
-- run a comment pass on these files
-
-This keeps tasks smaller and reviewable.
-
----
-
-## Relationship To Other Repo Docs
-
-- `WORKING_CONTEXT.md`
-  - task routing, active contexts, current priorities
-- `docs/workflow/wizard/README.md`
-  - human-facing entrypoint for creating or reframing a workstream context
-- `STYLE.md`
-  - naming and code structure
-- `CONTRIBUTING.md`
-  - repo hygiene such as commits, changelog, and release handling
-
-If documents overlap:
-- `WORKING_CONTEXT.md` decides where to start
-- `STYLE.md` wins on naming and structure
+- `AGENTS.md`: stable agent policy
+- `WORKING_CONTEXT.md`: active workstream
+- `STYLE.md`: naming and code structure
+- `CONTRIBUTING.md`: repo hygiene

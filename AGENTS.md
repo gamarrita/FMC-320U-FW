@@ -69,19 +69,19 @@ If scope, ownership, or interaction with active work is unclear:
 
 ---
 
-## Wizard Gate
+## Context Reframe
 
-Use the workflow wizard when:
-- the user explicitly says `wizard`
+Refresh the active context pair when:
 - the user asks to start a new `refactor` or `new_feature` track
 - the user asks to create or reframe a `WORKING_CONTEXT.md`
 - the request falls outside the active `WORKING_CONTEXT.md` and should become a
   separate workstream
 
-If the wizard gate is triggered:
+If a context reframe is triggered:
 - do not force the request into the current workstream
-- use `docs/workflow/wizard/README.md` as the entrypoint
-- ask only the minimum blocking questions before generating a new context pair
+- create or refresh one short `WORKING_CONTEXT.md`
+- create or refresh one matching extended context under `docs/contexts/`
+- ask only the minimum blocking questions before generating that pair
 
 ---
 

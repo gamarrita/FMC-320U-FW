@@ -3,104 +3,64 @@
 ## Active Workstream
 
 Stage:
-- implementation
-
-Active pass:
-- refactor
+- analysis
 
 Short name:
-- FMC model and presentation refactor
+- FMC presentation
 
 Extended context:
-- `docs/contexts/fmc_presentation_refactor.md`
+- `docs/contexts/fmc_presentation.md`
 
 ## Scope Now
 
 Active files/folders:
 - `src/product/fmc/`
 - `src/apps/fmc_model_units_test/`
-- `src/libs/fm_status.h`
-- `legacy_backup/libs/fm_fmc.*` as evidence only
-- `legacy_backup/libs/fm_user.c` and `legacy_backup/libs/fm_setup.c` as
-  behavior-discovery evidence only
 - `docs/specs/fmc/`
-- `src/bsp/devices/lcd/` as the already validated display foundation
+- `src/bsp/devices/lcd/`
 
 Current target:
-- finish the first pure FMC product slices before introducing runtime,
-  presentation, or LCD adapter behavior.
+- define the first `fmc_presentation.*` slice as a pure semantic layer above
+  the validated FMC model/unit/rate code and below any LCD adapter.
 
 ## Current State
 
-- `fmc_model.*` is implemented as canonical copyable FMC state plus structural
-  helpers.
-- `fmc_units.*` is implemented in the working tree as pure product unit policy.
-- `fmc_rate.*` is implemented as pure rate calculation from pulse/time windows.
-- `fm_status.h` now owns common lightweight status codes for authored modules.
-- `fmc_units.*` has been added to the common build sources.
-- `fmc_model_units_test` now provides a repeatable app-level verification path
-  for the pure model, unit-policy, and rate slices.
-- Canonical builds passed for:
-  - `main`
-  - `template`
-  - `panic_demo`
-  - `lcd_bringup`
-  - `lcd_blink_bringup`
-  - `fmc_model_units_test`
+- `fmc_model.*`, `fmc_units.*`, and `fmc_rate.*` are implemented.
+- `fmc_model_units_test` is the current regression harness for those pure FMC
+  slices.
+- `lcd_bringup` and `lcd_blink_bringup` remain the validated LCD foundation.
 
 ## Decisions In Force
 
-- FMC product modules live under `src/product/fmc/`, not `src/libs/`.
-- FMC modules are product firmware modules, not portable flow-computer
-  libraries.
-- `fmc_model.*`, `fmc_units.*`, and early `fmc_rate.*` should remain pure where
-  practical.
-- RTOS ownership belongs later in `fmc_service.*` or `fmc_runtime.*`.
-- LCD formatting and display writes belong later in presentation/adapter layers.
-- `fmc_model.*` stores canonical state only:
-  - measurement configuration
-  - ACM/TTL pulse counters
-  - reset policy and structural helpers
-- Visible volume, operative factor views, and rate values are derived behavior,
-  not stored truth in `fmc_model.*`.
-- ACM and TTL are backed by pulse counters.
-- TTL is resettable only through a privileged product flow; the model reset
-  primitive itself does not authenticate callers.
-- Calibration unit is explicit; current supported calculation path is liter
-  calibration.
-- `CUSTOM`, `KG`, and `EQUIV_M3` are valid 1:1 unit cases.
-- Invalid/corrupt volume-unit enum values recover to liters.
-- `BBL_US` is the model unit name; `BR` is a later presentation label.
-- `FMC_MODEL_VOLUME_UNIT_EQUIV_M3` is the model name for equivalent cubic meter;
-  `MC` is the later display label.
-- Public FMC product symbols use `FMC_*`; filenames use `fmc_*`.
+- `fmc_presentation.*` owns semantic presentation decisions:
+  - mode identity
+  - row roles
+  - legend selection
+  - unit cues
+  - decimal policy
+- `fmc_presentation.*` does not call the LCD API directly.
+- The LCD adapter remains a later separate slice.
+- RTOS/runtime ownership remains deferred to `fmc_service.*` or
+  `fmc_runtime.*`.
 
 ## Boundaries
 
-Do not add to the current pure slices:
+Do not add in this slice:
+- direct LCD writes
+- RTOS synchronization or task ownership
+- persistence, menus, or authorization flows
 - pulse capture or interrupt acquisition
-- RTOS mutexes, queues, timers, event flags, or task ownership
-- UI/menu authorization
-- LCD rendering or `FM_LCD_LL_*`
-- Bluetooth, RTC, ticketing, backup persistence, or log layout
 - direct ports from `legacy_backup/`
-- fixed-point/scaled types as public semantics
-- `flow_active` or `pulse_activity` as core model state without a new explicit
-  requirement
-
-Protected/generated-code policy remains in `AGENTS.md`.
 
 ## Next Step
 
-1. Validate and preserve the pure `fmc_rate.*` slice.
-2. Keep `fmc_service.*` or `fmc_runtime.*` deferred until RTOS ownership and
-   snapshot publication are explicit.
+1. Freeze the presentation contract: inputs, outputs, and ownership.
+2. Implement only the semantic layer that can later feed an LCD adapter.
 
 ## References
 
 - `AGENTS.md`
 - `STYLE.md`
-- `docs/contexts/fmc_presentation_refactor.md`
+- `docs/contexts/fmc_presentation.md`
 - `docs/specs/fmc/fm_fmc_legacy_field_inventory.md`
 - `docs/specs/fmc/use_cases.yaml`
-- `docs/specs/math/fm_numeric_library_candidate.md`

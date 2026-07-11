@@ -29,4 +29,4 @@ slice becomes active.
 
 For the active refactor context, use:
 - `WORKING_CONTEXT.md`
-- `docs/contexts/fmc_presentation_refactor.md`
+- `docs/contexts/fmc_presentation.md`

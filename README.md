@@ -35,7 +35,7 @@ For agents:
 For humans:
 - use local `README.md` files to understand folder ownership
 - use `CONTRIBUTING.md` for commit and changelog hygiene
-- use `docs/workflow/README.md` for the stage model and pass references
+- use `docs/workflow/README.md` for the stage model
 
 STM32 build and environment:
 - `docs/canonical-build/stm32cube-cli-workflow.md`
