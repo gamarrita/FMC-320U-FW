@@ -50,7 +50,7 @@ Do not add in this slice:
 - RTOS synchronization or task ownership
 - persistence, menus, or authorization flows
 - pulse capture or interrupt acquisition
-- direct ports from `legacy_backup/`
+- direct ports from `legacy/source/`
 
 ## Next Step
 

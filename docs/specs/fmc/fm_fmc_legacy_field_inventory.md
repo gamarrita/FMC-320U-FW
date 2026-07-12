@@ -8,7 +8,7 @@ Purpose:
 - this is a review artifact and may be freely edited, annotated, or overwritten
 
 Source under review:
-- [legacy_backup/libs/fm_fmc.h](/d:/githubs/FMC-320U-FW/firmware/legacy_backup/libs/fm_fmc.h)
+- [legacy/source/libs/fm_fmc.h](../../../legacy/source/libs/fm_fmc.h)
 
 Suggested classification vocabulary:
 - `canonical config`
