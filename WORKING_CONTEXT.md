@@ -6,7 +6,7 @@ Stage:
 - analysis
 
 Short name:
-- FMC totals and display-facing formatting
+- FMC volume and display-facing formatting
 
 Extended context:
 - `docs/contexts/fmc_presentation.md`
@@ -21,7 +21,7 @@ Active files/folders:
 - `src/services/` as the likely home for reusable display formatting helpers
 
 Current target:
-- decide whether the next implementation slice should be `fmc_totals.*`, and
+- decide whether the next implementation slice should be `fmc_volume.*`, and
   define what reusable display-format support is needed above the LCD BSP.
 
 ## Current State
@@ -39,7 +39,7 @@ Current target:
 
 - The model/unit/rate slices should not calculate display formatting or write
   LCD output.
-- Visible ACM/TTL total calculation is likely a missing pure FMC slice.
+- Visible ACM/TTL volume calculation is likely a missing pure FMC slice.
 - LCD BSP should remain a hardware/display foundation, not a product-formatting
   layer.
 - Reusable numeric/display-field formatting likely belongs above BSP, probably
@@ -59,15 +59,15 @@ Do not add in this slice:
 - persistence, menus, or authorization flows
 - pulse capture or interrupt acquisition
 - direct ports from `legacy/source/`
-- a full `fmc_presentation.*` module before totals and formatting boundaries
+- a full `fmc_presentation.*` module before volume and formatting boundaries
   are clear
 
 ## Next Step
 
-1. Discuss and define the minimal `fmc_totals.*` contract.
+1. Discuss and define the minimal `fmc_volume.*` contract.
 2. Identify whether a generic display-format helper is needed before any
    product presentation module.
-3. Keep `fmc_presentation.*` deferred until the totals and display-format
+3. Keep `fmc_presentation.*` deferred until the volume and display-format
    boundaries are explicit.
 
 ## References

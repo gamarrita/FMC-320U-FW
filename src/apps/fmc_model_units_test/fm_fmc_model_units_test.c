@@ -1,6 +1,7 @@
 /**
  * @file    fm_fmc_model_units_test.c
- * @brief   Repeatable verification app for pure FMC model and unit slices.
+ * @brief   Repeatable verification app for pure FMC model, unit, rate, and
+ *          volume slices.
  */
 #include "fm_fmc_model_units_test.h"
 
@@ -14,6 +15,7 @@
 #include "fmc_model.h"
 #include "fmc_rate.h"
 #include "fmc_units.h"
+#include "fmc_volume.h"
 
 #define FM_FMC_MODEL_UNITS_TEST_IDLE_MS   1000U
 #define FM_FMC_MODEL_UNITS_TEST_EPSILON   0.000001
@@ -29,6 +31,8 @@ typedef enum
     FM_FMC_MODEL_UNITS_TEST_CASE_ERROR_PATHS,
     FM_FMC_MODEL_UNITS_TEST_CASE_RATE_WINDOWS,
     FM_FMC_MODEL_UNITS_TEST_CASE_RATE_ERROR_PATHS,
+    FM_FMC_MODEL_UNITS_TEST_CASE_VOLUME_VALUES,
+    FM_FMC_MODEL_UNITS_TEST_CASE_VOLUME_ERROR_PATHS,
     FM_FMC_MODEL_UNITS_TEST_CASE_COUNT
 } fm_fmc_model_units_test_case_t;
 
@@ -50,6 +54,8 @@ static bool fm_fmc_model_units_test_pulses_per_active_unit_(void);
 static bool fm_fmc_model_units_test_error_paths_(void);
 static bool fm_fmc_model_units_test_rate_windows_(void);
 static bool fm_fmc_model_units_test_rate_error_paths_(void);
+static bool fm_fmc_model_units_test_volume_values_(void);
+static bool fm_fmc_model_units_test_volume_error_paths_(void);
 static bool fm_fmc_model_units_test_run_case_(fm_fmc_model_units_test_case_t p_case);
 static void fm_fmc_model_units_test_emit_case_(fm_fmc_model_units_test_case_t p_case,
                                                bool p_passed);
@@ -109,6 +115,12 @@ static bool fm_fmc_model_units_test_double_eq_(double p_actual,
     return diff <= FM_FMC_MODEL_UNITS_TEST_EPSILON;
 }
 
+/*
+ * Verifies the startup model defaults used by the pure FMC slices.
+ *
+ * This catches accidental changes to factory-like assumptions before flash or
+ * configuration persistence become the runtime source of these values.
+ */
 static bool fm_fmc_model_units_test_init_defaults_(void)
 {
     fmc_model_t model;
@@ -126,6 +138,13 @@ static bool fm_fmc_model_units_test_init_defaults_(void)
            (model.ttl.pulses == 0U);
 }
 
+/*
+ * Verifies the canonical ACM/TTL pulse counters and reset policy.
+ *
+ * ACM must be user-resettable because it represents the operator resettable
+ * accumulated volume. TTL must exist as a separate privileged counter so later
+ * UI/service code cannot accidentally treat it like ACM.
+ */
 static bool fm_fmc_model_units_test_totals_(void)
 {
     fmc_model_t model;
@@ -181,6 +200,13 @@ static bool fm_fmc_model_units_test_totals_(void)
                                  (fmc_model_total_t) 99) == FM_STATUS_EINVAL);
 }
 
+/*
+ * Verifies the product's accepted volume-unit enum values and the fallback for
+ * invalid active units.
+ *
+ * This protects the current policy that invalid persisted/display selections
+ * normalize to liters instead of breaking pure calculations.
+ */
 static bool fm_fmc_model_units_test_unit_validity_(void)
 {
     return FMC_UNITS_IsVolumeUnitValid(FMC_MODEL_VOLUME_UNIT_CUSTOM) &&
@@ -195,6 +221,13 @@ static bool fm_fmc_model_units_test_unit_validity_(void)
             FMC_MODEL_VOLUME_UNIT_L);
 }
 
+/*
+ * Verifies which units are physical liquid-volume units and which ones are
+ * one-to-one product display units.
+ *
+ * The distinction matters because physical units use liter conversion, while
+ * CUSTOM/KG/EQUIV_M3 currently preserve the calibrated unit scale.
+ */
 static bool fm_fmc_model_units_test_unit_kind_(void)
 {
     fmc_units_volume_unit_kind_t kind;
@@ -254,6 +287,12 @@ static bool fm_fmc_model_units_test_unit_kind_(void)
             FM_STATUS_EINVAL);
 }
 
+/*
+ * Verifies the fixed liter conversion table for physical volume units.
+ *
+ * Rate and volume calculations depend on this table when converting from the
+ * calibration unit to the active display unit.
+ */
 static bool fm_fmc_model_units_test_liters_per_unit_(void)
 {
     static const fm_fmc_model_units_liters_case_t cases[] =
@@ -293,6 +332,13 @@ static bool fm_fmc_model_units_test_liters_per_unit_(void)
             FM_STATUS_EINVAL);
 }
 
+/*
+ * Verifies the derived K factor expressed as pulses per active unit.
+ *
+ * This is the shared conversion used by rate and visible-volume calculations:
+ * once this value is correct, higher-level modules can divide pulses by it
+ * without duplicating unit policy.
+ */
 static bool fm_fmc_model_units_test_pulses_per_active_unit_(void)
 {
     static const fm_fmc_model_units_liters_case_t cases[] =
@@ -342,6 +388,12 @@ static bool fm_fmc_model_units_test_pulses_per_active_unit_(void)
            fm_fmc_model_units_test_double_eq_(pulses_per_active_unit, 2.5);
 }
 
+/*
+ * Verifies expected unit-conversion failure paths.
+ *
+ * These checks keep invalid pointers, out-of-range calibration, and currently
+ * unsupported calibration units explicit instead of silently producing a value.
+ */
 static bool fm_fmc_model_units_test_error_paths_(void)
 {
     fmc_model_measurement_t measurement;
@@ -384,6 +436,13 @@ static bool fm_fmc_model_units_test_error_paths_(void)
             FM_STATUS_EINVAL);
 }
 
+/*
+ * Verifies instantaneous rate for each supported time base and representative
+ * active-unit conversions.
+ *
+ * This keeps rate independent from acquisition/RTOS code: the test feeds a
+ * pulse/time window and expects a pure calculated rate.
+ */
 static bool fm_fmc_model_units_test_rate_windows_(void)
 {
     static const fmc_model_time_base_t time_bases[] =
@@ -444,6 +503,12 @@ static bool fm_fmc_model_units_test_rate_windows_(void)
            fm_fmc_model_units_test_double_eq_(rate, 0.0);
 }
 
+/*
+ * Verifies expected rate failure paths.
+ *
+ * This protects the contract for invalid arguments, non-positive time windows,
+ * invalid time bases, and invalid measurement configuration.
+ */
 static bool fm_fmc_model_units_test_rate_error_paths_(void)
 {
     fmc_model_measurement_t measurement;
@@ -476,6 +541,150 @@ static bool fm_fmc_model_units_test_rate_error_paths_(void)
     return FMC_RATE_Calc(&measurement, 1U, 1.0, &rate) == FM_STATUS_ERANGE;
 }
 
+/*
+ * Verifies visible volume calculation from pulse counters.
+ *
+ * The test covers direct total-state conversion plus role-based ACM/TTL
+ * selection. It intentionally stops before decimal selection or LCD formatting.
+ */
+static bool fm_fmc_model_units_test_volume_values_(void)
+{
+    fmc_model_t model;
+    fmc_model_total_state_t total;
+    double volume;
+
+    FMC_MODEL_Init(&model);
+
+    total.pulses = 2500U;
+    model.measurement.calibration_pulses_per_unit = 1000.0;
+    model.measurement.calibration_volume_unit = FMC_MODEL_VOLUME_UNIT_L;
+    model.measurement.active_volume_unit = FMC_MODEL_VOLUME_UNIT_L;
+
+    if ((FMC_VOLUME_CalcFromTotal(&model.measurement, &total, &volume) !=
+         FM_STATUS_OK) ||
+        !fm_fmc_model_units_test_double_eq_(volume, 2.5))
+    {
+        return false;
+    }
+
+    model.measurement.active_volume_unit = (fmc_model_volume_unit_t) 99;
+
+    if ((FMC_VOLUME_CalcFromTotal(&model.measurement, &total, &volume) !=
+         FM_STATUS_OK) ||
+        !fm_fmc_model_units_test_double_eq_(volume, 2.5))
+    {
+        return false;
+    }
+
+    total.pulses = 1000000U;
+    model.measurement.active_volume_unit = FMC_MODEL_VOLUME_UNIT_M3;
+
+    if ((FMC_VOLUME_CalcFromTotal(&model.measurement, &total, &volume) !=
+         FM_STATUS_OK) ||
+        !fm_fmc_model_units_test_double_eq_(volume, 1.0))
+    {
+        return false;
+    }
+
+    total.pulses = 6000U;
+    model.measurement.calibration_pulses_per_unit = 6000.0;
+    model.measurement.active_volume_unit = FMC_MODEL_VOLUME_UNIT_KG;
+
+    if ((FMC_VOLUME_CalcFromTotal(&model.measurement, &total, &volume) !=
+         FM_STATUS_OK) ||
+        !fm_fmc_model_units_test_double_eq_(volume, 1.0))
+    {
+        return false;
+    }
+
+    model.measurement.active_volume_unit = FMC_MODEL_VOLUME_UNIT_EQUIV_M3;
+
+    if ((FMC_VOLUME_CalcFromTotal(&model.measurement, &total, &volume) !=
+         FM_STATUS_OK) ||
+        !fm_fmc_model_units_test_double_eq_(volume, 1.0))
+    {
+        return false;
+    }
+
+    model.measurement.active_volume_unit = FMC_MODEL_VOLUME_UNIT_CUSTOM;
+
+    if ((FMC_VOLUME_CalcFromTotal(&model.measurement, &total, &volume) !=
+         FM_STATUS_OK) ||
+        !fm_fmc_model_units_test_double_eq_(volume, 1.0))
+    {
+        return false;
+    }
+
+    model.measurement.calibration_pulses_per_unit = 1000.0;
+    model.measurement.active_volume_unit = FMC_MODEL_VOLUME_UNIT_L;
+    model.acm.pulses = 1234U;
+    model.ttl.pulses = 5678U;
+
+    if ((FMC_VOLUME_CalcByTotalRole(&model,
+                                    FMC_MODEL_TOTAL_ACM,
+                                    &volume) != FM_STATUS_OK) ||
+        !fm_fmc_model_units_test_double_eq_(volume, 1.234))
+    {
+        return false;
+    }
+
+    return (FMC_VOLUME_CalcByTotalRole(&model,
+                                       FMC_MODEL_TOTAL_TTL,
+                                       &volume) == FM_STATUS_OK) &&
+           fm_fmc_model_units_test_double_eq_(volume, 5.678);
+}
+
+/*
+ * Verifies expected volume-calculation failure paths.
+ *
+ * The volume module delegates measurement validation to `fmc_units.*`, so these
+ * checks make sure that errors propagate without hiding bad configuration.
+ */
+static bool fm_fmc_model_units_test_volume_error_paths_(void)
+{
+    fmc_model_t model;
+    fmc_model_total_state_t total;
+    double volume;
+
+    FMC_MODEL_Init(&model);
+    total.pulses = 1U;
+
+    if ((FMC_VOLUME_CalcFromTotal(NULL, &total, &volume) !=
+         FM_STATUS_EINVAL) ||
+        (FMC_VOLUME_CalcFromTotal(&model.measurement, NULL, &volume) !=
+         FM_STATUS_EINVAL) ||
+        (FMC_VOLUME_CalcFromTotal(&model.measurement, &total, NULL) !=
+         FM_STATUS_EINVAL) ||
+        (FMC_VOLUME_CalcByTotalRole(NULL,
+                                    FMC_MODEL_TOTAL_ACM,
+                                    &volume) != FM_STATUS_EINVAL) ||
+        (FMC_VOLUME_CalcByTotalRole(&model,
+                                    FMC_MODEL_TOTAL_ACM,
+                                    NULL) != FM_STATUS_EINVAL) ||
+        (FMC_VOLUME_CalcByTotalRole(&model,
+                                    (fmc_model_total_t) 99,
+                                    &volume) != FM_STATUS_EINVAL))
+    {
+        return false;
+    }
+
+    model.measurement.calibration_pulses_per_unit =
+        FMC_MODEL_CALIBRATION_PULSES_PER_UNIT_MIN - 0.1;
+
+    if (FMC_VOLUME_CalcFromTotal(&model.measurement, &total, &volume) !=
+        FM_STATUS_ERANGE)
+    {
+        return false;
+    }
+
+    model.measurement.calibration_pulses_per_unit =
+        FMC_MODEL_CALIBRATION_PULSES_PER_UNIT_DEFAULT;
+    model.measurement.calibration_volume_unit = FMC_MODEL_VOLUME_UNIT_M3;
+
+    return FMC_VOLUME_CalcFromTotal(&model.measurement, &total, &volume) ==
+           FM_STATUS_ENOTSUP;
+}
+
 static bool fm_fmc_model_units_test_run_case_(fm_fmc_model_units_test_case_t p_case)
 {
     switch (p_case)
@@ -506,6 +715,12 @@ static bool fm_fmc_model_units_test_run_case_(fm_fmc_model_units_test_case_t p_c
 
     case FM_FMC_MODEL_UNITS_TEST_CASE_RATE_ERROR_PATHS:
         return fm_fmc_model_units_test_rate_error_paths_();
+
+    case FM_FMC_MODEL_UNITS_TEST_CASE_VOLUME_VALUES:
+        return fm_fmc_model_units_test_volume_values_();
+
+    case FM_FMC_MODEL_UNITS_TEST_CASE_VOLUME_ERROR_PATHS:
+        return fm_fmc_model_units_test_volume_error_paths_();
 
     default:
         return false;
@@ -551,6 +766,14 @@ static void fm_fmc_model_units_test_emit_case_(fm_fmc_model_units_test_case_t p_
 
     case FM_FMC_MODEL_UNITS_TEST_CASE_RATE_ERROR_PATHS:
         (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:RATE_ERROR_PATHS:");
+        break;
+
+    case FM_FMC_MODEL_UNITS_TEST_CASE_VOLUME_VALUES:
+        (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:VOLUME_VALUES:");
+        break;
+
+    case FM_FMC_MODEL_UNITS_TEST_CASE_VOLUME_ERROR_PATHS:
+        (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:VOLUME_ERROR_PATHS:");
         break;
 
     default:
