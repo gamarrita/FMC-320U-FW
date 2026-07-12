@@ -1,8 +1,8 @@
-# FMC Totals And Display-Facing Formatting
+# FMC Volume And Display-Facing Formatting
 
 ## Purpose
 
-This is the active extended context for the FMC totals and display-facing
+This is the active extended context for the FMC volume and display-facing
 formatting workstream.
 
 `WORKING_CONTEXT.md` stays short and operational.
@@ -39,8 +39,8 @@ The intended split is:
 3. `fmc_rate.*`
    - pure rate calculation from pulse and elapsed-time windows
 
-4. `fmc_totals.*`
-   - future pure visible-total calculation for ACM and TTL
+4. `fmc_volume.*`
+   - future pure visible-volume calculation for ACM and TTL
    - consumes pulse-backed totals plus measurement configuration
    - does not format strings or write LCD output
 
@@ -53,7 +53,7 @@ The intended split is:
 6. FMC operation view or `fmc_presentation.*`
    - future product semantic display layer
    - decides mode identity, row roles, legends, unit cues, and decimal policy
-   - should not be implemented before totals and display-format boundaries are
+   - should not be implemented before volume and display-format boundaries are
      clear
 
 7. FMC-to-LCD adapter
@@ -65,11 +65,11 @@ The intended split is:
 
 ## Decisions In Force
 
-- The next implementation candidate is `fmc_totals.*`, not
+- The next implementation candidate is `fmc_volume.*`, not
   `fmc_presentation.*`.
-- `fmc_totals.*` should calculate visible ACM/TTL quantities from canonical
+- `fmc_volume.*` should calculate visible ACM/TTL volumes from canonical
   pulse counters and measurement configuration.
-- `fmc_totals.*` should not format strings, own decimals, write LCD output, or
+- `fmc_volume.*` should not format strings, own decimals, write LCD output, or
   know keyboard/RTOS flow.
 - The LCD BSP should stay focused on physical/custom LCD capabilities.
 - A reusable display-format helper above BSP is likely needed for bounded
@@ -95,12 +95,12 @@ Detailed LCD redesign history is no longer active context.
 ## Open Design Work
 
 Still to define explicitly:
-- the `fmc_totals.*` public contract
-  - calculate one selected total
+- the `fmc_volume.*` public contract
+  - calculate one selected ACM/TTL volume
   - or calculate ACM and TTL together
   - input as model plus total role
   - or input as total state plus measurement
-- the numeric representation returned by totals
+- the numeric representation returned by volume calculation
   - `double`
   - scaled integer
   - or a small structured quantity
@@ -119,7 +119,7 @@ Still to define explicitly:
 
 ## Risks
 
-- letting presentation calculate totals because `fmc_totals.*` is missing
+- letting presentation calculate volumes because `fmc_volume.*` is missing
 - putting product formatting rules into the LCD BSP
 - creating a broad `fmc_presentation.*` module before the smaller boundaries are
   understood
@@ -129,11 +129,11 @@ Still to define explicitly:
 
 ## Near-Term Goal
 
-Define the smallest useful `fmc_totals.*` contract and decide whether a generic
+Define the smallest useful `fmc_volume.*` contract and decide whether a generic
 display-format helper is required before product presentation work.
 
 The first useful implementation should:
 - consume validated FMC model/unit semantics
-- calculate visible ACM/TTL quantities
+- calculate visible ACM/TTL volumes
 - stays pure
 - can be tested before any LCD adapter or UI flow exists
