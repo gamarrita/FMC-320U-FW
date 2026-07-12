@@ -37,9 +37,22 @@ represent the architecture targeted by the current refactor.
 
 ## Source status
 
-The source snapshot must be populated from the supplied legacy ZIP. The current
-`legacy_backup/` directory is not canonical: it mixes partial legacy files,
-post-hoc BSP classification, and obsolete refactor bring-up applications.
+The source snapshot has been imported from the supplied historical ZIP.
 
-Do not remove `legacy_backup/` until the extracted snapshot has been committed
-and compared for unique content.
+Verified imported content:
+- 42 authored files
+- 20 `.c` files
+- 20 `.h` files
+- 2 `.md` files
+
+`legacy/source/` is now the canonical historical source reference for authored
+legacy firmware. The original `FLOWMEET/` and `libs/` organization is preserved
+intentionally because it records how the firmware was actually organized.
+
+The removed `legacy_backup/` tree was not canonical. It mixed partial legacy
+files, post-hoc BSP classification, and obsolete refactor bring-up
+applications. Git history is sufficient to recover those experiments if needed.
+
+Future migration work should extract behavior and contracts from this snapshot.
+It should not copy complete modules or reproduce the old architecture inside
+`src/`.
