@@ -6,7 +6,7 @@ Stage:
 - analysis
 
 Short name:
-- FMC presentation
+- FMC totals and display-facing formatting
 
 Extended context:
 - `docs/contexts/fmc_presentation.md`
@@ -18,10 +18,11 @@ Active files/folders:
 - `src/apps/fmc_model_units_test/`
 - `docs/specs/fmc/`
 - `src/bsp/devices/lcd/`
+- `src/services/` as the likely home for reusable display formatting helpers
 
 Current target:
-- define the first `fmc_presentation.*` slice as a pure semantic layer above
-  the validated FMC model/unit/rate code and below any LCD adapter.
+- decide whether the next implementation slice should be `fmc_totals.*`, and
+  define what reusable display-format support is needed above the LCD BSP.
 
 ## Current State
 
@@ -29,17 +30,24 @@ Current target:
 - `fmc_model_units_test` is the current regression harness for those pure FMC
   slices.
 - `lcd_bringup` and `lcd_blink_bringup` remain the validated LCD foundation.
+- The canonical legacy source is now available under `legacy/source/` for
+  evidence.
+- `docs/specs/fmc/presentation_screens.md` captures user-visible screen
+  behavior as normalized evidence.
 
 ## Decisions In Force
 
-- `fmc_presentation.*` owns semantic presentation decisions:
-  - mode identity
-  - row roles
-  - legend selection
-  - unit cues
-  - decimal policy
-- `fmc_presentation.*` does not call the LCD API directly.
-- The LCD adapter remains a later separate slice.
+- The model/unit/rate slices should not calculate display formatting or write
+  LCD output.
+- Visible ACM/TTL total calculation is likely a missing pure FMC slice.
+- LCD BSP should remain a hardware/display foundation, not a product-formatting
+  layer.
+- Reusable numeric/display-field formatting likely belongs above BSP, probably
+  under `src/services/`, so it can support quick LCD prototypes without knowing
+  FMC semantics.
+- `fmc_presentation.*` remains a later candidate, not the assumed immediate
+  next module.
+- LCD adapters and bring-up apps remain later separate slices.
 - RTOS/runtime ownership remains deferred to `fmc_service.*` or
   `fmc_runtime.*`.
 
@@ -51,11 +59,16 @@ Do not add in this slice:
 - persistence, menus, or authorization flows
 - pulse capture or interrupt acquisition
 - direct ports from `legacy/source/`
+- a full `fmc_presentation.*` module before totals and formatting boundaries
+  are clear
 
 ## Next Step
 
-1. Freeze the presentation contract: inputs, outputs, and ownership.
-2. Implement only the semantic layer that can later feed an LCD adapter.
+1. Discuss and define the minimal `fmc_totals.*` contract.
+2. Identify whether a generic display-format helper is needed before any
+   product presentation module.
+3. Keep `fmc_presentation.*` deferred until the totals and display-format
+   boundaries are explicit.
 
 ## References
 
@@ -64,3 +77,6 @@ Do not add in this slice:
 - `docs/contexts/fmc_presentation.md`
 - `docs/specs/fmc/fm_fmc_legacy_field_inventory.md`
 - `docs/specs/fmc/use_cases.yaml`
+- `docs/specs/fmc/presentation_screens.md`
+- `legacy/source/libs/fm_fmc.*`
+- `legacy/source/FLOWMEET/fm_user.*`

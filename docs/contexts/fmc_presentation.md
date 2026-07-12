@@ -1,8 +1,9 @@
-# FMC Presentation
+# FMC Totals And Display-Facing Formatting
 
 ## Purpose
 
-This is the active extended context for the FMC presentation workstream.
+This is the active extended context for the FMC totals and display-facing
+formatting workstream.
 
 `WORKING_CONTEXT.md` stays short and operational.
 This file keeps the rationale and the few decisions needed to continue safely.
@@ -38,29 +39,43 @@ The intended split is:
 3. `fmc_rate.*`
    - pure rate calculation from pulse and elapsed-time windows
 
-4. `fmc_presentation.*`
-   - semantic display decisions
-   - mode identity
-   - legends
-   - unit labels and cues
-   - decimal policy
-   - row responsibility
+4. `fmc_totals.*`
+   - future pure visible-total calculation for ACM and TTL
+   - consumes pulse-backed totals plus measurement configuration
+   - does not format strings or write LCD output
 
-5. FMC-to-LCD adapter
-   - translates presentation output to the validated LCD stack
+5. Reusable display-format helper
+   - future technical service above the LCD BSP
+   - formats bounded numeric/display fields
+   - detects overflow/invalid states
+   - stays independent of FMC semantics
 
-6. `fmc_service.*` or `fmc_runtime.*`
+6. FMC operation view or `fmc_presentation.*`
+   - future product semantic display layer
+   - decides mode identity, row roles, legends, unit cues, and decimal policy
+   - should not be implemented before totals and display-format boundaries are
+     clear
+
+7. FMC-to-LCD adapter
+   - future adapter that translates product/display semantics to the validated
+     LCD stack
+
+8. `fmc_service.*` or `fmc_runtime.*`
    - future RTOS-facing owner of live FMC state and snapshots
 
-## Presentation Decisions In Force
+## Decisions In Force
 
-- `fmc_presentation.*` is not just for units.
-- It should own high-level FMC formatting for the LCD-facing product view.
-- LCD-specific segment mapping stays out of this module.
-- Direct `FM_LCD_*` calls stay out of this module.
-- The shared product view is still:
-  - top row for total-oriented data
-  - bottom row for rate-oriented data
+- The next implementation candidate is `fmc_totals.*`, not
+  `fmc_presentation.*`.
+- `fmc_totals.*` should calculate visible ACM/TTL quantities from canonical
+  pulse counters and measurement configuration.
+- `fmc_totals.*` should not format strings, own decimals, write LCD output, or
+  know keyboard/RTOS flow.
+- The LCD BSP should stay focused on physical/custom LCD capabilities.
+- A reusable display-format helper above BSP is likely needed for bounded
+  numeric fields, fixed decimals, alignment, and overflow states.
+- That helper likely belongs under `src/services/`, not under
+  `src/bsp/devices/lcd/` and not under `src/product/fmc/`.
 - `BBL_US` is the model unit name; `BR` is only a presentation label.
 - `FMC_MODEL_VOLUME_UNIT_EQUIV_M3` is the model name; `MC` is only a
   presentation label.
@@ -80,27 +95,45 @@ Detailed LCD redesign history is no longer active context.
 ## Open Design Work
 
 Still to define explicitly:
-- the presentation input shape
-  - direct model-plus-derived fields
-  - or a dedicated snapshot struct
-- the presentation output shape
-  - semantic fields
-  - or LCD-ready but adapter-neutral fields
-- the exact label policy for each unit
-- the exact decimal policy for total and rate views
-- whether mode selection is explicit or inferred from the requested screen
+- the `fmc_totals.*` public contract
+  - calculate one selected total
+  - or calculate ACM and TTL together
+  - input as model plus total role
+  - or input as total state plus measurement
+- the numeric representation returned by totals
+  - `double`
+  - scaled integer
+  - or a small structured quantity
+- where decimal selection belongs
+  - FMC product config
+  - display-format helper
+  - or future presentation layer
+- the reusable display-format helper contract
+  - numeric input type
+  - width
+  - fractional digits
+  - rounding rule
+  - overflow/invalid status
+- whether an intermediate FMC operation view should exist before a broader
+  `fmc_presentation.*` module
 
 ## Risks
 
-- leaking LCD segment concerns into semantic presentation
-- pulling runtime or RTOS ownership into a pure formatting slice
-- duplicating unit policy that already belongs in `fmc_units.*`
-- freezing labels before the contract shape is clear
+- letting presentation calculate totals because `fmc_totals.*` is missing
+- putting product formatting rules into the LCD BSP
+- creating a broad `fmc_presentation.*` module before the smaller boundaries are
+  understood
+- pulling runtime, keyboard, or RTOS ownership into pure calculation or
+  formatting modules
+- duplicating unit policy already owned by `fmc_units.*`
 
 ## Near-Term Goal
 
-Define and implement the smallest useful `fmc_presentation.*` contract that:
-- consumes validated FMC semantics
-- produces stable presentation semantics
+Define the smallest useful `fmc_totals.*` contract and decide whether a generic
+display-format helper is required before product presentation work.
+
+The first useful implementation should:
+- consume validated FMC model/unit semantics
+- calculate visible ACM/TTL quantities
 - stays pure
-- can be tested before any LCD adapter exists
+- can be tested before any LCD adapter or UI flow exists
