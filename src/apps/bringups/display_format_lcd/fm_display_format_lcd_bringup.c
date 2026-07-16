@@ -23,21 +23,19 @@
  * - `PADDED_DECIMAL_1`: top row shows `0000012.3`
  * - `PADDED_DECIMAL_2`: top row shows `000001.23`
  * - `PADDED_DECIMAL_3`: top row shows `00000.123`
- * - `ROUNDED_DECIMAL`: top row shows `000123.5`
+ * - `ROUNDED_DECIMAL`: top row shows `0000123.5`
  * - `OVERFLOW_FILL`: top row shows `--------`
  *
  * Error communication:
  * - format, expected-text, LCD clear, LCD write, flush, or LCD init failures
  *   call `FM_DEBUG_PanicMsg()`
- * - the board reports the specific panic string over UART when debug messages
- *   are enabled
- * - the normal case loop stops after a panic; absence of further case lines is
- *   also a failure signal
+ * - with debug UART enabled, the board prints the panic reason
+ * - the red error LED is expected to turn on during panic
+ * - the LCD usually remains frozen on the last successfully written case
  *
- * Suggested agent report prompt:
- * "In `bringups/display_format_lcd`, UART reached CASE=<case> TOP=<text>,
- * but the LCD top row looked like <observed>. The last UART line was <line>.
- * Please analyze the likely fault path before changing code."
+ * Report failures with the UART log tail, red LED state, and frozen LCD text.
+ * Example: "UART ended at TEXT_MISMATCH after CASE=PADDED_DECIMAL_3;
+ * red LED on; LCD frozen at 00000.123."
  */
 #include "fm_display_format_lcd_bringup.h"
 
@@ -128,7 +126,7 @@ static const fm_display_format_lcd_bringup_case_t
         .scale_digits = 2U,
         .fractional_digits = 1U,
         .overflow_policy = DISPLAY_FORMAT_OVERFLOW_ERROR,
-        .expected_top = "000123.5"
+        .expected_top = "0000123.5"
     },
     {
         .name = "OVERFLOW_FILL",
