@@ -48,7 +48,7 @@ set(FM_AVAILABLE_APPS
 # Default app defined in this file.
 # The cache follows this value only while the user has not explicitly
 # overridden FM_ACTIVE_APP to a different app.
-set(FM_ACTIVE_APP_DEFAULT "tests/regression")
+set(FM_ACTIVE_APP_DEFAULT "bringups/display_format_lcd")
 
 if(NOT DEFINED FM_ACTIVE_APP)
     set(FM_ACTIVE_APP "${FM_ACTIVE_APP_DEFAULT}" CACHE STRING "Active firmware app")

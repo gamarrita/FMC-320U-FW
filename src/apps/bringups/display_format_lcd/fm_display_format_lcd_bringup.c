@@ -10,9 +10,34 @@
  * - physical LCD glass
  *
  * Human validation contract:
- * - read the UART line for each case
- * - compare `TOP=<text>` against the LCD top row
- * - verify zero padding, decimal position, rounding, and overflow marker
+ * - enable debug UART messages before reset
+ * - open the ST-LINK VCP at 115200 8N1
+ * - wait for `DISPLAY_FORMAT_LCD_BRINGUP:LCD_INIT_OK`
+ * - read each `DISPLAY_FORMAT_LCD_BRINGUP:CASE=<name> TOP=<text>` line
+ * - compare the LCD top row against the `TOP=<text>` value for that case
+ * - verify that decimal points are attached to the previous visible digit
+ * - verify that leading zero padding, rounding, and overflow markers match
+ *
+ * Expected case observations:
+ * - `PADDED_INTEGER`: top row shows `00000123`
+ * - `PADDED_DECIMAL_1`: top row shows `0000012.3`
+ * - `PADDED_DECIMAL_2`: top row shows `000001.23`
+ * - `PADDED_DECIMAL_3`: top row shows `00000.123`
+ * - `ROUNDED_DECIMAL`: top row shows `000123.5`
+ * - `OVERFLOW_FILL`: top row shows `--------`
+ *
+ * Error communication:
+ * - format, expected-text, LCD clear, LCD write, flush, or LCD init failures
+ *   call `FM_DEBUG_PanicMsg()`
+ * - the board reports the specific panic string over UART when debug messages
+ *   are enabled
+ * - the normal case loop stops after a panic; absence of further case lines is
+ *   also a failure signal
+ *
+ * Suggested agent report prompt:
+ * "In `bringups/display_format_lcd`, UART reached CASE=<case> TOP=<text>,
+ * but the LCD top row looked like <observed>. The last UART line was <line>.
+ * Please analyze the likely fault path before changing code."
  */
 #include "fm_display_format_lcd_bringup.h"
 
