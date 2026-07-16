@@ -14,11 +14,16 @@ Already implemented and treated as the current base:
 - `src/product/fmc/fmc_model.*`
 - `src/product/fmc/fmc_units.*`
 - `src/product/fmc/fmc_rate.*`
+- `src/product/fmc/fmc_volume.*`
 - `src/apps/fmc_model_units_test/`
+- `src/apps/display_format_lcd_bringup/`
 
 Current validation evidence:
-- `fmc_model_units_test` passes on hardware for the pure model, unit, and rate
-  slices
+- `fmc_model_units_test` passes on hardware for the pure model, unit, rate,
+  and volume slices
+- `display_format.*` builds and is covered by the current regression harness
+- `display_format_lcd_bringup` exists to compare formatted text against the
+  physical LCD using UART `TOP=` lines
 - `lcd_bringup` validates the static LCD foundation
 - `lcd_blink_bringup` validates the current logical blink path
 
@@ -40,12 +45,12 @@ The intended split is:
    - pure rate calculation from pulse and elapsed-time windows
 
 4. `fmc_volume.*`
-   - future pure visible-volume calculation for ACM and TTL
+   - pure visible-volume calculation for ACM and TTL
    - consumes pulse-backed totals plus measurement configuration
    - does not format strings or write LCD output
 
-5. Reusable display-format helper
-   - future technical service above the LCD BSP
+5. `display_format.*`
+   - technical service above the LCD BSP
    - formats bounded numeric/display fields
    - detects overflow/invalid states
    - stays independent of FMC semantics
@@ -65,16 +70,16 @@ The intended split is:
 
 ## Decisions In Force
 
-- The next implementation candidate is `fmc_volume.*`, not
+- The current implementation candidate is `display_format.*`, not
   `fmc_presentation.*`.
 - `fmc_volume.*` should calculate visible ACM/TTL volumes from canonical
   pulse counters and measurement configuration.
 - `fmc_volume.*` should not format strings, own decimals, write LCD output, or
   know keyboard/RTOS flow.
 - The LCD BSP should stay focused on physical/custom LCD capabilities.
-- A reusable display-format helper above BSP is likely needed for bounded
-  numeric fields, fixed decimals, alignment, and overflow states.
-- That helper likely belongs under `src/services/`, not under
+- A reusable `display_format.*` helper above BSP is needed for bounded numeric
+  fields, fixed decimals, alignment, and overflow states.
+- That helper belongs under `src/services/`, not under
   `src/bsp/devices/lcd/` and not under `src/product/fmc/`.
 - `BBL_US` is the model unit name; `BR` is only a presentation label.
 - `FMC_MODEL_VOLUME_UNIT_EQUIV_M3` is the model name; `MC` is only a
@@ -95,25 +100,10 @@ Detailed LCD redesign history is no longer active context.
 ## Open Design Work
 
 Still to define explicitly:
-- the `fmc_volume.*` public contract
-  - calculate one selected ACM/TTL volume
-  - or calculate ACM and TTL together
-  - input as model plus total role
-  - or input as total state plus measurement
-- the numeric representation returned by volume calculation
-  - `double`
-  - scaled integer
-  - or a small structured quantity
 - where decimal selection belongs
   - FMC product config
   - display-format helper
   - or future presentation layer
-- the reusable display-format helper contract
-  - numeric input type
-  - width
-  - fractional digits
-  - rounding rule
-  - overflow/invalid status
 - whether an intermediate FMC operation view should exist before a broader
   `fmc_presentation.*` module
 
@@ -129,11 +119,12 @@ Still to define explicitly:
 
 ## Near-Term Goal
 
-Define the smallest useful `fmc_volume.*` contract and decide whether a generic
-display-format helper is required before product presentation work.
+Define and validate the smallest useful `display_format.*` contract before
+product presentation work.
 
 The first useful implementation should:
-- consume validated FMC model/unit semantics
-- calculate visible ACM/TTL volumes
-- stays pure
+- consume bounded numeric field policies
+- format integers, fixed-point values, and already-calculated doubles
+- detect overflow explicitly
+- stay pure
 - can be tested before any LCD adapter or UI flow exists

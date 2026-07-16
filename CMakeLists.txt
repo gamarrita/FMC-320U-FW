@@ -41,6 +41,7 @@ set(FM_AVAILABLE_APPS
     panic_demo
     lcd_bringup
     lcd_blink_bringup
+    display_format_lcd_bringup
     fmc_model_units_test
 )
 
@@ -98,6 +99,7 @@ set(FM_COMMON_SOURCES
     ${FM_SRC_DIR}/product/fmc/fmc_rate.c
     ${FM_SRC_DIR}/product/fmc/fmc_units.c
     ${FM_SRC_DIR}/product/fmc/fmc_volume.c
+    ${FM_SRC_DIR}/services/display_format.c
     ${FM_SRC_DIR}/port/fm_port_dwt.c
     ${FM_SRC_DIR}/port/fm_port_gpio.c
     ${FM_SRC_DIR}/port/fm_port_pcf8553_ctrl.c
@@ -120,6 +122,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     ${FM_SRC_DIR}/libs
     ${FM_SRC_DIR}/bsp
     ${FM_SRC_DIR}/product/fmc
+    ${FM_SRC_DIR}/services
     ${FM_SRC_DIR}/port
 )
 

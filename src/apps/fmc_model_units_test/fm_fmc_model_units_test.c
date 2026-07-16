@@ -1,7 +1,7 @@
 /**
  * @file    fm_fmc_model_units_test.c
- * @brief   Repeatable verification app for pure FMC model, unit, rate, and
- *          volume slices.
+ * @brief   Repeatable verification app for pure model, unit, rate, volume,
+ *          and display-format slices.
  */
 #include "fm_fmc_model_units_test.h"
 
@@ -9,6 +9,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "display_format.h"
 #include "fm_board.h"
 #include "fm_debug.h"
 #include "fm_port_time.h"
@@ -33,6 +34,8 @@ typedef enum
     FM_FMC_MODEL_UNITS_TEST_CASE_RATE_ERROR_PATHS,
     FM_FMC_MODEL_UNITS_TEST_CASE_VOLUME_VALUES,
     FM_FMC_MODEL_UNITS_TEST_CASE_VOLUME_ERROR_PATHS,
+    FM_FMC_MODEL_UNITS_TEST_CASE_DISPLAY_FORMAT_VALUES,
+    FM_FMC_MODEL_UNITS_TEST_CASE_DISPLAY_FORMAT_ERROR_PATHS,
     FM_FMC_MODEL_UNITS_TEST_CASE_COUNT
 } fm_fmc_model_units_test_case_t;
 
@@ -56,9 +59,13 @@ static bool fm_fmc_model_units_test_rate_windows_(void);
 static bool fm_fmc_model_units_test_rate_error_paths_(void);
 static bool fm_fmc_model_units_test_volume_values_(void);
 static bool fm_fmc_model_units_test_volume_error_paths_(void);
+static bool fm_fmc_model_units_test_display_format_values_(void);
+static bool fm_fmc_model_units_test_display_format_error_paths_(void);
 static bool fm_fmc_model_units_test_run_case_(fm_fmc_model_units_test_case_t p_case);
 static void fm_fmc_model_units_test_emit_case_(fm_fmc_model_units_test_case_t p_case,
                                                bool p_passed);
+static bool fm_fmc_model_units_test_text_eq_(const char *p_actual,
+                                             const char *p_expected);
 
 /* Public function definitions */
 void FM_FmcModelUnitsTest_Run(void)
@@ -113,6 +120,23 @@ static bool fm_fmc_model_units_test_double_eq_(double p_actual,
     }
 
     return diff <= FM_FMC_MODEL_UNITS_TEST_EPSILON;
+}
+
+static bool fm_fmc_model_units_test_text_eq_(const char *p_actual,
+                                             const char *p_expected)
+{
+    while ((*p_actual != '\0') && (*p_expected != '\0'))
+    {
+        if (*p_actual != *p_expected)
+        {
+            return false;
+        }
+
+        p_actual++;
+        p_expected++;
+    }
+
+    return (*p_actual == '\0') && (*p_expected == '\0');
 }
 
 /*
@@ -685,6 +709,133 @@ static bool fm_fmc_model_units_test_volume_error_paths_(void)
            FM_STATUS_ENOTSUP;
 }
 
+/*
+ * Verifies reusable bounded display-field formatting.
+ *
+ * These checks keep numeric-to-text conversion above the LCD BSP but below
+ * product presentation. The output strings are ready for `FM_LCD_WriteText()`.
+ */
+static bool fm_fmc_model_units_test_display_format_values_(void)
+{
+    display_format_field_t field;
+    char text[16];
+
+    field.visible_width = 5U;
+    field.fractional_digits = 0U;
+    field.align = DISPLAY_FORMAT_ALIGN_RIGHT;
+    field.pad_char = ' ';
+    field.overflow_policy = DISPLAY_FORMAT_OVERFLOW_ERROR;
+    field.overflow_char = '-';
+
+    if ((DISPLAY_FORMAT_Unsigned(123U, &field, text, sizeof(text)) !=
+         FM_STATUS_OK) ||
+        !fm_fmc_model_units_test_text_eq_(text, "  123"))
+    {
+        return false;
+    }
+
+    if ((DISPLAY_FORMAT_Signed(-12, &field, text, sizeof(text)) !=
+         FM_STATUS_OK) ||
+        !fm_fmc_model_units_test_text_eq_(text, "  -12"))
+    {
+        return false;
+    }
+
+    field.pad_char = '0';
+
+    if ((DISPLAY_FORMAT_Signed(-12, &field, text, sizeof(text)) !=
+         FM_STATUS_OK) ||
+        !fm_fmc_model_units_test_text_eq_(text, "-0012"))
+    {
+        return false;
+    }
+
+    field.visible_width = 7U;
+    field.fractional_digits = 1U;
+    field.pad_char = ' ';
+
+    if ((DISPLAY_FORMAT_Scaled(12345, 2U, &field, text, sizeof(text)) !=
+         FM_STATUS_OK) ||
+        !fm_fmc_model_units_test_text_eq_(text, "   123.5"))
+    {
+        return false;
+    }
+
+    field.align = DISPLAY_FORMAT_ALIGN_LEFT;
+
+    if ((DISPLAY_FORMAT_Scaled(12345, 2U, &field, text, sizeof(text)) !=
+         FM_STATUS_OK) ||
+        !fm_fmc_model_units_test_text_eq_(text, "123.5   "))
+    {
+        return false;
+    }
+
+    field.visible_width = 5U;
+    field.fractional_digits = 2U;
+    field.align = DISPLAY_FORMAT_ALIGN_RIGHT;
+
+    return (DISPLAY_FORMAT_Double(1.236, &field, text, sizeof(text)) ==
+            FM_STATUS_OK) &&
+           fm_fmc_model_units_test_text_eq_(text, "  1.24");
+}
+
+/*
+ * Verifies expected display-format failure paths.
+ *
+ * Overflow is reported as `FM_STATUS_ERANGE`. When the caller requests a fill
+ * policy, the field is still populated so the UI can show a bounded marker.
+ */
+static bool fm_fmc_model_units_test_display_format_error_paths_(void)
+{
+    display_format_field_t field;
+    char text[16];
+
+    field.visible_width = 3U;
+    field.fractional_digits = 0U;
+    field.align = DISPLAY_FORMAT_ALIGN_RIGHT;
+    field.pad_char = ' ';
+    field.overflow_policy = DISPLAY_FORMAT_OVERFLOW_FILL;
+    field.overflow_char = '-';
+
+    if ((DISPLAY_FORMAT_Unsigned(1234U, &field, text, sizeof(text)) !=
+         FM_STATUS_ERANGE) ||
+        !fm_fmc_model_units_test_text_eq_(text, "---"))
+    {
+        return false;
+    }
+
+    if ((DISPLAY_FORMAT_Unsigned(1U, NULL, text, sizeof(text)) !=
+         FM_STATUS_EINVAL) ||
+        (DISPLAY_FORMAT_Unsigned(1U, &field, NULL, sizeof(text)) !=
+         FM_STATUS_EINVAL) ||
+        (DISPLAY_FORMAT_Unsigned(1U, &field, text, 0U) != FM_STATUS_EINVAL))
+    {
+        return false;
+    }
+
+    field.visible_width = 0U;
+
+    if (DISPLAY_FORMAT_Unsigned(1U, &field, text, sizeof(text)) !=
+        FM_STATUS_EINVAL)
+    {
+        return false;
+    }
+
+    field.visible_width = 5U;
+    field.fractional_digits = 1U;
+
+    if (DISPLAY_FORMAT_Unsigned(1U, &field, text, sizeof(text)) !=
+        FM_STATUS_EINVAL)
+    {
+        return false;
+    }
+
+    field.fractional_digits = DISPLAY_FORMAT_FRACTIONAL_DIGITS_MAX + 1U;
+
+    return DISPLAY_FORMAT_Double(1.0, &field, text, sizeof(text)) ==
+           FM_STATUS_EINVAL;
+}
+
 static bool fm_fmc_model_units_test_run_case_(fm_fmc_model_units_test_case_t p_case)
 {
     switch (p_case)
@@ -721,6 +872,12 @@ static bool fm_fmc_model_units_test_run_case_(fm_fmc_model_units_test_case_t p_c
 
     case FM_FMC_MODEL_UNITS_TEST_CASE_VOLUME_ERROR_PATHS:
         return fm_fmc_model_units_test_volume_error_paths_();
+
+    case FM_FMC_MODEL_UNITS_TEST_CASE_DISPLAY_FORMAT_VALUES:
+        return fm_fmc_model_units_test_display_format_values_();
+
+    case FM_FMC_MODEL_UNITS_TEST_CASE_DISPLAY_FORMAT_ERROR_PATHS:
+        return fm_fmc_model_units_test_display_format_error_paths_();
 
     default:
         return false;
@@ -774,6 +931,14 @@ static void fm_fmc_model_units_test_emit_case_(fm_fmc_model_units_test_case_t p_
 
     case FM_FMC_MODEL_UNITS_TEST_CASE_VOLUME_ERROR_PATHS:
         (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:VOLUME_ERROR_PATHS:");
+        break;
+
+    case FM_FMC_MODEL_UNITS_TEST_CASE_DISPLAY_FORMAT_VALUES:
+        (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:DISPLAY_FORMAT_VALUES:");
+        break;
+
+    case FM_FMC_MODEL_UNITS_TEST_CASE_DISPLAY_FORMAT_ERROR_PATHS:
+        (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:DISPLAY_FORMAT_ERROR_PATHS:");
         break;
 
     default:

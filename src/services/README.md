@@ -8,6 +8,9 @@ Contain reusable system services with a clear technical responsibility.
 - services that mediate between lower layers and the application,
 - modules with a clear interface and well-defined responsibility.
 
+Current intended modules:
+- `display_format.*`: bounded numeric-to-text formatting for display fields.
+
 ## Should NOT contain
 - concrete physical board details,
 - product use cases,

@@ -16,19 +16,22 @@ Extended context:
 Active files/folders:
 - `src/product/fmc/`
 - `src/apps/fmc_model_units_test/`
+- `src/apps/display_format_lcd_bringup/`
 - `docs/specs/fmc/`
 - `src/bsp/devices/lcd/`
 - `src/services/` as the likely home for reusable display formatting helpers
 
 Current target:
-- decide whether the next implementation slice should be `fmc_volume.*`, and
-  define what reusable display-format support is needed above the LCD BSP.
+- validate the reusable `display_format.*` helper through UART tests and LCD
+  human-observed bring-up.
 
 ## Current State
 
 - `fmc_model.*`, `fmc_units.*`, and `fmc_rate.*` are implemented.
 - `fmc_model_units_test` is the current regression harness for those pure FMC
-  slices.
+  slices and `display_format.*`.
+- `display_format_lcd_bringup` validates `display_format.*` output on the
+  physical LCD with UART comparison lines.
 - `lcd_bringup` and `lcd_blink_bringup` remain the validated LCD foundation.
 - The canonical legacy source is now available under `legacy/source/` for
   evidence.
@@ -39,12 +42,12 @@ Current target:
 
 - The model/unit/rate slices should not calculate display formatting or write
   LCD output.
-- Visible ACM/TTL volume calculation is likely a missing pure FMC slice.
+- Visible ACM/TTL volume calculation exists as a pure FMC slice.
 - LCD BSP should remain a hardware/display foundation, not a product-formatting
   layer.
-- Reusable numeric/display-field formatting likely belongs above BSP, probably
-  under `src/services/`, so it can support quick LCD prototypes without knowing
-  FMC semantics.
+- Reusable numeric/display-field formatting belongs above BSP, under
+  `src/services/`, so it can support quick LCD prototypes without knowing FMC
+  semantics.
 - `fmc_presentation.*` remains a later candidate, not the assumed immediate
   next module.
 - LCD adapters and bring-up apps remain later separate slices.
@@ -64,9 +67,9 @@ Do not add in this slice:
 
 ## Next Step
 
-1. Discuss and define the minimal `fmc_volume.*` contract.
-2. Identify whether a generic display-format helper is needed before any
-   product presentation module.
+1. Run `display_format_lcd_bringup` on hardware and compare UART `TOP=` lines
+   with the LCD top row.
+2. Confirm whether the zero-padded decimal cases match product expectations.
 3. Keep `fmc_presentation.*` deferred until the volume and display-format
    boundaries are explicit.
 
