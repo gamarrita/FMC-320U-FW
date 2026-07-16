@@ -13,18 +13,20 @@
  * - enable debug UART messages before reset
  * - open the ST-LINK VCP at 115200 8N1
  * - wait for `DISPLAY_FORMAT_LCD_BRINGUP:LCD_INIT_OK`
- * - read each `DISPLAY_FORMAT_LCD_BRINGUP:CASE=<name> TOP=<text>` line
- * - compare the LCD top row against the `TOP=<text>` value for that case
+ * - read each `DISPLAY_FORMAT_LCD_BRINGUP:SCENE=<name> TOP=<text>
+ *   BOTTOM=<text>` line
+ * - compare the LCD rows against the UART values for that scene
  * - verify that decimal points are attached to the previous visible digit
  * - verify that leading zero padding, rounding, and overflow markers match
  *
- * Expected case observations:
- * - `PADDED_INTEGER`: top row shows `00000123`
- * - `PADDED_DECIMAL_1`: top row shows `0000012.3`
- * - `PADDED_DECIMAL_2`: top row shows `000001.23`
- * - `PADDED_DECIMAL_3`: top row shows `00000.123`
- * - `ROUNDED_DECIMAL`: top row shows `0000123.5`
- * - `OVERFLOW_FILL`: top row shows `--------`
+ * Expected scene observations:
+ * - `PADDED_INTEGER`: TOP=`00000123`, BOTTOM=`0000123`
+ * - `PADDED_DECIMAL_1`: TOP=`0000012.3`, BOTTOM=`000012.3`
+ * - `PADDED_DECIMAL_2`: TOP=`000001.23`, BOTTOM=`00001.23`
+ * - `PADDED_DECIMAL_3`: TOP=`00000.123`, BOTTOM=`0000.123`
+ * - `ROUNDED_DECIMAL`: TOP=`0000123.5`, BOTTOM=`000123.5`
+ * - `LOW_DECIMAL`: TOP=`0000000.1`, BOTTOM=`000000.1`
+ * - `OVERFLOW_FILL`: TOP=`--------`, BOTTOM=`-------`
  *
  * Error communication:
  * - format, expected-text, LCD clear, LCD write, flush, or LCD init failures
@@ -34,7 +36,7 @@
  * - the LCD usually remains frozen on the last successfully written case
  *
  * Report failures with the UART log tail, red LED state, and frozen LCD text.
- * Example: "UART ended at TEXT_MISMATCH after CASE=PADDED_DECIMAL_3;
+ * Example: "UART ended at TEXT_MISMATCH after SCENE=PADDED_DECIMAL_3;
  * red LED on; LCD frozen at 00000.123."
  */
 #include "fm_display_format_lcd_bringup.h"
@@ -50,7 +52,8 @@
 #include "devices/lcd/fm_lcd.h"
 
 /* =========================== Private Macros ============================= */
-#define FM_DISPLAY_FORMAT_LCD_BRINGUP_TOP_WIDTH        8U
+#define FM_DISPLAY_FORMAT_LCD_BRINGUP_TOP_WIDTH        FM_LCD_LAYOUT_TOP_ROW_COLUMNS
+#define FM_DISPLAY_FORMAT_LCD_BRINGUP_BOTTOM_WIDTH     FM_LCD_LAYOUT_BOTTOM_ROW_COLUMNS
 #define FM_DISPLAY_FORMAT_LCD_BRINGUP_SCENE_DELAY_MS   3000U
 #define FM_DISPLAY_FORMAT_LCD_BRINGUP_IDLE_DELAY_MS    500U
 #define FM_DISPLAY_FORMAT_LCD_BRINGUP_TEXT_SIZE        16U
@@ -64,79 +67,255 @@ typedef enum
 
 typedef struct
 {
-    const char *name;
     fm_display_format_lcd_bringup_kind_t kind;
     int64_t scaled_value;
     uint32_t unsigned_value;
     uint8_t scale_digits;
-    uint8_t fractional_digits;
-    display_format_overflow_policy_t overflow_policy;
-    const char *expected_top;
-} fm_display_format_lcd_bringup_case_t;
+    display_format_field_t field;
+    const char *expected_text;
+} fm_display_format_lcd_bringup_value_t;
+
+typedef struct
+{
+    const char *name;
+    fm_display_format_lcd_bringup_value_t top;
+    fm_display_format_lcd_bringup_value_t bottom;
+} fm_display_format_lcd_bringup_scene_t;
 
 /* =========================== Private Constants ========================== */
-static const fm_display_format_lcd_bringup_case_t
-    g_fm_display_format_lcd_bringup_cases[] =
+static const fm_display_format_lcd_bringup_scene_t
+    g_fm_display_format_lcd_bringup_scenes[] =
 {
     {
         .name = "PADDED_INTEGER",
-        .kind = FM_DISPLAY_FORMAT_LCD_BRINGUP_KIND_UNSIGNED,
-        .scaled_value = 0,
-        .unsigned_value = 123U,
-        .scale_digits = 0U,
-        .fractional_digits = 0U,
-        .overflow_policy = DISPLAY_FORMAT_OVERFLOW_ERROR,
-        .expected_top = "00000123"
+        .top = {
+            .kind = FM_DISPLAY_FORMAT_LCD_BRINGUP_KIND_UNSIGNED,
+            .scaled_value = 0,
+            .unsigned_value = 123U,
+            .scale_digits = 0U,
+            .field = {
+                .visible_width = FM_DISPLAY_FORMAT_LCD_BRINGUP_TOP_WIDTH,
+                .fractional_digits = 0U,
+                .align = DISPLAY_FORMAT_ALIGN_RIGHT,
+                .pad_char = '0',
+                .overflow_policy = DISPLAY_FORMAT_OVERFLOW_ERROR,
+                .overflow_char = '-'
+            },
+            .expected_text = "00000123"
+        },
+        .bottom = {
+            .kind = FM_DISPLAY_FORMAT_LCD_BRINGUP_KIND_UNSIGNED,
+            .scaled_value = 0,
+            .unsigned_value = 123U,
+            .scale_digits = 0U,
+            .field = {
+                .visible_width = FM_DISPLAY_FORMAT_LCD_BRINGUP_BOTTOM_WIDTH,
+                .fractional_digits = 0U,
+                .align = DISPLAY_FORMAT_ALIGN_RIGHT,
+                .pad_char = '0',
+                .overflow_policy = DISPLAY_FORMAT_OVERFLOW_ERROR,
+                .overflow_char = '-'
+            },
+            .expected_text = "0000123"
+        }
     },
     {
         .name = "PADDED_DECIMAL_1",
-        .kind = FM_DISPLAY_FORMAT_LCD_BRINGUP_KIND_SCALED,
-        .scaled_value = 123,
-        .unsigned_value = 0U,
-        .scale_digits = 1U,
-        .fractional_digits = 1U,
-        .overflow_policy = DISPLAY_FORMAT_OVERFLOW_ERROR,
-        .expected_top = "0000012.3"
+        .top = {
+            .kind = FM_DISPLAY_FORMAT_LCD_BRINGUP_KIND_SCALED,
+            .scaled_value = 123,
+            .unsigned_value = 0U,
+            .scale_digits = 1U,
+            .field = {
+                .visible_width = FM_DISPLAY_FORMAT_LCD_BRINGUP_TOP_WIDTH,
+                .fractional_digits = 1U,
+                .align = DISPLAY_FORMAT_ALIGN_RIGHT,
+                .pad_char = '0',
+                .overflow_policy = DISPLAY_FORMAT_OVERFLOW_ERROR,
+                .overflow_char = '-'
+            },
+            .expected_text = "0000012.3"
+        },
+        .bottom = {
+            .kind = FM_DISPLAY_FORMAT_LCD_BRINGUP_KIND_SCALED,
+            .scaled_value = 123,
+            .unsigned_value = 0U,
+            .scale_digits = 1U,
+            .field = {
+                .visible_width = FM_DISPLAY_FORMAT_LCD_BRINGUP_BOTTOM_WIDTH,
+                .fractional_digits = 1U,
+                .align = DISPLAY_FORMAT_ALIGN_RIGHT,
+                .pad_char = '0',
+                .overflow_policy = DISPLAY_FORMAT_OVERFLOW_ERROR,
+                .overflow_char = '-'
+            },
+            .expected_text = "000012.3"
+        }
     },
     {
         .name = "PADDED_DECIMAL_2",
-        .kind = FM_DISPLAY_FORMAT_LCD_BRINGUP_KIND_SCALED,
-        .scaled_value = 123,
-        .unsigned_value = 0U,
-        .scale_digits = 2U,
-        .fractional_digits = 2U,
-        .overflow_policy = DISPLAY_FORMAT_OVERFLOW_ERROR,
-        .expected_top = "000001.23"
+        .top = {
+            .kind = FM_DISPLAY_FORMAT_LCD_BRINGUP_KIND_SCALED,
+            .scaled_value = 123,
+            .unsigned_value = 0U,
+            .scale_digits = 2U,
+            .field = {
+                .visible_width = FM_DISPLAY_FORMAT_LCD_BRINGUP_TOP_WIDTH,
+                .fractional_digits = 2U,
+                .align = DISPLAY_FORMAT_ALIGN_RIGHT,
+                .pad_char = '0',
+                .overflow_policy = DISPLAY_FORMAT_OVERFLOW_ERROR,
+                .overflow_char = '-'
+            },
+            .expected_text = "000001.23"
+        },
+        .bottom = {
+            .kind = FM_DISPLAY_FORMAT_LCD_BRINGUP_KIND_SCALED,
+            .scaled_value = 123,
+            .unsigned_value = 0U,
+            .scale_digits = 2U,
+            .field = {
+                .visible_width = FM_DISPLAY_FORMAT_LCD_BRINGUP_BOTTOM_WIDTH,
+                .fractional_digits = 2U,
+                .align = DISPLAY_FORMAT_ALIGN_RIGHT,
+                .pad_char = '0',
+                .overflow_policy = DISPLAY_FORMAT_OVERFLOW_ERROR,
+                .overflow_char = '-'
+            },
+            .expected_text = "00001.23"
+        }
     },
     {
         .name = "PADDED_DECIMAL_3",
-        .kind = FM_DISPLAY_FORMAT_LCD_BRINGUP_KIND_SCALED,
-        .scaled_value = 123,
-        .unsigned_value = 0U,
-        .scale_digits = 3U,
-        .fractional_digits = 3U,
-        .overflow_policy = DISPLAY_FORMAT_OVERFLOW_ERROR,
-        .expected_top = "00000.123"
+        .top = {
+            .kind = FM_DISPLAY_FORMAT_LCD_BRINGUP_KIND_SCALED,
+            .scaled_value = 123,
+            .unsigned_value = 0U,
+            .scale_digits = 3U,
+            .field = {
+                .visible_width = FM_DISPLAY_FORMAT_LCD_BRINGUP_TOP_WIDTH,
+                .fractional_digits = 3U,
+                .align = DISPLAY_FORMAT_ALIGN_RIGHT,
+                .pad_char = '0',
+                .overflow_policy = DISPLAY_FORMAT_OVERFLOW_ERROR,
+                .overflow_char = '-'
+            },
+            .expected_text = "00000.123"
+        },
+        .bottom = {
+            .kind = FM_DISPLAY_FORMAT_LCD_BRINGUP_KIND_SCALED,
+            .scaled_value = 123,
+            .unsigned_value = 0U,
+            .scale_digits = 3U,
+            .field = {
+                .visible_width = FM_DISPLAY_FORMAT_LCD_BRINGUP_BOTTOM_WIDTH,
+                .fractional_digits = 3U,
+                .align = DISPLAY_FORMAT_ALIGN_RIGHT,
+                .pad_char = '0',
+                .overflow_policy = DISPLAY_FORMAT_OVERFLOW_ERROR,
+                .overflow_char = '-'
+            },
+            .expected_text = "0000.123"
+        }
     },
     {
         .name = "ROUNDED_DECIMAL",
-        .kind = FM_DISPLAY_FORMAT_LCD_BRINGUP_KIND_SCALED,
-        .scaled_value = 12345,
-        .unsigned_value = 0U,
-        .scale_digits = 2U,
-        .fractional_digits = 1U,
-        .overflow_policy = DISPLAY_FORMAT_OVERFLOW_ERROR,
-        .expected_top = "0000123.5"
+        .top = {
+            .kind = FM_DISPLAY_FORMAT_LCD_BRINGUP_KIND_SCALED,
+            .scaled_value = 12345,
+            .unsigned_value = 0U,
+            .scale_digits = 2U,
+            .field = {
+                .visible_width = FM_DISPLAY_FORMAT_LCD_BRINGUP_TOP_WIDTH,
+                .fractional_digits = 1U,
+                .align = DISPLAY_FORMAT_ALIGN_RIGHT,
+                .pad_char = '0',
+                .overflow_policy = DISPLAY_FORMAT_OVERFLOW_ERROR,
+                .overflow_char = '-'
+            },
+            .expected_text = "0000123.5"
+        },
+        .bottom = {
+            .kind = FM_DISPLAY_FORMAT_LCD_BRINGUP_KIND_SCALED,
+            .scaled_value = 12345,
+            .unsigned_value = 0U,
+            .scale_digits = 2U,
+            .field = {
+                .visible_width = FM_DISPLAY_FORMAT_LCD_BRINGUP_BOTTOM_WIDTH,
+                .fractional_digits = 1U,
+                .align = DISPLAY_FORMAT_ALIGN_RIGHT,
+                .pad_char = '0',
+                .overflow_policy = DISPLAY_FORMAT_OVERFLOW_ERROR,
+                .overflow_char = '-'
+            },
+            .expected_text = "000123.5"
+        }
+    },
+    {
+        .name = "LOW_DECIMAL",
+        .top = {
+            .kind = FM_DISPLAY_FORMAT_LCD_BRINGUP_KIND_SCALED,
+            .scaled_value = 1,
+            .unsigned_value = 0U,
+            .scale_digits = 1U,
+            .field = {
+                .visible_width = FM_DISPLAY_FORMAT_LCD_BRINGUP_TOP_WIDTH,
+                .fractional_digits = 1U,
+                .align = DISPLAY_FORMAT_ALIGN_RIGHT,
+                .pad_char = '0',
+                .overflow_policy = DISPLAY_FORMAT_OVERFLOW_ERROR,
+                .overflow_char = '-'
+            },
+            .expected_text = "0000000.1"
+        },
+        .bottom = {
+            .kind = FM_DISPLAY_FORMAT_LCD_BRINGUP_KIND_SCALED,
+            .scaled_value = 1,
+            .unsigned_value = 0U,
+            .scale_digits = 1U,
+            .field = {
+                .visible_width = FM_DISPLAY_FORMAT_LCD_BRINGUP_BOTTOM_WIDTH,
+                .fractional_digits = 1U,
+                .align = DISPLAY_FORMAT_ALIGN_RIGHT,
+                .pad_char = '0',
+                .overflow_policy = DISPLAY_FORMAT_OVERFLOW_ERROR,
+                .overflow_char = '-'
+            },
+            .expected_text = "000000.1"
+        }
     },
     {
         .name = "OVERFLOW_FILL",
-        .kind = FM_DISPLAY_FORMAT_LCD_BRINGUP_KIND_UNSIGNED,
-        .scaled_value = 0,
-        .unsigned_value = 123456789U,
-        .scale_digits = 0U,
-        .fractional_digits = 0U,
-        .overflow_policy = DISPLAY_FORMAT_OVERFLOW_FILL,
-        .expected_top = "--------"
+        .top = {
+            .kind = FM_DISPLAY_FORMAT_LCD_BRINGUP_KIND_UNSIGNED,
+            .scaled_value = 0,
+            .unsigned_value = 123456789U,
+            .scale_digits = 0U,
+            .field = {
+                .visible_width = FM_DISPLAY_FORMAT_LCD_BRINGUP_TOP_WIDTH,
+                .fractional_digits = 0U,
+                .align = DISPLAY_FORMAT_ALIGN_RIGHT,
+                .pad_char = '0',
+                .overflow_policy = DISPLAY_FORMAT_OVERFLOW_FILL,
+                .overflow_char = '-'
+            },
+            .expected_text = "--------"
+        },
+        .bottom = {
+            .kind = FM_DISPLAY_FORMAT_LCD_BRINGUP_KIND_UNSIGNED,
+            .scaled_value = 0,
+            .unsigned_value = 123456789U,
+            .scale_digits = 0U,
+            .field = {
+                .visible_width = FM_DISPLAY_FORMAT_LCD_BRINGUP_BOTTOM_WIDTH,
+                .fractional_digits = 0U,
+                .align = DISPLAY_FORMAT_ALIGN_RIGHT,
+                .pad_char = '0',
+                .overflow_policy = DISPLAY_FORMAT_OVERFLOW_FILL,
+                .overflow_char = '-'
+            },
+            .expected_text = "-------"
+        }
     }
 };
 
@@ -148,12 +327,17 @@ static void fm_display_format_lcd_bringup_require_format_status_(fm_status_t p_s
                                                                  fm_status_t p_expected,
                                                                  const char *p_msg);
 static void fm_display_format_lcd_bringup_emit_case_(
-    const fm_display_format_lcd_bringup_case_t *p_case,
-    const char *p_top);
+    const fm_display_format_lcd_bringup_scene_t *p_scene,
+    const char *p_top,
+    const char *p_bottom);
+static void fm_display_format_lcd_bringup_format_value_(
+    const fm_display_format_lcd_bringup_value_t *p_value,
+    char *p_text,
+    size_t p_text_size);
 static bool fm_display_format_lcd_bringup_text_eq_(const char *p_actual,
                                                    const char *p_expected);
 static void fm_display_format_lcd_bringup_apply_case_(
-    const fm_display_format_lcd_bringup_case_t *p_case);
+    const fm_display_format_lcd_bringup_scene_t *p_scene);
 
 /* =========================== Private Bodies ============================= */
 static void fm_display_format_lcd_bringup_panic_(const char *p_msg)
@@ -181,14 +365,59 @@ static void fm_display_format_lcd_bringup_require_format_status_(fm_status_t p_s
 }
 
 static void fm_display_format_lcd_bringup_emit_case_(
-    const fm_display_format_lcd_bringup_case_t *p_case,
-    const char *p_top)
+    const fm_display_format_lcd_bringup_scene_t *p_scene,
+    const char *p_top,
+    const char *p_bottom)
 {
-    (void) FM_DEBUG_UartStr("DISPLAY_FORMAT_LCD_BRINGUP:CASE=");
-    (void) FM_DEBUG_UartStr(p_case->name);
+    (void) FM_DEBUG_UartStr("DISPLAY_FORMAT_LCD_BRINGUP:SCENE=");
+    (void) FM_DEBUG_UartStr(p_scene->name);
     (void) FM_DEBUG_UartStr(" TOP=");
     (void) FM_DEBUG_UartStr(p_top);
+    (void) FM_DEBUG_UartStr(" BOTTOM=");
+    (void) FM_DEBUG_UartStr(p_bottom);
     (void) FM_DEBUG_UartStr("\n");
+}
+
+static void fm_display_format_lcd_bringup_format_value_(
+    const fm_display_format_lcd_bringup_value_t *p_value,
+    char *p_text,
+    size_t p_text_size)
+{
+    fm_status_t status;
+    fm_status_t expected_status = FM_STATUS_OK;
+
+    if (p_value->field.overflow_policy == DISPLAY_FORMAT_OVERFLOW_FILL)
+    {
+        expected_status = FM_STATUS_ERANGE;
+    }
+
+    if (p_value->kind == FM_DISPLAY_FORMAT_LCD_BRINGUP_KIND_UNSIGNED)
+    {
+        status = DISPLAY_FORMAT_Unsigned(p_value->unsigned_value,
+                                         &p_value->field,
+                                         p_text,
+                                         p_text_size);
+    }
+    else
+    {
+        status = DISPLAY_FORMAT_Scaled(p_value->scaled_value,
+                                       p_value->scale_digits,
+                                       &p_value->field,
+                                       p_text,
+                                       p_text_size);
+    }
+
+    fm_display_format_lcd_bringup_require_format_status_(
+        status,
+        expected_status,
+        "DISPLAY_FORMAT_LCD_BRINGUP:FORMAT_FAIL\n");
+
+    if (!fm_display_format_lcd_bringup_text_eq_(p_text,
+                                                p_value->expected_text))
+    {
+        fm_display_format_lcd_bringup_panic_(
+            "DISPLAY_FORMAT_LCD_BRINGUP:TEXT_MISMATCH\n");
+    }
 }
 
 static bool fm_display_format_lcd_bringup_text_eq_(const char *p_actual,
@@ -209,51 +438,17 @@ static bool fm_display_format_lcd_bringup_text_eq_(const char *p_actual,
 }
 
 static void fm_display_format_lcd_bringup_apply_case_(
-    const fm_display_format_lcd_bringup_case_t *p_case)
+    const fm_display_format_lcd_bringup_scene_t *p_scene)
 {
-    display_format_field_t field;
     char top[FM_DISPLAY_FORMAT_LCD_BRINGUP_TEXT_SIZE];
-    fm_status_t status;
-    fm_status_t expected_status = FM_STATUS_OK;
+    char bottom[FM_DISPLAY_FORMAT_LCD_BRINGUP_TEXT_SIZE];
 
-    field.visible_width = FM_DISPLAY_FORMAT_LCD_BRINGUP_TOP_WIDTH;
-    field.fractional_digits = p_case->fractional_digits;
-    field.align = DISPLAY_FORMAT_ALIGN_RIGHT;
-    field.pad_char = '0';
-    field.overflow_policy = p_case->overflow_policy;
-    field.overflow_char = '-';
-
-    if (p_case->overflow_policy == DISPLAY_FORMAT_OVERFLOW_FILL)
-    {
-        expected_status = FM_STATUS_ERANGE;
-    }
-
-    if (p_case->kind == FM_DISPLAY_FORMAT_LCD_BRINGUP_KIND_UNSIGNED)
-    {
-        status = DISPLAY_FORMAT_Unsigned(p_case->unsigned_value,
-                                         &field,
-                                         top,
-                                         sizeof(top));
-    }
-    else
-    {
-        status = DISPLAY_FORMAT_Scaled(p_case->scaled_value,
-                                       p_case->scale_digits,
-                                       &field,
-                                       top,
-                                       sizeof(top));
-    }
-
-    fm_display_format_lcd_bringup_require_format_status_(
-        status,
-        expected_status,
-        "DISPLAY_FORMAT_LCD_BRINGUP:FORMAT_FAIL\n");
-
-    if (!fm_display_format_lcd_bringup_text_eq_(top, p_case->expected_top))
-    {
-        fm_display_format_lcd_bringup_panic_(
-            "DISPLAY_FORMAT_LCD_BRINGUP:TEXT_MISMATCH\n");
-    }
+    fm_display_format_lcd_bringup_format_value_(&p_scene->top,
+                                                top,
+                                                sizeof(top));
+    fm_display_format_lcd_bringup_format_value_(&p_scene->bottom,
+                                                bottom,
+                                                sizeof(bottom));
 
     fm_display_format_lcd_bringup_require_lcd_ok_(
         FM_LCD_Clear(),
@@ -265,10 +460,16 @@ static void fm_display_format_lcd_bringup_apply_case_(
                          true),
         "DISPLAY_FORMAT_LCD_BRINGUP:TOP_FAIL\n");
     fm_display_format_lcd_bringup_require_lcd_ok_(
+        FM_LCD_WriteText(FM_LCD_LAYOUT_ROW_BOTTOM,
+                         bottom,
+                         FM_LCD_ALIGN_LEFT,
+                         true),
+        "DISPLAY_FORMAT_LCD_BRINGUP:BOTTOM_FAIL\n");
+    fm_display_format_lcd_bringup_require_lcd_ok_(
         FM_LCD_Flush(),
         "DISPLAY_FORMAT_LCD_BRINGUP:FLUSH_FAIL\n");
 
-    fm_display_format_lcd_bringup_emit_case_(p_case, top);
+    fm_display_format_lcd_bringup_emit_case_(p_scene, top, bottom);
     FM_DEBUG_Flush();
 }
 
@@ -294,12 +495,12 @@ void FM_DisplayFormatLcdBringup_Run(void)
         (void) FM_DEBUG_UartStr("DISPLAY_FORMAT_LCD_BRINGUP:LOOP_RESTART\n");
 
         for (index = 0U;
-             index < (uint8_t) (sizeof(g_fm_display_format_lcd_bringup_cases) /
-                                sizeof(g_fm_display_format_lcd_bringup_cases[0]));
+             index < (uint8_t) (sizeof(g_fm_display_format_lcd_bringup_scenes) /
+                                sizeof(g_fm_display_format_lcd_bringup_scenes[0]));
              index++)
         {
             fm_display_format_lcd_bringup_apply_case_(
-                &g_fm_display_format_lcd_bringup_cases[index]);
+                &g_fm_display_format_lcd_bringup_scenes[index]);
             FM_PORT_TIME_SleepMs(FM_DISPLAY_FORMAT_LCD_BRINGUP_SCENE_DELAY_MS);
         }
 

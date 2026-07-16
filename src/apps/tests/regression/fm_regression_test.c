@@ -761,7 +761,19 @@ static bool fm_regression_test_display_format_values_(void)
         return false;
     }
 
+    field.visible_width = 8U;
+    field.pad_char = '0';
+
+    if ((DISPLAY_FORMAT_Scaled(12345, 2U, &field, text, sizeof(text)) !=
+         FM_STATUS_OK) ||
+        !fm_regression_test_text_eq_(text, "0000123.5"))
+    {
+        return false;
+    }
+
     field.align = DISPLAY_FORMAT_ALIGN_LEFT;
+    field.visible_width = 7U;
+    field.pad_char = ' ';
 
     if ((DISPLAY_FORMAT_Scaled(12345, 2U, &field, text, sizeof(text)) !=
          FM_STATUS_OK) ||
