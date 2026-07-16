@@ -40,3 +40,7 @@ When a request starts a new track or no longer fits the current one:
 - `WORKING_CONTEXT.md`: active workstream
 - `STYLE.md`: naming and code structure
 - `CONTRIBUTING.md`: repo hygiene
+- `docs/workflow/codex_stm32_vscode_case.md`: summarized real Codex workflow
+  case for STM32, VS Code, canonical build, flash, and UART validation
+- `docs/workflow/codex_stm32_vscode_linkedin.md`: English LinkedIn-oriented
+  version of the same Codex workflow case

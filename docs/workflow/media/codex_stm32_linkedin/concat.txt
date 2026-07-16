@@ -1,0 +1,17 @@
+file 'D:/githubs/FMC-320U_V2_VSCODE/docs/workflow/media/codex_stm32_linkedin/slides/slide_01.png'
+duration 4.2
+file 'D:/githubs/FMC-320U_V2_VSCODE/docs/workflow/media/codex_stm32_linkedin/slides/slide_02.png'
+duration 4.2
+file 'D:/githubs/FMC-320U_V2_VSCODE/docs/workflow/media/codex_stm32_linkedin/slides/slide_03.png'
+duration 4.2
+file 'D:/githubs/FMC-320U_V2_VSCODE/docs/workflow/media/codex_stm32_linkedin/slides/slide_04.png'
+duration 4.2
+file 'D:/githubs/FMC-320U_V2_VSCODE/docs/workflow/media/codex_stm32_linkedin/slides/slide_05.png'
+duration 4.2
+file 'D:/githubs/FMC-320U_V2_VSCODE/docs/workflow/media/codex_stm32_linkedin/slides/slide_06.png'
+duration 4.2
+file 'D:/githubs/FMC-320U_V2_VSCODE/docs/workflow/media/codex_stm32_linkedin/slides/slide_07.png'
+duration 4.2
+file 'D:/githubs/FMC-320U_V2_VSCODE/docs/workflow/media/codex_stm32_linkedin/slides/slide_08.png'
+duration 4.2
+file 'D:/githubs/FMC-320U_V2_VSCODE/docs/workflow/media/codex_stm32_linkedin/slides/slide_08.png'

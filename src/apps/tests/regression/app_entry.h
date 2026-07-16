@@ -1,6 +1,6 @@
 /**
  * @file    app_entry.h
- * @brief   App entry point for FMC model/units verification.
+ * @brief   App entry point for the shared regression test profile.
  */
 #ifndef APP_ENTRY_H
 #define APP_ENTRY_H

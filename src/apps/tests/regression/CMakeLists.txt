@@ -1,6 +1,6 @@
 set(FM_APP_SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/app_entry.c
-    ${CMAKE_CURRENT_LIST_DIR}/fm_fmc_model_units_test.c
+    ${CMAKE_CURRENT_LIST_DIR}/fm_regression_test.c
     PARENT_SCOPE
 )
 

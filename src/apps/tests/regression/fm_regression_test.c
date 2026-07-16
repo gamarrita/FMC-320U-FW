@@ -1,9 +1,9 @@
 /**
- * @file    fm_fmc_model_units_test.c
+ * @file    fm_regression_test.c
  * @brief   Repeatable verification app for pure model, unit, rate, volume,
  *          and display-format slices.
  */
-#include "fm_fmc_model_units_test.h"
+#include "fm_regression_test.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -18,98 +18,98 @@
 #include "fmc_units.h"
 #include "fmc_volume.h"
 
-#define FM_FMC_MODEL_UNITS_TEST_IDLE_MS   1000U
-#define FM_FMC_MODEL_UNITS_TEST_EPSILON   0.000001
+#define FM_REGRESSION_TEST_IDLE_MS   1000U
+#define FM_REGRESSION_TEST_EPSILON   0.000001
 
 typedef enum
 {
-    FM_FMC_MODEL_UNITS_TEST_CASE_INIT_DEFAULTS = 0,
-    FM_FMC_MODEL_UNITS_TEST_CASE_TOTALS,
-    FM_FMC_MODEL_UNITS_TEST_CASE_UNIT_VALIDITY,
-    FM_FMC_MODEL_UNITS_TEST_CASE_UNIT_KIND,
-    FM_FMC_MODEL_UNITS_TEST_CASE_LITERS_PER_UNIT,
-    FM_FMC_MODEL_UNITS_TEST_CASE_PULSES_PER_ACTIVE_UNIT,
-    FM_FMC_MODEL_UNITS_TEST_CASE_ERROR_PATHS,
-    FM_FMC_MODEL_UNITS_TEST_CASE_RATE_WINDOWS,
-    FM_FMC_MODEL_UNITS_TEST_CASE_RATE_ERROR_PATHS,
-    FM_FMC_MODEL_UNITS_TEST_CASE_VOLUME_VALUES,
-    FM_FMC_MODEL_UNITS_TEST_CASE_VOLUME_ERROR_PATHS,
-    FM_FMC_MODEL_UNITS_TEST_CASE_DISPLAY_FORMAT_VALUES,
-    FM_FMC_MODEL_UNITS_TEST_CASE_DISPLAY_FORMAT_ERROR_PATHS,
-    FM_FMC_MODEL_UNITS_TEST_CASE_COUNT
-} fm_fmc_model_units_test_case_t;
+    FM_REGRESSION_TEST_CASE_INIT_DEFAULTS = 0,
+    FM_REGRESSION_TEST_CASE_TOTALS,
+    FM_REGRESSION_TEST_CASE_UNIT_VALIDITY,
+    FM_REGRESSION_TEST_CASE_UNIT_KIND,
+    FM_REGRESSION_TEST_CASE_LITERS_PER_UNIT,
+    FM_REGRESSION_TEST_CASE_PULSES_PER_ACTIVE_UNIT,
+    FM_REGRESSION_TEST_CASE_ERROR_PATHS,
+    FM_REGRESSION_TEST_CASE_RATE_WINDOWS,
+    FM_REGRESSION_TEST_CASE_RATE_ERROR_PATHS,
+    FM_REGRESSION_TEST_CASE_VOLUME_VALUES,
+    FM_REGRESSION_TEST_CASE_VOLUME_ERROR_PATHS,
+    FM_REGRESSION_TEST_CASE_DISPLAY_FORMAT_VALUES,
+    FM_REGRESSION_TEST_CASE_DISPLAY_FORMAT_ERROR_PATHS,
+    FM_REGRESSION_TEST_CASE_COUNT
+} fm_regression_test_case_t;
 
 typedef struct
 {
     fmc_model_volume_unit_t unit;
     double expected_liters_per_unit;
-} fm_fmc_model_units_liters_case_t;
+} fm_regression_liters_case_t;
 
 /* Private function declarations */
-static bool fm_fmc_model_units_test_double_eq_(double p_actual,
+static bool fm_regression_test_double_eq_(double p_actual,
                                                double p_expected);
-static bool fm_fmc_model_units_test_init_defaults_(void);
-static bool fm_fmc_model_units_test_totals_(void);
-static bool fm_fmc_model_units_test_unit_validity_(void);
-static bool fm_fmc_model_units_test_unit_kind_(void);
-static bool fm_fmc_model_units_test_liters_per_unit_(void);
-static bool fm_fmc_model_units_test_pulses_per_active_unit_(void);
-static bool fm_fmc_model_units_test_error_paths_(void);
-static bool fm_fmc_model_units_test_rate_windows_(void);
-static bool fm_fmc_model_units_test_rate_error_paths_(void);
-static bool fm_fmc_model_units_test_volume_values_(void);
-static bool fm_fmc_model_units_test_volume_error_paths_(void);
-static bool fm_fmc_model_units_test_display_format_values_(void);
-static bool fm_fmc_model_units_test_display_format_error_paths_(void);
-static bool fm_fmc_model_units_test_run_case_(fm_fmc_model_units_test_case_t p_case);
-static void fm_fmc_model_units_test_emit_case_(fm_fmc_model_units_test_case_t p_case,
+static bool fm_regression_test_init_defaults_(void);
+static bool fm_regression_test_totals_(void);
+static bool fm_regression_test_unit_validity_(void);
+static bool fm_regression_test_unit_kind_(void);
+static bool fm_regression_test_liters_per_unit_(void);
+static bool fm_regression_test_pulses_per_active_unit_(void);
+static bool fm_regression_test_error_paths_(void);
+static bool fm_regression_test_rate_windows_(void);
+static bool fm_regression_test_rate_error_paths_(void);
+static bool fm_regression_test_volume_values_(void);
+static bool fm_regression_test_volume_error_paths_(void);
+static bool fm_regression_test_display_format_values_(void);
+static bool fm_regression_test_display_format_error_paths_(void);
+static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case);
+static void fm_regression_test_emit_case_(fm_regression_test_case_t p_case,
                                                bool p_passed);
-static bool fm_fmc_model_units_test_text_eq_(const char *p_actual,
+static bool fm_regression_test_text_eq_(const char *p_actual,
                                              const char *p_expected);
 
 /* Public function definitions */
-void FM_FmcModelUnitsTest_Run(void)
+void FM_RegressionTest_Run(void)
 {
-    fm_fmc_model_units_test_case_t test_case;
+    fm_regression_test_case_t test_case;
     bool passed = true;
 
     FM_BOARD_Init();
     FM_DEBUG_Init();
 
-    (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:START\n");
+    (void) FM_DEBUG_UartStr("REGRESSION_TEST:START\n");
 
-    for (test_case = FM_FMC_MODEL_UNITS_TEST_CASE_INIT_DEFAULTS;
-         test_case < FM_FMC_MODEL_UNITS_TEST_CASE_COUNT;
-         test_case = (fm_fmc_model_units_test_case_t) (test_case + 1U))
+    for (test_case = FM_REGRESSION_TEST_CASE_INIT_DEFAULTS;
+         test_case < FM_REGRESSION_TEST_CASE_COUNT;
+         test_case = (fm_regression_test_case_t) (test_case + 1U))
     {
-        if (!fm_fmc_model_units_test_run_case_(test_case))
+        if (!fm_regression_test_run_case_(test_case))
         {
             passed = false;
-            fm_fmc_model_units_test_emit_case_(test_case, false);
+            fm_regression_test_emit_case_(test_case, false);
             FM_DEBUG_Flush();
-            FM_DEBUG_PanicMsg("FMC_MODEL_UNITS_TEST:FAIL\n");
+            FM_DEBUG_PanicMsg("REGRESSION_TEST:FAIL\n");
         }
 
-        fm_fmc_model_units_test_emit_case_(test_case, true);
+        fm_regression_test_emit_case_(test_case, true);
         FM_DEBUG_Flush();
     }
 
     if (passed)
     {
-        (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:PASS\n");
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:PASS\n");
     }
 
     for (;;)
     {
         FM_DEBUG_LedRun(FM_DEBUG_LED_ON);
-        FM_PORT_TIME_SleepMs(FM_FMC_MODEL_UNITS_TEST_IDLE_MS);
+        FM_PORT_TIME_SleepMs(FM_REGRESSION_TEST_IDLE_MS);
         FM_DEBUG_LedRun(FM_DEBUG_LED_OFF);
-        FM_PORT_TIME_SleepMs(FM_FMC_MODEL_UNITS_TEST_IDLE_MS);
+        FM_PORT_TIME_SleepMs(FM_REGRESSION_TEST_IDLE_MS);
     }
 }
 
 /* Private function definitions */
-static bool fm_fmc_model_units_test_double_eq_(double p_actual,
+static bool fm_regression_test_double_eq_(double p_actual,
                                                double p_expected)
 {
     double diff = p_actual - p_expected;
@@ -119,10 +119,10 @@ static bool fm_fmc_model_units_test_double_eq_(double p_actual,
         diff = -diff;
     }
 
-    return diff <= FM_FMC_MODEL_UNITS_TEST_EPSILON;
+    return diff <= FM_REGRESSION_TEST_EPSILON;
 }
 
-static bool fm_fmc_model_units_test_text_eq_(const char *p_actual,
+static bool fm_regression_test_text_eq_(const char *p_actual,
                                              const char *p_expected)
 {
     while ((*p_actual != '\0') && (*p_expected != '\0'))
@@ -145,13 +145,13 @@ static bool fm_fmc_model_units_test_text_eq_(const char *p_actual,
  * This catches accidental changes to factory-like assumptions before flash or
  * configuration persistence become the runtime source of these values.
  */
-static bool fm_fmc_model_units_test_init_defaults_(void)
+static bool fm_regression_test_init_defaults_(void)
 {
     fmc_model_t model;
 
     FMC_MODEL_Init(&model);
 
-    return fm_fmc_model_units_test_double_eq_(
+    return fm_regression_test_double_eq_(
                model.measurement.calibration_pulses_per_unit,
                FMC_MODEL_CALIBRATION_PULSES_PER_UNIT_DEFAULT) &&
            (model.measurement.calibration_volume_unit ==
@@ -169,7 +169,7 @@ static bool fm_fmc_model_units_test_init_defaults_(void)
  * accumulated volume. TTL must exist as a separate privileged counter so later
  * UI/service code cannot accidentally treat it like ACM.
  */
-static bool fm_fmc_model_units_test_totals_(void)
+static bool fm_regression_test_totals_(void)
 {
     fmc_model_t model;
     fmc_model_total_state_t *acm;
@@ -231,7 +231,7 @@ static bool fm_fmc_model_units_test_totals_(void)
  * This protects the current policy that invalid persisted/display selections
  * normalize to liters instead of breaking pure calculations.
  */
-static bool fm_fmc_model_units_test_unit_validity_(void)
+static bool fm_regression_test_unit_validity_(void)
 {
     return FMC_UNITS_IsVolumeUnitValid(FMC_MODEL_VOLUME_UNIT_CUSTOM) &&
            FMC_UNITS_IsVolumeUnitValid(FMC_MODEL_VOLUME_UNIT_L) &&
@@ -252,7 +252,7 @@ static bool fm_fmc_model_units_test_unit_validity_(void)
  * The distinction matters because physical units use liter conversion, while
  * CUSTOM/KG/EQUIV_M3 currently preserve the calibrated unit scale.
  */
-static bool fm_fmc_model_units_test_unit_kind_(void)
+static bool fm_regression_test_unit_kind_(void)
 {
     fmc_units_volume_unit_kind_t kind;
 
@@ -317,9 +317,9 @@ static bool fm_fmc_model_units_test_unit_kind_(void)
  * Rate and volume calculations depend on this table when converting from the
  * calibration unit to the active display unit.
  */
-static bool fm_fmc_model_units_test_liters_per_unit_(void)
+static bool fm_regression_test_liters_per_unit_(void)
 {
-    static const fm_fmc_model_units_liters_case_t cases[] =
+    static const fm_regression_liters_case_t cases[] =
     {
         { FMC_MODEL_VOLUME_UNIT_CUSTOM, 1.0 },
         { FMC_MODEL_VOLUME_UNIT_L, 1.0 },
@@ -342,7 +342,7 @@ static bool fm_fmc_model_units_test_liters_per_unit_(void)
             return false;
         }
 
-        if (!fm_fmc_model_units_test_double_eq_(
+        if (!fm_regression_test_double_eq_(
                 liters_per_unit,
                 cases[index].expected_liters_per_unit))
         {
@@ -363,9 +363,9 @@ static bool fm_fmc_model_units_test_liters_per_unit_(void)
  * once this value is correct, higher-level modules can divide pulses by it
  * without duplicating unit policy.
  */
-static bool fm_fmc_model_units_test_pulses_per_active_unit_(void)
+static bool fm_regression_test_pulses_per_active_unit_(void)
 {
-    static const fm_fmc_model_units_liters_case_t cases[] =
+    static const fm_regression_liters_case_t cases[] =
     {
         { FMC_MODEL_VOLUME_UNIT_L, 2.5 },
         { FMC_MODEL_VOLUME_UNIT_M3, 2500.0 },
@@ -396,7 +396,7 @@ static bool fm_fmc_model_units_test_pulses_per_active_unit_(void)
             return false;
         }
 
-        if (!fm_fmc_model_units_test_double_eq_(
+        if (!fm_regression_test_double_eq_(
                 pulses_per_active_unit,
                 cases[index].expected_liters_per_unit))
         {
@@ -409,7 +409,7 @@ static bool fm_fmc_model_units_test_pulses_per_active_unit_(void)
     return (FMC_UNITS_CalcPulsesPerActiveUnit(&measurement,
                                               &pulses_per_active_unit) ==
             FM_STATUS_OK) &&
-           fm_fmc_model_units_test_double_eq_(pulses_per_active_unit, 2.5);
+           fm_regression_test_double_eq_(pulses_per_active_unit, 2.5);
 }
 
 /*
@@ -418,7 +418,7 @@ static bool fm_fmc_model_units_test_pulses_per_active_unit_(void)
  * These checks keep invalid pointers, out-of-range calibration, and currently
  * unsupported calibration units explicit instead of silently producing a value.
  */
-static bool fm_fmc_model_units_test_error_paths_(void)
+static bool fm_regression_test_error_paths_(void)
 {
     fmc_model_measurement_t measurement;
     double pulses_per_active_unit;
@@ -467,7 +467,7 @@ static bool fm_fmc_model_units_test_error_paths_(void)
  * This keeps rate independent from acquisition/RTOS code: the test feeds a
  * pulse/time window and expects a pure calculated rate.
  */
-static bool fm_fmc_model_units_test_rate_windows_(void)
+static bool fm_regression_test_rate_windows_(void)
 {
     static const fmc_model_time_base_t time_bases[] =
     {
@@ -498,7 +498,7 @@ static bool fm_fmc_model_units_test_rate_windows_(void)
         measurement.active_time_base = time_bases[index];
 
         if ((FMC_RATE_Calc(&measurement, 4U, 2.0, &rate) != FM_STATUS_OK) ||
-            !fm_fmc_model_units_test_double_eq_(rate,
+            !fm_regression_test_double_eq_(rate,
                                                 expected_rates[index]))
         {
             return false;
@@ -509,7 +509,7 @@ static bool fm_fmc_model_units_test_rate_windows_(void)
     measurement.active_volume_unit = FMC_MODEL_VOLUME_UNIT_M3;
 
     if ((FMC_RATE_Calc(&measurement, 2000U, 10.0, &rate) != FM_STATUS_OK) ||
-        !fm_fmc_model_units_test_double_eq_(rate, 6.0))
+        !fm_regression_test_double_eq_(rate, 6.0))
     {
         return false;
     }
@@ -518,13 +518,13 @@ static bool fm_fmc_model_units_test_rate_windows_(void)
     measurement.active_volume_unit = FMC_MODEL_VOLUME_UNIT_L;
 
     if ((FMC_RATE_Calc(&measurement, 60U, 1.0, &rate) != FM_STATUS_OK) ||
-        !fm_fmc_model_units_test_double_eq_(rate, 0.6))
+        !fm_regression_test_double_eq_(rate, 0.6))
     {
         return false;
     }
 
     return (FMC_RATE_Calc(&measurement, 0U, 10.0, &rate) == FM_STATUS_OK) &&
-           fm_fmc_model_units_test_double_eq_(rate, 0.0);
+           fm_regression_test_double_eq_(rate, 0.0);
 }
 
 /*
@@ -533,7 +533,7 @@ static bool fm_fmc_model_units_test_rate_windows_(void)
  * This protects the contract for invalid arguments, non-positive time windows,
  * invalid time bases, and invalid measurement configuration.
  */
-static bool fm_fmc_model_units_test_rate_error_paths_(void)
+static bool fm_regression_test_rate_error_paths_(void)
 {
     fmc_model_measurement_t measurement;
     double rate;
@@ -571,7 +571,7 @@ static bool fm_fmc_model_units_test_rate_error_paths_(void)
  * The test covers direct total-state conversion plus role-based ACM/TTL
  * selection. It intentionally stops before decimal selection or LCD formatting.
  */
-static bool fm_fmc_model_units_test_volume_values_(void)
+static bool fm_regression_test_volume_values_(void)
 {
     fmc_model_t model;
     fmc_model_total_state_t total;
@@ -586,7 +586,7 @@ static bool fm_fmc_model_units_test_volume_values_(void)
 
     if ((FMC_VOLUME_CalcFromTotal(&model.measurement, &total, &volume) !=
          FM_STATUS_OK) ||
-        !fm_fmc_model_units_test_double_eq_(volume, 2.5))
+        !fm_regression_test_double_eq_(volume, 2.5))
     {
         return false;
     }
@@ -595,7 +595,7 @@ static bool fm_fmc_model_units_test_volume_values_(void)
 
     if ((FMC_VOLUME_CalcFromTotal(&model.measurement, &total, &volume) !=
          FM_STATUS_OK) ||
-        !fm_fmc_model_units_test_double_eq_(volume, 2.5))
+        !fm_regression_test_double_eq_(volume, 2.5))
     {
         return false;
     }
@@ -605,7 +605,7 @@ static bool fm_fmc_model_units_test_volume_values_(void)
 
     if ((FMC_VOLUME_CalcFromTotal(&model.measurement, &total, &volume) !=
          FM_STATUS_OK) ||
-        !fm_fmc_model_units_test_double_eq_(volume, 1.0))
+        !fm_regression_test_double_eq_(volume, 1.0))
     {
         return false;
     }
@@ -616,7 +616,7 @@ static bool fm_fmc_model_units_test_volume_values_(void)
 
     if ((FMC_VOLUME_CalcFromTotal(&model.measurement, &total, &volume) !=
          FM_STATUS_OK) ||
-        !fm_fmc_model_units_test_double_eq_(volume, 1.0))
+        !fm_regression_test_double_eq_(volume, 1.0))
     {
         return false;
     }
@@ -625,7 +625,7 @@ static bool fm_fmc_model_units_test_volume_values_(void)
 
     if ((FMC_VOLUME_CalcFromTotal(&model.measurement, &total, &volume) !=
          FM_STATUS_OK) ||
-        !fm_fmc_model_units_test_double_eq_(volume, 1.0))
+        !fm_regression_test_double_eq_(volume, 1.0))
     {
         return false;
     }
@@ -634,7 +634,7 @@ static bool fm_fmc_model_units_test_volume_values_(void)
 
     if ((FMC_VOLUME_CalcFromTotal(&model.measurement, &total, &volume) !=
          FM_STATUS_OK) ||
-        !fm_fmc_model_units_test_double_eq_(volume, 1.0))
+        !fm_regression_test_double_eq_(volume, 1.0))
     {
         return false;
     }
@@ -647,7 +647,7 @@ static bool fm_fmc_model_units_test_volume_values_(void)
     if ((FMC_VOLUME_CalcByTotalRole(&model,
                                     FMC_MODEL_TOTAL_ACM,
                                     &volume) != FM_STATUS_OK) ||
-        !fm_fmc_model_units_test_double_eq_(volume, 1.234))
+        !fm_regression_test_double_eq_(volume, 1.234))
     {
         return false;
     }
@@ -655,7 +655,7 @@ static bool fm_fmc_model_units_test_volume_values_(void)
     return (FMC_VOLUME_CalcByTotalRole(&model,
                                        FMC_MODEL_TOTAL_TTL,
                                        &volume) == FM_STATUS_OK) &&
-           fm_fmc_model_units_test_double_eq_(volume, 5.678);
+           fm_regression_test_double_eq_(volume, 5.678);
 }
 
 /*
@@ -664,7 +664,7 @@ static bool fm_fmc_model_units_test_volume_values_(void)
  * The volume module delegates measurement validation to `fmc_units.*`, so these
  * checks make sure that errors propagate without hiding bad configuration.
  */
-static bool fm_fmc_model_units_test_volume_error_paths_(void)
+static bool fm_regression_test_volume_error_paths_(void)
 {
     fmc_model_t model;
     fmc_model_total_state_t total;
@@ -715,7 +715,7 @@ static bool fm_fmc_model_units_test_volume_error_paths_(void)
  * These checks keep numeric-to-text conversion above the LCD BSP but below
  * product presentation. The output strings are ready for `FM_LCD_WriteText()`.
  */
-static bool fm_fmc_model_units_test_display_format_values_(void)
+static bool fm_regression_test_display_format_values_(void)
 {
     display_format_field_t field;
     char text[16];
@@ -729,14 +729,14 @@ static bool fm_fmc_model_units_test_display_format_values_(void)
 
     if ((DISPLAY_FORMAT_Unsigned(123U, &field, text, sizeof(text)) !=
          FM_STATUS_OK) ||
-        !fm_fmc_model_units_test_text_eq_(text, "  123"))
+        !fm_regression_test_text_eq_(text, "  123"))
     {
         return false;
     }
 
     if ((DISPLAY_FORMAT_Signed(-12, &field, text, sizeof(text)) !=
          FM_STATUS_OK) ||
-        !fm_fmc_model_units_test_text_eq_(text, "  -12"))
+        !fm_regression_test_text_eq_(text, "  -12"))
     {
         return false;
     }
@@ -745,7 +745,7 @@ static bool fm_fmc_model_units_test_display_format_values_(void)
 
     if ((DISPLAY_FORMAT_Signed(-12, &field, text, sizeof(text)) !=
          FM_STATUS_OK) ||
-        !fm_fmc_model_units_test_text_eq_(text, "-0012"))
+        !fm_regression_test_text_eq_(text, "-0012"))
     {
         return false;
     }
@@ -756,7 +756,7 @@ static bool fm_fmc_model_units_test_display_format_values_(void)
 
     if ((DISPLAY_FORMAT_Scaled(12345, 2U, &field, text, sizeof(text)) !=
          FM_STATUS_OK) ||
-        !fm_fmc_model_units_test_text_eq_(text, "   123.5"))
+        !fm_regression_test_text_eq_(text, "   123.5"))
     {
         return false;
     }
@@ -765,7 +765,7 @@ static bool fm_fmc_model_units_test_display_format_values_(void)
 
     if ((DISPLAY_FORMAT_Scaled(12345, 2U, &field, text, sizeof(text)) !=
          FM_STATUS_OK) ||
-        !fm_fmc_model_units_test_text_eq_(text, "123.5   "))
+        !fm_regression_test_text_eq_(text, "123.5   "))
     {
         return false;
     }
@@ -776,7 +776,7 @@ static bool fm_fmc_model_units_test_display_format_values_(void)
 
     return (DISPLAY_FORMAT_Double(1.236, &field, text, sizeof(text)) ==
             FM_STATUS_OK) &&
-           fm_fmc_model_units_test_text_eq_(text, "  1.24");
+           fm_regression_test_text_eq_(text, "  1.24");
 }
 
 /*
@@ -785,7 +785,7 @@ static bool fm_fmc_model_units_test_display_format_values_(void)
  * Overflow is reported as `FM_STATUS_ERANGE`. When the caller requests a fill
  * policy, the field is still populated so the UI can show a bounded marker.
  */
-static bool fm_fmc_model_units_test_display_format_error_paths_(void)
+static bool fm_regression_test_display_format_error_paths_(void)
 {
     display_format_field_t field;
     char text[16];
@@ -799,7 +799,7 @@ static bool fm_fmc_model_units_test_display_format_error_paths_(void)
 
     if ((DISPLAY_FORMAT_Unsigned(1234U, &field, text, sizeof(text)) !=
          FM_STATUS_ERANGE) ||
-        !fm_fmc_model_units_test_text_eq_(text, "---"))
+        !fm_regression_test_text_eq_(text, "---"))
     {
         return false;
     }
@@ -836,113 +836,113 @@ static bool fm_fmc_model_units_test_display_format_error_paths_(void)
            FM_STATUS_EINVAL;
 }
 
-static bool fm_fmc_model_units_test_run_case_(fm_fmc_model_units_test_case_t p_case)
+static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case)
 {
     switch (p_case)
     {
-    case FM_FMC_MODEL_UNITS_TEST_CASE_INIT_DEFAULTS:
-        return fm_fmc_model_units_test_init_defaults_();
+    case FM_REGRESSION_TEST_CASE_INIT_DEFAULTS:
+        return fm_regression_test_init_defaults_();
 
-    case FM_FMC_MODEL_UNITS_TEST_CASE_TOTALS:
-        return fm_fmc_model_units_test_totals_();
+    case FM_REGRESSION_TEST_CASE_TOTALS:
+        return fm_regression_test_totals_();
 
-    case FM_FMC_MODEL_UNITS_TEST_CASE_UNIT_VALIDITY:
-        return fm_fmc_model_units_test_unit_validity_();
+    case FM_REGRESSION_TEST_CASE_UNIT_VALIDITY:
+        return fm_regression_test_unit_validity_();
 
-    case FM_FMC_MODEL_UNITS_TEST_CASE_UNIT_KIND:
-        return fm_fmc_model_units_test_unit_kind_();
+    case FM_REGRESSION_TEST_CASE_UNIT_KIND:
+        return fm_regression_test_unit_kind_();
 
-    case FM_FMC_MODEL_UNITS_TEST_CASE_LITERS_PER_UNIT:
-        return fm_fmc_model_units_test_liters_per_unit_();
+    case FM_REGRESSION_TEST_CASE_LITERS_PER_UNIT:
+        return fm_regression_test_liters_per_unit_();
 
-    case FM_FMC_MODEL_UNITS_TEST_CASE_PULSES_PER_ACTIVE_UNIT:
-        return fm_fmc_model_units_test_pulses_per_active_unit_();
+    case FM_REGRESSION_TEST_CASE_PULSES_PER_ACTIVE_UNIT:
+        return fm_regression_test_pulses_per_active_unit_();
 
-    case FM_FMC_MODEL_UNITS_TEST_CASE_ERROR_PATHS:
-        return fm_fmc_model_units_test_error_paths_();
+    case FM_REGRESSION_TEST_CASE_ERROR_PATHS:
+        return fm_regression_test_error_paths_();
 
-    case FM_FMC_MODEL_UNITS_TEST_CASE_RATE_WINDOWS:
-        return fm_fmc_model_units_test_rate_windows_();
+    case FM_REGRESSION_TEST_CASE_RATE_WINDOWS:
+        return fm_regression_test_rate_windows_();
 
-    case FM_FMC_MODEL_UNITS_TEST_CASE_RATE_ERROR_PATHS:
-        return fm_fmc_model_units_test_rate_error_paths_();
+    case FM_REGRESSION_TEST_CASE_RATE_ERROR_PATHS:
+        return fm_regression_test_rate_error_paths_();
 
-    case FM_FMC_MODEL_UNITS_TEST_CASE_VOLUME_VALUES:
-        return fm_fmc_model_units_test_volume_values_();
+    case FM_REGRESSION_TEST_CASE_VOLUME_VALUES:
+        return fm_regression_test_volume_values_();
 
-    case FM_FMC_MODEL_UNITS_TEST_CASE_VOLUME_ERROR_PATHS:
-        return fm_fmc_model_units_test_volume_error_paths_();
+    case FM_REGRESSION_TEST_CASE_VOLUME_ERROR_PATHS:
+        return fm_regression_test_volume_error_paths_();
 
-    case FM_FMC_MODEL_UNITS_TEST_CASE_DISPLAY_FORMAT_VALUES:
-        return fm_fmc_model_units_test_display_format_values_();
+    case FM_REGRESSION_TEST_CASE_DISPLAY_FORMAT_VALUES:
+        return fm_regression_test_display_format_values_();
 
-    case FM_FMC_MODEL_UNITS_TEST_CASE_DISPLAY_FORMAT_ERROR_PATHS:
-        return fm_fmc_model_units_test_display_format_error_paths_();
+    case FM_REGRESSION_TEST_CASE_DISPLAY_FORMAT_ERROR_PATHS:
+        return fm_regression_test_display_format_error_paths_();
 
     default:
         return false;
     }
 }
 
-static void fm_fmc_model_units_test_emit_case_(fm_fmc_model_units_test_case_t p_case,
+static void fm_regression_test_emit_case_(fm_regression_test_case_t p_case,
                                                bool p_passed)
 {
     switch (p_case)
     {
-    case FM_FMC_MODEL_UNITS_TEST_CASE_INIT_DEFAULTS:
-        (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:INIT_DEFAULTS:");
+    case FM_REGRESSION_TEST_CASE_INIT_DEFAULTS:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:INIT_DEFAULTS:");
         break;
 
-    case FM_FMC_MODEL_UNITS_TEST_CASE_TOTALS:
-        (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:TOTALS:");
+    case FM_REGRESSION_TEST_CASE_TOTALS:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:TOTALS:");
         break;
 
-    case FM_FMC_MODEL_UNITS_TEST_CASE_UNIT_VALIDITY:
-        (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:UNIT_VALIDITY:");
+    case FM_REGRESSION_TEST_CASE_UNIT_VALIDITY:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:UNIT_VALIDITY:");
         break;
 
-    case FM_FMC_MODEL_UNITS_TEST_CASE_UNIT_KIND:
-        (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:UNIT_KIND:");
+    case FM_REGRESSION_TEST_CASE_UNIT_KIND:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:UNIT_KIND:");
         break;
 
-    case FM_FMC_MODEL_UNITS_TEST_CASE_LITERS_PER_UNIT:
-        (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:LITERS_PER_UNIT:");
+    case FM_REGRESSION_TEST_CASE_LITERS_PER_UNIT:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:LITERS_PER_UNIT:");
         break;
 
-    case FM_FMC_MODEL_UNITS_TEST_CASE_PULSES_PER_ACTIVE_UNIT:
-        (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:PULSES_PER_ACTIVE_UNIT:");
+    case FM_REGRESSION_TEST_CASE_PULSES_PER_ACTIVE_UNIT:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:PULSES_PER_ACTIVE_UNIT:");
         break;
 
-    case FM_FMC_MODEL_UNITS_TEST_CASE_ERROR_PATHS:
-        (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:ERROR_PATHS:");
+    case FM_REGRESSION_TEST_CASE_ERROR_PATHS:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:ERROR_PATHS:");
         break;
 
-    case FM_FMC_MODEL_UNITS_TEST_CASE_RATE_WINDOWS:
-        (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:RATE_WINDOWS:");
+    case FM_REGRESSION_TEST_CASE_RATE_WINDOWS:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:RATE_WINDOWS:");
         break;
 
-    case FM_FMC_MODEL_UNITS_TEST_CASE_RATE_ERROR_PATHS:
-        (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:RATE_ERROR_PATHS:");
+    case FM_REGRESSION_TEST_CASE_RATE_ERROR_PATHS:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:RATE_ERROR_PATHS:");
         break;
 
-    case FM_FMC_MODEL_UNITS_TEST_CASE_VOLUME_VALUES:
-        (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:VOLUME_VALUES:");
+    case FM_REGRESSION_TEST_CASE_VOLUME_VALUES:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:VOLUME_VALUES:");
         break;
 
-    case FM_FMC_MODEL_UNITS_TEST_CASE_VOLUME_ERROR_PATHS:
-        (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:VOLUME_ERROR_PATHS:");
+    case FM_REGRESSION_TEST_CASE_VOLUME_ERROR_PATHS:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:VOLUME_ERROR_PATHS:");
         break;
 
-    case FM_FMC_MODEL_UNITS_TEST_CASE_DISPLAY_FORMAT_VALUES:
-        (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:DISPLAY_FORMAT_VALUES:");
+    case FM_REGRESSION_TEST_CASE_DISPLAY_FORMAT_VALUES:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:DISPLAY_FORMAT_VALUES:");
         break;
 
-    case FM_FMC_MODEL_UNITS_TEST_CASE_DISPLAY_FORMAT_ERROR_PATHS:
-        (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:DISPLAY_FORMAT_ERROR_PATHS:");
+    case FM_REGRESSION_TEST_CASE_DISPLAY_FORMAT_ERROR_PATHS:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:DISPLAY_FORMAT_ERROR_PATHS:");
         break;
 
     default:
-        (void) FM_DEBUG_UartStr("FMC_MODEL_UNITS_TEST:UNKNOWN:");
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:UNKNOWN:");
         break;
     }
 

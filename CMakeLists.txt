@@ -34,21 +34,21 @@ enable_language(C ASM)
 
 # Select active app
 # Example:
-#   cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=lcd_bringup
+#   cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=bringups/lcd
 set(FM_AVAILABLE_APPS
-    main
+    product/main
     template
-    panic_demo
-    lcd_bringup
-    lcd_blink_bringup
-    display_format_lcd_bringup
-    fmc_model_units_test
+    bringups/debug_panic
+    bringups/lcd
+    bringups/lcd_blink
+    bringups/display_format_lcd
+    tests/regression
 )
 
 # Default app defined in this file.
 # The cache follows this value only while the user has not explicitly
 # overridden FM_ACTIVE_APP to a different app.
-set(FM_ACTIVE_APP_DEFAULT "fmc_model_units_test")
+set(FM_ACTIVE_APP_DEFAULT "tests/regression")
 
 if(NOT DEFINED FM_ACTIVE_APP)
     set(FM_ACTIVE_APP "${FM_ACTIVE_APP_DEFAULT}" CACHE STRING "Active firmware app")

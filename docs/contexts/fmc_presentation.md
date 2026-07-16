@@ -15,17 +15,17 @@ Already implemented and treated as the current base:
 - `src/product/fmc/fmc_units.*`
 - `src/product/fmc/fmc_rate.*`
 - `src/product/fmc/fmc_volume.*`
-- `src/apps/fmc_model_units_test/`
-- `src/apps/display_format_lcd_bringup/`
+- `src/apps/tests/regression/`
+- `src/apps/bringups/display_format_lcd/`
 
 Current validation evidence:
-- `fmc_model_units_test` passes on hardware for the pure model, unit, rate,
+- `tests/regression` passes on hardware for the pure model, unit, rate,
   and volume slices
 - `display_format.*` builds and is covered by the current regression harness
-- `display_format_lcd_bringup` exists to compare formatted text against the
+- `bringups/display_format_lcd` exists to compare formatted text against the
   physical LCD using UART `TOP=` lines
-- `lcd_bringup` validates the static LCD foundation
-- `lcd_blink_bringup` validates the current logical blink path
+- `bringups/lcd` validates the static LCD foundation
+- `bringups/lcd_blink` validates the current logical blink path
 
 ## Layer Ownership
 

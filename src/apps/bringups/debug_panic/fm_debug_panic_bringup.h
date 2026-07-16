@@ -1,16 +1,16 @@
-#ifndef FM_PANIC_DEMO_H_
-#define FM_PANIC_DEMO_H_
+#ifndef FM_DEBUG_PANIC_BRINGUP_H_
+#define FM_DEBUG_PANIC_BRINGUP_H_
 
 /**
- * @brief Run the panic demonstration application.
+ * @brief Run the panic bring-up application.
  *
  * @details
- *  - This app is intentionally didactic.
+ *  - This app is intentionally controlled and deterministic.
  *  - It selects one controlled failure path and then stops inside the shared
  *    panic infrastructure from fm_debug.
  *  - The goal is to let humans and agents correlate UART messages, LEDs, and
  *    debugger state with a known failure source.
  */
-void FM_PanicDemo_Run(void);
+void FM_DebugPanicBringup_Run(void);
 
-#endif /* FM_PANIC_DEMO_H_ */
+#endif /* FM_DEBUG_PANIC_BRINGUP_H_ */

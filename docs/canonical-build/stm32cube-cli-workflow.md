@@ -395,7 +395,7 @@ Eso es intencional:
 
 ### 4.4 Qué esperar con el bringup de LCD
 
-Con `FM_ACTIVE_APP=lcd_bringup`, la UART debería mostrar:
+Con `FM_ACTIVE_APP=bringups/lcd`, la UART debería mostrar:
 
 ```text
 LCD_BRINGUP:START
