@@ -108,6 +108,29 @@ changes:
 
 ---
 
+## Hardware Configuration Source Of Truth
+
+CubeMX remains the source of truth for MCU hardware configuration:
+- pins
+- clocks
+- peripheral instances
+- middleware enablement
+- generated initialization shape
+
+When new work requires hardware configuration:
+- the human updates CubeMX first, or explicitly approves the intended CubeMX
+  change before it is made
+- agents do not hand-edit `.ioc` files or generated init code to enable
+  hardware
+- after CubeMX/regeneration, agents may add the repository-facing wrappers,
+  ports, BSP modules, apps, tests, and documentation needed to use the
+  generated configuration
+
+Legacy CubeMX files are evidence for comparison, not authority to copy
+silently.
+
+---
+
 ## Build And Verification
 
 This repository has a canonical STM32 build flow.

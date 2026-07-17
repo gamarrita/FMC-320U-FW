@@ -64,6 +64,12 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : KEY_DOWN_Pin KEY_UP_Pin KEY_ENTER_Pin KEY_ESC_Pin */
+  GPIO_InitStruct.Pin = KEY_DOWN_Pin|KEY_UP_Pin|KEY_ENTER_Pin|KEY_ESC_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
   /*Configure GPIO pins : DBG_LED_EN_Pin DBG_MSG_EN_Pin */
   GPIO_InitStruct.Pin = DBG_LED_EN_Pin|DBG_MSG_EN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
@@ -76,6 +82,19 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI10_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI11_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI11_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI12_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI12_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI13_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI13_IRQn);
 
 }
 

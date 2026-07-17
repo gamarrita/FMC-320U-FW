@@ -21,9 +21,10 @@ Already implemented and treated as the current base:
 Current validation evidence:
 - `tests/regression` passes on hardware for the pure model, unit, rate,
   and volume slices
-- `display_format.*` builds and is covered by the current regression harness
-- `bringups/display_format_lcd` exists to compare formatted text against the
-  physical LCD using UART `TOP=` lines
+- `display_format.*` builds and is covered by the current regression harness,
+  including an LCD-width rounding case
+- `bringups/display_format_lcd` compares formatted text against the physical
+  LCD using UART `TOP=` and `BOTTOM=` scene lines
 - `bringups/lcd` validates the static LCD foundation
 - `bringups/lcd_blink` validates the current logical blink path
 
@@ -117,14 +118,17 @@ Still to define explicitly:
   formatting modules
 - duplicating unit policy already owned by `fmc_units.*`
 
-## Near-Term Goal
+## Closed Near-Term Goal
 
-Define and validate the smallest useful `display_format.*` contract before
-product presentation work.
+The smallest useful `display_format.*` contract is now implemented and
+validated.
 
-The first useful implementation should:
+It can:
 - consume bounded numeric field policies
 - format integers, fixed-point values, and already-calculated doubles
 - detect overflow explicitly
 - stay pure
-- can be tested before any LCD adapter or UI flow exists
+- be tested before any LCD adapter or UI flow exists
+
+Future work should treat it as a base dependency unless a concrete defect is
+found.

@@ -12,3 +12,4 @@ Current bringups:
 - `lcd`: LCD glass, numeric rows, decimals, indicators, and alpha characters.
 - `lcd_blink`: LCD logical blink behavior.
 - `display_format_lcd`: formatted numeric text rendered on the LCD.
+- `keyboard_input`: keyboard GPIO EXTI short-press events.

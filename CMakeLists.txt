@@ -42,6 +42,7 @@ set(FM_AVAILABLE_APPS
     bringups/lcd
     bringups/lcd_blink
     bringups/display_format_lcd
+    bringups/keyboard_input
     tests/regression
 )
 
@@ -91,6 +92,7 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 set(FM_COMMON_SOURCES
     ${FM_SRC_DIR}/libs/fm_debug.c
     ${FM_SRC_DIR}/bsp/fm_board.c
+    ${FM_SRC_DIR}/bsp/fm_board_keyboard.c
     ${FM_SRC_DIR}/bsp/devices/lcd/fm_lcd.c
     ${FM_SRC_DIR}/bsp/devices/lcd/fm_lcd_blink.c
     ${FM_SRC_DIR}/bsp/devices/lcd/fm_lcd_map.c
@@ -102,6 +104,7 @@ set(FM_COMMON_SOURCES
     ${FM_SRC_DIR}/services/display_format.c
     ${FM_SRC_DIR}/port/fm_port_dwt.c
     ${FM_SRC_DIR}/port/fm_port_gpio.c
+    ${FM_SRC_DIR}/port/fm_port_gpio_exti.c
     ${FM_SRC_DIR}/port/fm_port_pcf8553_ctrl.c
     ${FM_SRC_DIR}/port/fm_port_rcc.c
     ${FM_SRC_DIR}/port/fm_port_rtc.c
