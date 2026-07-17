@@ -9,7 +9,7 @@ The initial split is:
 - `fmc_units.*`: unit and conversion policy for this product,
 - `fmc_rate.*`: pure instantaneous-rate calculation from pulse/time windows,
 - `fmc_volume.*`: pure visible-volume calculation from ACM/TTL pulse counters,
-- `fmc_service.*`: future RTOS-facing owner of live FMC state.
+- `fmc_service.*`: selected next owner of live FMC state.
 
 ## Current Boundary
 
@@ -31,4 +31,4 @@ slice becomes active.
 
 For the active refactor context, use:
 - `WORKING_CONTEXT.md`
-- `docs/contexts/fmc_presentation.md`
+- `docs/contexts/fmc_runtime_boundary.md`

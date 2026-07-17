@@ -168,6 +168,9 @@ Do not duplicate stable policy across multiple files.
 When `WORKING_CONTEXT.md` and its referenced extended context would diverge,
 update both in the same change.
 
+When closing a slice or changing active context, apply
+`docs/workflow/doc_closure.md` before the final response.
+
 ---
 
 ## Stop And Report Instead Of Editing

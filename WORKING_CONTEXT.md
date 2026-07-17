@@ -3,46 +3,39 @@
 ## Active Workstream
 
 Stage:
-- hardware bring-up validated
+- selected next refactor slice
 
 Short name:
-- keyboard input bring-up
+- FMC service/runtime boundary
 
 Extended context:
-- `docs/contexts/keyboard_input_bringup.md`
+- `docs/contexts/fmc_runtime_boundary.md`
 
 ## Scope Now
 
 Active files/folders:
 - `WORKING_CONTEXT.md`
-- `docs/contexts/keyboard_input_bringup.md`
+- `docs/contexts/fmc_runtime_boundary.md`
 - `legacy/`
 - `fmc-320u-v2.ioc`
-- generated CubeMX GPIO/interrupt files for keyboard EXTI
-- `src/port/`, `src/bsp/`, and `src/apps/bringups/` keyboard input files
+- `src/product/fmc/`
+- `src/port/`, `src/bsp/`, and `src/apps/`
 
 Current target:
-- close the short-press keyboard bring-up slice and choose the next integration
-  step deliberately.
+- define the smallest useful `fmc_service` / `fmc_runtime` boundary so future
+  RTOS, low-power, input, acquisition, persistence, and presentation work has a
+  clear place to connect.
 
 ## Current State
 
-- `display_format.*` is implemented, regression-tested, built, flashed, and
-  visually validated through `bringups/display_format_lcd`.
-- `bringups/display_format_lcd` now validates top and bottom LCD rows with
-  UART-guided human inspection.
-- `src/product/fmc/` currently contains validated pure model, units, rate, and
-  volume calculation slices.
+- Validated base: `fmc_model.*`, `fmc_units.*`, `fmc_rate.*`,
+  `fmc_volume.*`, `display_format.*`, LCD bring-ups, debug UART/LEDs, and
+  keyboard short-press bring-up.
 - `src/apps/product/main` is still a runnable placeholder/smoke app, not the
   real product runtime.
-- Current hardware configuration is intentionally smaller than the legacy
-  CubeMX project.
-- `legacy/100_main.ioc` is tracked comparison evidence.
-- `bringups/keyboard_input` is implemented and human-validated on hardware for
-  the four configured short-press keys.
-- The first keyboard slice intentionally covers short press only. Long press,
-  timers, debounce firmware, menu navigation, and ThreadX queues remain
-  deferred.
+- Current hardware configuration is smaller than legacy; use
+  `legacy/100_main.ioc` only as comparison evidence.
+- Next active task: define the FMC service/runtime boundary.
 
 ## Decisions In Force
 
@@ -51,25 +44,13 @@ Current target:
 - For new hardware-facing work, the human updates CubeMX first; the agent then
   adds repository wrappers such as `port/`, `bsp/`, apps, and tests.
 - Treat legacy code and `legacy/100_main.ioc` as evidence, not authority.
-- Hardware debounce is considered sufficient for the first keyboard slice.
-- Do not add firmware debounce in the first keyboard slice.
-- Do not implement long press before a runtime/timer decision is made.
-- Keep the input event boundary RTOS-neutral so future ThreadX integration can
-  replace only the event/timer backend.
+- Keep input/runtime boundaries RTOS-neutral until the ThreadX transition is
+  selected deliberately.
 
-## Selected Slice
+## Last Closed Slice
 
-See `docs/contexts/keyboard_input_bringup.md` for scope and rationale.
-
-Validated goal:
-- report short key events over UART from a bring-up app using the
-  CubeMX-generated falling-edge EXTI path and `fm_debug`.
-
-Validated events:
-- `KEY_ESC`
-- `KEY_ENTER`
-- `KEY_UP`
-- `KEY_DOWN`
+Keyboard short-press bring-up is closed for now. It reports
+`KEY_ESC`, `KEY_ENTER`, `KEY_UP`, and `KEY_DOWN` over UART.
 
 ## Boundaries
 
@@ -86,23 +67,19 @@ Do not add in this slice:
 
 ## Next Step
 
-1. Choose the next slice from the remaining options:
-   - product presentation semantics,
-   - product/UI input integration,
-   - ThreadX transition point,
-   - pulse acquisition,
-   - persistence,
-   - communication/MXC.
-2. If the next slice requires new hardware configuration, the human updates
-   CubeMX first.
-3. If the next slice expands keyboard behavior beyond short press, decide the
-   ThreadX/input-service boundary before adding timers or queues.
+1. Choose the first sub-slice inside the FMC service/runtime boundary:
+   - pure service state/snapshot contract,
+   - runtime event loop skeleton,
+   - ThreadX/low-power risk study.
+2. Keep the first implementation small enough to preserve agent-assisted
+   development clarity.
+3. If the chosen sub-slice requires CubeMX, ThreadX, or low-power changes,
+   make that decision explicit before editing generated configuration.
 
 ## References
 
 - `AGENTS.md`
 - `STYLE.md`
-- `docs/contexts/keyboard_input_bringup.md`
-- `docs/contexts/next_fmc_slice_selection.md`
+- `docs/contexts/fmc_runtime_boundary.md`
 - `legacy/analysis/migration_ledger.md`
 - `legacy/analysis/module_inventory.md`

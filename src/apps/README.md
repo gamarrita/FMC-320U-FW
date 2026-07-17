@@ -47,6 +47,7 @@ Examples:
 - `cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=bringups/lcd`
 - `cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=bringups/lcd_blink`
 - `cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=bringups/display_format_lcd`
+- `cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=bringups/keyboard_input`
 - `cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=tests/regression`
 
 The default app is defined in the repository `CMakeLists.txt`.
