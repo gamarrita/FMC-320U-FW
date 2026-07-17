@@ -1,6 +1,11 @@
 /**
  * @file    fm_port_dwt.h
  * @brief   Platform DWT cycle counter helpers.
+ *
+ * This module owns access to the Cortex DWT cycle counter when the target
+ * exposes `CYCCNT`. Call `FM_PORT_DWT_Init()` before relying on cycle values
+ * or busy-wait delays. Helpers are foreground utilities and provide no
+ * synchronization.
  */
 
 #ifndef FM_PORT_DWT_H
@@ -58,6 +63,9 @@ int32_t FM_PORT_DWT_CyclesToUs(int32_t cycles);
 /**
  * @brief   Busy-wait for a short interval using the DWT cycle counter.
  *
+ * This is a foreground blocking delay. When cycle counting is unavailable or
+ * the requested duration converts to zero cycles, it returns immediately.
+ *
  * @param   time_us  Delay interval in microseconds.
  */
 void FM_PORT_DWT_DelayUs(uint32_t time_us);
@@ -78,6 +86,8 @@ static inline uint32_t FM_PORT_DWT_GetCycles(void)
 
 /**
  * @brief   Reset the DWT cycle counter when supported.
+ *
+ * Has no effect on targets without `CYCCNT`.
  */
 static inline void FM_PORT_DWT_Reset(void)
 {

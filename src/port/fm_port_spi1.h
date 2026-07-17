@@ -8,6 +8,9 @@
  *  - This module applies the technical SPI1 configuration explicitly so port
  *    remains the active owner of the peripheral instance.
  *  - Device-level meaning stays outside this module.
+ *
+ * Call `FM_PORT_Spi1_Init()` before transmitting. Functions are foreground
+ * blocking helpers and provide no internal synchronization.
  */
 
 #ifndef FM_PORT_SPI1_H
@@ -23,11 +26,15 @@
  *  - This is a technical backend API for the MCU SPI1 instance.
  *  - The configuration matches the current CubeMX reference for SPI1.
  *  - Board-level meaning and device transaction policy stay outside this module.
+ *  - Initialization failures stop in `Error_Handler()`.
  */
 void FM_PORT_Spi1_Init(void);
 
 /**
  * @brief Write a raw byte sequence over SPI1.
+ *
+ * This performs a blocking HAL transmit. The buffer is read during the call
+ * and is not retained.
  *
  * @param p_data      Buffer to transmit.
  * @param len         Number of bytes to send.

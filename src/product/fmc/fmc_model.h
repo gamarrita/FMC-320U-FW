@@ -208,6 +208,10 @@ typedef struct
  *
  * This helper prepares a copyable model value only.
  * It does not imply persistence, acquisition startup, or LCD output.
+ *
+ * Existing contents are overwritten. Passing `NULL` has no effect.
+ *
+ * @param p_model Caller-owned model object to initialize.
  */
 void FMC_MODEL_Init(fmc_model_t *p_model);
 
@@ -220,6 +224,13 @@ void FMC_MODEL_Init(fmc_model_t *p_model);
  *
  * This is informational policy for callers.
  * `FMC_MODEL_ResetTotal()` does not authenticate or authorize the caller.
+ *
+ * Invalid total roles return `FMC_MODEL_RESET_PRIVILEGED` so unknown roles do
+ * not accidentally become user-resettable.
+ *
+ * @param p_total Total role to query.
+ *
+ * @return Reset policy associated with the role.
  */
 fmc_model_reset_policy_t FMC_MODEL_GetResetPolicy(fmc_model_total_t p_total);
 
@@ -228,8 +239,11 @@ fmc_model_reset_policy_t FMC_MODEL_GetResetPolicy(fmc_model_total_t p_total);
  *
  * This helper keeps ACM and TTL modeled as the same primitive state shape.
  *
+ * @param p_model Model object that owns the requested total.
+ * @param p_total Total role to select.
+ *
  * @return Pointer to the selected total state on success.
- * @return NULL when arguments are invalid.
+ * @return `NULL` when `p_model` is `NULL` or `p_total` is invalid.
  */
 fmc_model_total_state_t *FMC_MODEL_GetTotalState(fmc_model_t *p_model,
                                                  fmc_model_total_t p_total);
@@ -237,8 +251,11 @@ fmc_model_total_state_t *FMC_MODEL_GetTotalState(fmc_model_t *p_model,
 /**
  * @brief Return a read-only pointer to one total state selected by role.
  *
+ * @param p_model Model object that owns the requested total.
+ * @param p_total Total role to select.
+ *
  * @return Pointer to the selected total state on success.
- * @return NULL when arguments are invalid.
+ * @return `NULL` when `p_model` is `NULL` or `p_total` is invalid.
  */
 const fmc_model_total_state_t *FMC_MODEL_GetTotalStateConst(
     const fmc_model_t *p_model,
@@ -251,6 +268,12 @@ const fmc_model_total_state_t *FMC_MODEL_GetTotalStateConst(
  * UI, password, or privilege enforcement remains outside this contract. In
  * practice, the same primitive reset operation can serve ACM and TTL once the
  * caller has reached the correct UI/service flow.
+ *
+ * @param p_model Model object that owns the total.
+ * @param p_total Total role to reset.
+ *
+ * @return `FM_STATUS_OK` on success.
+ * @return `FM_STATUS_EINVAL` when `p_model` is `NULL` or `p_total` is invalid.
  */
 fm_status_t FMC_MODEL_ResetTotal(fmc_model_t *p_model,
                                  fmc_model_total_t p_total);

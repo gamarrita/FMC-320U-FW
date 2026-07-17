@@ -9,14 +9,15 @@ The initial split is:
 - `fmc_units.*`: unit and conversion policy for this product,
 - `fmc_rate.*`: pure instantaneous-rate calculation from pulse/time windows,
 - `fmc_volume.*`: pure visible-volume calculation from ACM/TTL pulse counters,
-- `fmc_service.*`: selected next owner of live FMC state.
+- `fmc_service.*`: live FMC state owner and snapshot/update boundary.
 
 ## Current Boundary
 
 The current implemented slices are:
 - `fmc_model.*`: canonical model state and structural helpers,
 - `fmc_units.*`: product unit policy and operative factor helpers,
-- `fmc_rate.*`: active-unit rate derived from captured pulse/time windows.
+- `fmc_rate.*`: active-unit rate derived from captured pulse/time windows,
+- `fmc_service.*`: live state owner and snapshot/update boundary,
 - `fmc_volume.*`: active-unit volume derived from ACM/TTL pulse counters.
 
 These modules should not own:

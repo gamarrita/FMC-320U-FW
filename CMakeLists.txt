@@ -99,6 +99,7 @@ set(FM_COMMON_SOURCES
     ${FM_SRC_DIR}/bsp/devices/lcd/pcf8553/fm_pcf8553.c
     ${FM_SRC_DIR}/product/fmc/fmc_model.c
     ${FM_SRC_DIR}/product/fmc/fmc_rate.c
+    ${FM_SRC_DIR}/product/fmc/fmc_service.c
     ${FM_SRC_DIR}/product/fmc/fmc_units.c
     ${FM_SRC_DIR}/product/fmc/fmc_volume.c
     ${FM_SRC_DIR}/services/display_format.c

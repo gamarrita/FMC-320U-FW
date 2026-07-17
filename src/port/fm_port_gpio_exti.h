@@ -1,6 +1,6 @@
 /**
  * @file    fm_port_gpio_exti.h
- * @brief   GPIO EXTI adapter contract for authored code.
+ * @brief   STM32 GPIO EXTI forwarding API for authored code.
  *
  * This module owns the HAL GPIO EXTI callbacks for the STM32 port and forwards
  * them through one small authored callback. Consumers must treat the callback as

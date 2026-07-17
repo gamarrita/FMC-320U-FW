@@ -27,6 +27,8 @@ The boundary should make these responsibilities explicit:
 
 Implemented foundations:
 - pure FMC model, unit, rate, and volume slices
+- `fmc_service.*` live-state owner with pulse-delta update, total reset, and
+  snapshot contract
 - display formatting and LCD validation slices
 - debug UART/LED support
 - keyboard short-press bring-up for `ESC`, `ENTER`, `UP`, and `DOWN`
@@ -38,30 +40,23 @@ Nearby evidence:
 - `legacy/100_main.ioc`: legacy CubeMX hardware/middleware comparison
 
 Still missing:
-- `fmc_service.*`
 - `fmc_runtime.*`
 - product event vocabulary beyond the keyboard bring-up
-- runtime snapshot/update contract
 - ThreadX ownership decision
 - low-power ownership decision
 - acquisition-to-rate runtime contract
 - persistence restore/save policy
 
-## First Sub-Slice Options
+## Next Sub-Slice Options
 
-### Option 1: Service State/Snapshot Contract
+### Closed: Service State/Snapshot Contract
 
-Scope:
+Implemented scope:
 - add `fmc_service.*` as the owner of live FMC state
-- expose init, snapshot, and simple update/query functions
+- expose init, pulse-delta update, total reset, and snapshot functions
 - stay independent of ThreadX, HAL, LCD, keyboard, persistence, and low power
 
-Why it fits:
-- creates the central product boundary with low risk
-- keeps regression testing simple
-- gives future runtime/input/acquisition/persistence code one place to connect
-
-### Option 2: Runtime Event Loop Skeleton
+### Option 1: Runtime Event Loop Skeleton
 
 Scope:
 - add a minimal runtime owner that receives events and calls service functions
@@ -72,7 +67,7 @@ Why it fits:
 - directly addresses the future RTOS boundary
 - can be written as a stepping stone before enabling ThreadX
 
-### Option 3: ThreadX/Low-Power Risk Study
+### Option 2: ThreadX/Low-Power Risk Study
 
 Scope:
 - analyze legacy `fmx.*`, `fmx_lp.*`, LPTIM use, wake sources, and ThreadX
@@ -87,15 +82,14 @@ Risk:
 
 ## Recommended First Cut
 
-Start with Option 1 or Option 2.
+Next, choose between the runtime event loop skeleton and the ThreadX/low-power
+risk study.
 
-Option 1 is the safer first implementation because it creates `fmc_service.*`
-without RTOS or hardware churn.
-
-Option 2 is better if the next lesson should be runtime ownership and event
+The runtime skeleton is better if the next lesson should be ownership and event
 flow, accepting that the first loop may be bare-metal before ThreadX.
 
-Option 3 is better only if the human wants risk analysis before more code.
+The risk study is better if the human wants low-power and RTOS interaction
+analyzed before more runtime code.
 
 Avoid starting with low power plus ThreadX together. Treat their interaction as
 an explicit later decision, not an accidental side effect of a broader runtime
@@ -103,7 +97,7 @@ port.
 
 ## Boundaries
 
-Do not implement in the first sub-slice unless explicitly selected:
+Do not implement in the next sub-slice unless explicitly selected:
 - full menu navigation
 - long press
 - ThreadX enablement

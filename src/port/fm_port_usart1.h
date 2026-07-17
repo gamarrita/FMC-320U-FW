@@ -1,6 +1,10 @@
 /**
  * @file    fm_port_usart1.h
  * @brief   Platform USART1 helpers for debug transport.
+ *
+ * This module owns the concrete USART1 peripheral backend used by the board
+ * debug UART path. Call `FM_PORT_Usart1_Init()` before transmitting. Functions
+ * are foreground blocking helpers and provide no internal synchronization.
  */
 
 #ifndef FM_PORT_USART1_H
@@ -18,6 +22,7 @@
  *    by the host PC.
  *  - The board-level meaning of that path is exposed by
  *    FM_BOARD_DebugUartTransmit().
+ *  - Initialization failures stop in `Error_Handler()`.
  */
 void FM_PORT_Usart1_Init(void);
 
@@ -29,8 +34,9 @@ void FM_PORT_Usart1_Init(void);
  *  - It does not define board policy or debug enable rules.
  *  - On the current board, USART1 is the backend behind the ST-Link Virtual
  *    COM Port used for debug messages.
+ *  - This is a blocking foreground transmit path.
  *
- * @param   p_data      Buffer to transmit.
+ * @param   p_data      Buffer to transmit; read during the call and not retained.
  * @param   len         Number of bytes to send.
  * @param   timeout_ms  HAL transmit timeout in milliseconds.
  *

@@ -1,6 +1,9 @@
 /**
  * @file    fm_port_time.h
  * @brief   Platform millisecond sleep helpers.
+ *
+ * This module currently wraps the HAL millisecond delay path. It is intended
+ * for foreground code and bring-ups; do not call it from IRQ context.
  */
 
 #ifndef FM_PORT_TIME_H

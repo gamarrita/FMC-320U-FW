@@ -16,6 +16,7 @@
 #include "fm_port_time.h"
 #include "fmc_model.h"
 #include "fmc_rate.h"
+#include "fmc_service.h"
 #include "fmc_units.h"
 #include "fmc_volume.h"
 #include "main.h"
@@ -34,6 +35,8 @@ typedef enum
     FM_REGRESSION_TEST_CASE_ERROR_PATHS,
     FM_REGRESSION_TEST_CASE_RATE_WINDOWS,
     FM_REGRESSION_TEST_CASE_RATE_ERROR_PATHS,
+    FM_REGRESSION_TEST_CASE_SERVICE_STATE,
+    FM_REGRESSION_TEST_CASE_SERVICE_ERROR_PATHS,
     FM_REGRESSION_TEST_CASE_VOLUME_VALUES,
     FM_REGRESSION_TEST_CASE_VOLUME_ERROR_PATHS,
     FM_REGRESSION_TEST_CASE_DISPLAY_FORMAT_VALUES,
@@ -66,6 +69,8 @@ static bool fm_regression_test_pulses_per_active_unit_(void);
 static bool fm_regression_test_error_paths_(void);
 static bool fm_regression_test_rate_windows_(void);
 static bool fm_regression_test_rate_error_paths_(void);
+static bool fm_regression_test_service_state_(void);
+static bool fm_regression_test_service_error_paths_(void);
 static bool fm_regression_test_volume_values_(void);
 static bool fm_regression_test_volume_error_paths_(void);
 static bool fm_regression_test_display_format_values_(void);
@@ -576,6 +581,95 @@ static bool fm_regression_test_rate_error_paths_(void)
 }
 
 /*
+ * Verifies the live-state service boundary used by future runtime adapters.
+ *
+ * Acquisition deltas accumulate into both product totals. Presentation should
+ * use snapshots rather than reaching into the service-owned model.
+ */
+static bool fm_regression_test_service_state_(void)
+{
+    fmc_service_t service;
+    fmc_service_snapshot_t snapshot;
+
+    FMC_SERVICE_Init(&service);
+
+    service.model.measurement.calibration_pulses_per_unit = 1000.0;
+    service.model.measurement.calibration_volume_unit = FMC_MODEL_VOLUME_UNIT_L;
+    service.model.measurement.active_volume_unit = FMC_MODEL_VOLUME_UNIT_L;
+
+    if ((FMC_SERVICE_AddPulseDelta(&service, 2500U) != FM_STATUS_OK) ||
+        (FMC_SERVICE_GetSnapshot(&service, &snapshot) != FM_STATUS_OK))
+    {
+        return false;
+    }
+
+    if ((snapshot.model.acm.pulses != 2500U) ||
+        (snapshot.model.ttl.pulses != 2500U) ||
+        !fm_regression_test_double_eq_(snapshot.acm_volume, 2.5) ||
+        !fm_regression_test_double_eq_(snapshot.ttl_volume, 2.5))
+    {
+        return false;
+    }
+
+    if ((FMC_SERVICE_ResetTotal(&service, FMC_MODEL_TOTAL_ACM) !=
+         FM_STATUS_OK) ||
+        (FMC_SERVICE_GetSnapshot(&service, &snapshot) != FM_STATUS_OK))
+    {
+        return false;
+    }
+
+    return (snapshot.model.acm.pulses == 0U) &&
+           (snapshot.model.ttl.pulses == 2500U) &&
+           fm_regression_test_double_eq_(snapshot.acm_volume, 0.0) &&
+           fm_regression_test_double_eq_(snapshot.ttl_volume, 2.5);
+}
+
+/*
+ * Verifies that the service keeps invalid arguments, invalid total roles, and
+ * pulse-counter overflow explicit.
+ */
+static bool fm_regression_test_service_error_paths_(void)
+{
+    fmc_service_t service;
+    fmc_service_snapshot_t snapshot;
+
+    FMC_SERVICE_Init(&service);
+
+    if ((FMC_SERVICE_AddPulseDelta(NULL, 1U) != FM_STATUS_EINVAL) ||
+        (FMC_SERVICE_ResetTotal(NULL, FMC_MODEL_TOTAL_ACM) !=
+         FM_STATUS_EINVAL) ||
+        (FMC_SERVICE_GetSnapshot(NULL, &snapshot) != FM_STATUS_EINVAL) ||
+        (FMC_SERVICE_GetSnapshot(&service, NULL) != FM_STATUS_EINVAL) ||
+        (FMC_SERVICE_ResetTotal(&service,
+                                (fmc_model_total_t) 99) != FM_STATUS_EINVAL))
+    {
+        return false;
+    }
+
+    service.model.acm.pulses = UINT64_MAX;
+    service.model.ttl.pulses = 0U;
+
+    if (FMC_SERVICE_AddPulseDelta(&service, 1U) != FM_STATUS_ERANGE)
+    {
+        return false;
+    }
+
+    service.model.acm.pulses = 0U;
+    service.model.ttl.pulses = UINT64_MAX;
+
+    if (FMC_SERVICE_AddPulseDelta(&service, 1U) != FM_STATUS_ERANGE)
+    {
+        return false;
+    }
+
+    service.model.ttl.pulses = 0U;
+    service.model.measurement.calibration_pulses_per_unit =
+        FMC_MODEL_CALIBRATION_PULSES_PER_UNIT_MIN - 0.1;
+
+    return FMC_SERVICE_GetSnapshot(&service, &snapshot) == FM_STATUS_ERANGE;
+}
+
+/*
  * Verifies visible volume calculation from pulse counters.
  *
  * The test covers direct total-state conversion plus role-based ACM/TTL
@@ -924,6 +1018,12 @@ static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case)
     case FM_REGRESSION_TEST_CASE_RATE_ERROR_PATHS:
         return fm_regression_test_rate_error_paths_();
 
+    case FM_REGRESSION_TEST_CASE_SERVICE_STATE:
+        return fm_regression_test_service_state_();
+
+    case FM_REGRESSION_TEST_CASE_SERVICE_ERROR_PATHS:
+        return fm_regression_test_service_error_paths_();
+
     case FM_REGRESSION_TEST_CASE_VOLUME_VALUES:
         return fm_regression_test_volume_values_();
 
@@ -983,6 +1083,14 @@ static void fm_regression_test_emit_case_(fm_regression_test_case_t p_case,
 
     case FM_REGRESSION_TEST_CASE_RATE_ERROR_PATHS:
         (void) FM_DEBUG_UartStr("REGRESSION_TEST:RATE_ERROR_PATHS:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_SERVICE_STATE:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:SERVICE_STATE:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_SERVICE_ERROR_PATHS:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:SERVICE_ERROR_PATHS:");
         break;
 
     case FM_REGRESSION_TEST_CASE_VOLUME_VALUES:

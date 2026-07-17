@@ -9,6 +9,10 @@
  *    the bus instance, while this module owns auxiliary device control lines.
  *  - It also stays separate from fm_port_gpio so board-level debug GPIO does
  *    not turn into a dump of unrelated device-specific signals.
+ *
+ * Call `FM_PORT_Pcf8553Ctrl_Init()` before using CE or RESET helpers. The
+ * helpers are foreground GPIO control functions and provide no internal
+ * synchronization.
  */
 
 #ifndef FM_PORT_PCF8553_CTRL_H
@@ -21,6 +25,7 @@
  *  - This configures the control lines required by the current board wiring.
  *  - The initial implementation covers the CE and RESET lines defined by CubeMX.
  *  - Protocol-level LCD behavior remains outside this module.
+ *  - After initialization, CE is deasserted and RESET is inactive.
  */
 void FM_PORT_Pcf8553Ctrl_Init(void);
 
@@ -48,6 +53,7 @@ void FM_PORT_Pcf8553Ctrl_Disable(void);
  * @details
  *  - This applies the reset sequence expected by the current board/device path.
  *  - Reset line levels stay localized to this module.
+ *  - This function blocks for the reset pulse duration.
  */
 void FM_PORT_Pcf8553Ctrl_Reset(void);
 

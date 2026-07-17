@@ -79,18 +79,36 @@ Variables:
 
 ## Headers And Sources
 
+Header files define and document the public contract of a module. A consumer
+should be able to use a public API correctly from the `.h` without inspecting
+the `.c`.
+
 Header files contain only the public surface:
 - required includes
 - public types
 - public constants when truly needed
 - public function declarations
-- short API comments when useful
+- Doxygen comments for public API behavior
 
 Header files do not contain:
 - private helper declarations
 - implementation-only macros
 - internal sequencing details
 - unnecessary includes
+
+Public API comments should document only information needed to consume the
+module correctly:
+- module responsibility and controlled resources
+- observable behavior and side effects
+- parameters, units, ranges, ownership, and lifetimes
+- return values and invalid-argument or invalid-state behavior
+- execution context, blocking, concurrency, reentrancy, and ISR restrictions
+- visible dependencies and required initialization or sequencing
+
+When creating or changing a public type, macro, callback, or function, update
+its header documentation in the same change. Keep API-specific documentation in
+the header; Markdown files should hold general rules, transversal decisions, or
+module maps, not duplicate the API contract.
 
 Source files contain:
 - the module header first

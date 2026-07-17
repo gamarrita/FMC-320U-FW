@@ -25,6 +25,14 @@
  * @param p_pulse_delta Pulses observed during the window.
  * @param p_elapsed_seconds Positive duration of the window in seconds.
  * @param p_rate Output rate in active volume units per active time base.
+ *
+ * @return `FM_STATUS_OK` on success.
+ * @return `FM_STATUS_EINVAL` when any pointer is `NULL`, the active time base
+ *         is invalid, or measurement validation reports invalid arguments.
+ * @return `FM_STATUS_ERANGE` when `p_elapsed_seconds` is not positive or
+ *         measurement validation reports an out-of-range calibration.
+ * @return `FM_STATUS_ENOTSUP` when measurement validation reports an
+ *         unsupported calibration unit.
  */
 fm_status_t FMC_RATE_Calc(const fmc_model_measurement_t *p_measurement,
                           uint64_t p_pulse_delta,
