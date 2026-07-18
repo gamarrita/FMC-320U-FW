@@ -6,10 +6,10 @@
  * have been translated away. It does not depend on GPIO, EXTI, HAL, BSP,
  * ThreadX, queues, or timers.
  *
- * The current product contract supports both mechanical keys and external
- * buttons. A provisional producer may emit only `SHORT` actions on release,
- * but the contract includes `LONG` from the start so the future recognizer can
- * replace that producer without changing runtime-facing interfaces.
+ * The current product contract supports mechanical keys and external
+ * pushbuttons. Mechanical keys support `SHORT` and `LONG`. External
+ * pushbuttons support `SHORT` on release only; they do not produce a
+ * three-second `LONG` event.
  *
  * This module owns no debounce, timing, wake, backlight, menu, password, or UI
  * state. Those are consequences of accepted semantic input and belong to later
@@ -38,8 +38,9 @@ typedef enum
 /**
  * @brief Product-level input action identity.
  *
- * `SHORT` is executed on release when no long action has already fired. `LONG`
- * represents the single action emitted after the configured hold threshold.
+ * For mechanical keys, `SHORT` is executed on release when no long action has
+ * already fired, and `LONG` represents the single action emitted after the
+ * configured hold threshold. External pushbuttons use `SHORT` on release only.
  * Recognizing those conditions is a producer responsibility, not this type's
  * responsibility.
  */
@@ -53,8 +54,8 @@ typedef enum
 /**
  * @brief One semantic input event delivered to product runtime.
  *
- * Both fields must be valid enum values. The event does not carry hardware
- * edge, pin, timing, or ISR context details.
+ * Both fields must form a valid key/action combination. The event does not
+ * carry hardware edge, pin, timing, or ISR context details.
  */
 typedef struct
 {

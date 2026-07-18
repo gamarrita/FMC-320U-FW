@@ -49,7 +49,8 @@ The milestone does not include the complete UI state machine.
 
 ## Next Selected Step
 
-- Define semantic input contract and pure tests.
+- Define the app-level board-to-product input adapter and prepare the
+  ThreadX/ISR-delivery decision gate.
 
 ## Milestone Boundaries
 

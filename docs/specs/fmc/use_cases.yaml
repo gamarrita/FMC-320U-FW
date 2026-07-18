@@ -183,17 +183,34 @@ input_model:
   semantic_actions:
     - SHORT
     - LONG
+  valid_key_action_combinations:
+    mechanical_keys:
+      keys:
+        - KEY_ESC
+        - KEY_ENTER
+        - KEY_UP
+        - KEY_DOWN
+      actions:
+        - SHORT
+        - LONG
+    external_buttons:
+      keys:
+        - EXT_1
+        - EXT_2
+      actions:
+        - SHORT
+      note: "External pushbuttons execute SHORT on release only; they do not produce 3-second LONG events"
   event_model:
     status: "confirmed"
     rule: "Runtime-facing input must preserve product key identity and action identity"
-    contract_note: "The producer may initially emit only SHORT on release, but the product input contract must support SHORT and LONG from the start"
+    contract_note: "Mechanical keys support SHORT and LONG; external pushbuttons support SHORT on release only"
     non_requirements:
       - "BSP, GPIO, HAL, RTOS, queue, and timer types are not part of product input events"
   implementation_guidance:
     status: "inferred"
     recommendation:
       - "Represent input as edge-triggered events, not polled actions"
-      - "Model long-press generation centrally to keep all screens consistent"
+      - "Model mechanical-key long-press generation centrally to keep all screens consistent"
       - "Execute short press only on release if long press was not already fired"
       - "A provisional release-edge producer may generate SHORT until the full press/release/timer recognizer is implemented"
 
@@ -697,39 +714,6 @@ measurement_and_test_guidance:
       focus: "firmware version screen and skip behavior"
     - id: "0x2FB397FE"
       focus: "full user/configuration menu traversal and usability"
-
-code_refactor_guidance:
-  status: "inferred"
-  architecture_recommendation:
-    - "Separate screen rendering, navigation, actions, and persistence access into independent modules"
-    - "Represent each screen as declarative data plus callbacks rather than large switch/case blocks"
-    - "Keep an explicit UI state machine with startup, user, config, and transient workflow substates"
-    - "Use a centralized alarm model and let screens subscribe to shared status bits"
-    - "Keep measurement model independent from display formatting"
-  suggested_modules:
-    - name: "ui_state_machine"
-      responsibility: "screen IDs, transitions, timers, startup flow, auto-return logic"
-    - name: "ui_input_dispatch"
-      responsibility: "debounce, press/release events, long-press generation, external button routing"
-    - name: "ui_render_model"
-      responsibility: "row content, legends, icons, blink masks, backlight policy"
-    - name: "measurement_model"
-      responsibility: "pulse accumulation, rate, TTL, ACM, compensation hooks"
-    - name: "config_store"
-      responsibility: "validated load/save to flash and backup RAM"
-    - name: "alarm_manager"
-      responsibility: "E alarm, low battery, pulse indicator, per-screen reset semantics"
-    - name: "workflow_printer_bt"
-      responsibility: "printer progress stages, connection windows, auto-timeout"
-  invariants_to_preserve:
-    - "Short-press actions occur on release"
-    - "Long press fires once at 3 seconds and suppresses short action"
-    - "User-visible units and decimal settings persist in flash"
-    - "TTL is not user-resettable"
-    - "ACM is user-resettable"
-    - "Date/time screen auto-exits after 3 minutes"
-    - "Configuration changes require correct password for edit rights"
-    - "Invalid linearization must be ignored safely"
 
 open_questions_and_gaps:
   status: "confirmed_with_unresolved_items"

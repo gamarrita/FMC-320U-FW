@@ -127,7 +127,7 @@ void FMC_RUNTIME_Init(fmc_runtime_t *p_runtime);
  *
  * @return `FM_STATUS_OK` on success.
  * @return `FM_STATUS_EINVAL` when any pointer is `NULL`, the event kind is
- *         invalid, or an input key/action is invalid.
+ *         invalid, or an input key/action combination is invalid.
  * @return `FM_STATUS_ERANGE` when the owned service reports a range error,
  *         such as pulse-counter overflow.
  */

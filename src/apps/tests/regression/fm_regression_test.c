@@ -690,12 +690,15 @@ static bool fm_regression_test_runtime_events_(void)
  */
 static bool fm_regression_test_runtime_input_events_(void)
 {
-    static const fmc_input_key_t keys[] =
+    static const fmc_input_key_t mechanical_keys[] =
     {
         FMC_INPUT_KEY_DOWN,
         FMC_INPUT_KEY_UP,
         FMC_INPUT_KEY_ENTER,
-        FMC_INPUT_KEY_ESC,
+        FMC_INPUT_KEY_ESC
+    };
+    static const fmc_input_key_t external_keys[] =
+    {
         FMC_INPUT_KEY_EXT_1,
         FMC_INPUT_KEY_EXT_2
     };
@@ -716,7 +719,8 @@ static bool fm_regression_test_runtime_input_events_(void)
     event.kind = FMC_RUNTIME_EVENT_INPUT;
 
     for (key_index = 0U;
-         key_index < (uint8_t) (sizeof(keys) / sizeof(keys[0]));
+         key_index < (uint8_t) (sizeof(mechanical_keys) /
+                                sizeof(mechanical_keys[0]));
          key_index++)
     {
         for (action_index = 0U;
@@ -729,19 +733,45 @@ static bool fm_regression_test_runtime_input_events_(void)
                 return false;
             }
 
-            event.data.input.key = keys[key_index];
+            event.data.input.key = mechanical_keys[key_index];
             event.data.input.action = actions[action_index];
 
             if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_OK) ||
                 !FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
                 !runtime.last_input_valid ||
-                (runtime.last_input.key != keys[key_index]) ||
+                (runtime.last_input.key != mechanical_keys[key_index]) ||
                 (runtime.last_input.action != actions[action_index]) ||
                 (runtime.service.model.acm.pulses != 11U) ||
                 (runtime.service.model.ttl.pulses != 22U))
             {
                 return false;
             }
+        }
+    }
+
+    for (key_index = 0U;
+         key_index < (uint8_t) (sizeof(external_keys) /
+                                sizeof(external_keys[0]));
+         key_index++)
+    {
+        if (FMC_RUNTIME_ClearPresentationUpdatePending(&runtime) !=
+            FM_STATUS_OK)
+        {
+            return false;
+        }
+
+        event.data.input.key = external_keys[key_index];
+        event.data.input.action = FMC_INPUT_ACTION_SHORT;
+
+        if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_OK) ||
+            !FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
+            !runtime.last_input_valid ||
+            (runtime.last_input.key != external_keys[key_index]) ||
+            (runtime.last_input.action != FMC_INPUT_ACTION_SHORT) ||
+            (runtime.service.model.acm.pulses != 11U) ||
+            (runtime.service.model.ttl.pulses != 22U))
+        {
+            return false;
         }
     }
 
@@ -821,6 +851,24 @@ static bool fm_regression_test_runtime_error_paths_(void)
 
     event.data.input.key = FMC_INPUT_KEY_DOWN;
     event.data.input.action = (fmc_input_action_t) -1;
+    if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_EINVAL) ||
+        FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
+        runtime.last_input_valid)
+    {
+        return false;
+    }
+
+    event.data.input.key = FMC_INPUT_KEY_EXT_1;
+    event.data.input.action = FMC_INPUT_ACTION_LONG;
+    if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_EINVAL) ||
+        FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
+        runtime.last_input_valid)
+    {
+        return false;
+    }
+
+    event.data.input.key = FMC_INPUT_KEY_EXT_2;
+    event.data.input.action = FMC_INPUT_ACTION_LONG;
     return (FMC_RUNTIME_Dispatch(&runtime, &event) == FM_STATUS_EINVAL) &&
            !FMC_RUNTIME_PresentationUpdateIsPending(&runtime) &&
            !runtime.last_input_valid;

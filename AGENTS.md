@@ -83,7 +83,7 @@ If scope, ownership, or interaction with active work is unclear:
 
 ## Context Reframe
 
-Refresh the active context pair when:
+Refresh the active working context when:
 - the user asks to start a new `refactor` or `new_feature` track
 - the user asks to create or reframe a `WORKING_CONTEXT.md`
 - the request falls outside the active `WORKING_CONTEXT.md` and should become a
@@ -94,7 +94,7 @@ If a context reframe is triggered:
 - create or refresh one short `WORKING_CONTEXT.md`
 - reference or update the applicable roadmap/specification only when its
   durable content changes
-- ask only the minimum blocking questions before generating that pair
+- ask only the minimum blocking questions before generating or updating it
 
 ---
 
