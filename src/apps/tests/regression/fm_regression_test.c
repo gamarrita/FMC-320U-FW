@@ -16,6 +16,7 @@
 #include "fm_port_time.h"
 #include "fmc_model.h"
 #include "fmc_rate.h"
+#include "fmc_runtime.h"
 #include "fmc_service.h"
 #include "fmc_units.h"
 #include "fmc_volume.h"
@@ -35,6 +36,8 @@ typedef enum
     FM_REGRESSION_TEST_CASE_ERROR_PATHS,
     FM_REGRESSION_TEST_CASE_RATE_WINDOWS,
     FM_REGRESSION_TEST_CASE_RATE_ERROR_PATHS,
+    FM_REGRESSION_TEST_CASE_RUNTIME_EVENTS,
+    FM_REGRESSION_TEST_CASE_RUNTIME_ERROR_PATHS,
     FM_REGRESSION_TEST_CASE_SERVICE_STATE,
     FM_REGRESSION_TEST_CASE_SERVICE_ERROR_PATHS,
     FM_REGRESSION_TEST_CASE_VOLUME_VALUES,
@@ -69,6 +72,8 @@ static bool fm_regression_test_pulses_per_active_unit_(void);
 static bool fm_regression_test_error_paths_(void);
 static bool fm_regression_test_rate_windows_(void);
 static bool fm_regression_test_rate_error_paths_(void);
+static bool fm_regression_test_runtime_events_(void);
+static bool fm_regression_test_runtime_error_paths_(void);
 static bool fm_regression_test_service_state_(void);
 static bool fm_regression_test_service_error_paths_(void);
 static bool fm_regression_test_volume_values_(void);
@@ -581,6 +586,143 @@ static bool fm_regression_test_rate_error_paths_(void)
 }
 
 /*
+ * Verifies the minimal runtime event boundary over the live FMC service.
+ *
+ * Product events update service state and mark presentation dirty without
+ * naming a keyboard, LCD driver, queue, or RTOS primitive.
+ */
+static bool fm_regression_test_runtime_events_(void)
+{
+    fmc_runtime_t runtime;
+    fmc_service_snapshot_t snapshot;
+    fmc_runtime_event_t event;
+
+    FMC_RUNTIME_Init(&runtime);
+
+    runtime.service.model.measurement.calibration_pulses_per_unit = 1000.0;
+    runtime.service.model.measurement.calibration_volume_unit =
+        FMC_MODEL_VOLUME_UNIT_L;
+    runtime.service.model.measurement.active_volume_unit =
+        FMC_MODEL_VOLUME_UNIT_L;
+
+    event.kind = FMC_RUNTIME_EVENT_NONE;
+    event.pulse_delta = 0U;
+    if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_OK) ||
+        FMC_RUNTIME_PresentationUpdateIsPending(&runtime))
+    {
+        return false;
+    }
+
+    event.kind = FMC_RUNTIME_EVENT_PULSE_DELTA;
+    event.pulse_delta = 2500U;
+    if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_OK) ||
+        !FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
+        (FMC_RUNTIME_GetSnapshot(&runtime, &snapshot) != FM_STATUS_OK))
+    {
+        return false;
+    }
+
+    if ((snapshot.model.acm.pulses != 2500U) ||
+        (snapshot.model.ttl.pulses != 2500U) ||
+        !fm_regression_test_double_eq_(snapshot.acm_volume, 2.5) ||
+        !fm_regression_test_double_eq_(snapshot.ttl_volume, 2.5))
+    {
+        return false;
+    }
+
+    if ((FMC_RUNTIME_ClearPresentationUpdatePending(&runtime) !=
+         FM_STATUS_OK) ||
+        FMC_RUNTIME_PresentationUpdateIsPending(&runtime))
+    {
+        return false;
+    }
+
+    event.kind = FMC_RUNTIME_EVENT_PRESENTATION_INVALIDATE;
+    if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_OK) ||
+        !FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
+        (FMC_RUNTIME_ClearPresentationUpdatePending(&runtime) !=
+         FM_STATUS_OK))
+    {
+        return false;
+    }
+
+    event.kind = FMC_RUNTIME_EVENT_RESET_TTL;
+    if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_OK) ||
+        !FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
+        (FMC_RUNTIME_GetSnapshot(&runtime, &snapshot) != FM_STATUS_OK))
+    {
+        return false;
+    }
+
+    if ((snapshot.model.acm.pulses != 2500U) ||
+        (snapshot.model.ttl.pulses != 0U) ||
+        !fm_regression_test_double_eq_(snapshot.acm_volume, 2.5) ||
+        !fm_regression_test_double_eq_(snapshot.ttl_volume, 0.0))
+    {
+        return false;
+    }
+
+    if (FMC_RUNTIME_ClearPresentationUpdatePending(&runtime) != FM_STATUS_OK)
+    {
+        return false;
+    }
+
+    event.kind = FMC_RUNTIME_EVENT_RESET_ACM;
+    if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_OK) ||
+        !FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
+        (FMC_RUNTIME_GetSnapshot(&runtime, &snapshot) != FM_STATUS_OK))
+    {
+        return false;
+    }
+
+    return (snapshot.model.acm.pulses == 0U) &&
+           (snapshot.model.ttl.pulses == 0U) &&
+           fm_regression_test_double_eq_(snapshot.acm_volume, 0.0) &&
+           fm_regression_test_double_eq_(snapshot.ttl_volume, 0.0);
+}
+
+/*
+ * Verifies that invalid runtime calls and service errors stay explicit and do
+ * not create new presentation work.
+ */
+static bool fm_regression_test_runtime_error_paths_(void)
+{
+    fmc_runtime_t runtime;
+    fmc_service_snapshot_t snapshot;
+    fmc_runtime_event_t event;
+
+    FMC_RUNTIME_Init(&runtime);
+
+    event.kind = FMC_RUNTIME_EVENT_PULSE_DELTA;
+    event.pulse_delta = 1U;
+    if ((FMC_RUNTIME_Dispatch(NULL, &event) != FM_STATUS_EINVAL) ||
+        (FMC_RUNTIME_Dispatch(&runtime, NULL) != FM_STATUS_EINVAL) ||
+        (FMC_RUNTIME_GetSnapshot(NULL, &snapshot) != FM_STATUS_EINVAL) ||
+        (FMC_RUNTIME_GetSnapshot(&runtime, NULL) != FM_STATUS_EINVAL) ||
+        FMC_RUNTIME_PresentationUpdateIsPending(NULL) ||
+        (FMC_RUNTIME_ClearPresentationUpdatePending(NULL) !=
+         FM_STATUS_EINVAL))
+    {
+        return false;
+    }
+
+    event.kind = (fmc_runtime_event_kind_t) 99;
+    if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_EINVAL) ||
+        FMC_RUNTIME_PresentationUpdateIsPending(&runtime))
+    {
+        return false;
+    }
+
+    runtime.service.model.acm.pulses = UINT64_MAX;
+    event.kind = FMC_RUNTIME_EVENT_PULSE_DELTA;
+    event.pulse_delta = 1U;
+    return (FMC_RUNTIME_Dispatch(&runtime, &event) == FM_STATUS_ERANGE) &&
+           !FMC_RUNTIME_PresentationUpdateIsPending(&runtime) &&
+           (runtime.service.model.acm.pulses == UINT64_MAX) &&
+           (runtime.service.model.ttl.pulses == 0U);
+}
+
+/*
  * Verifies the live-state service boundary used by future runtime adapters.
  *
  * Acquisition deltas accumulate into both product totals. Presentation should
@@ -1018,6 +1160,12 @@ static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case)
     case FM_REGRESSION_TEST_CASE_RATE_ERROR_PATHS:
         return fm_regression_test_rate_error_paths_();
 
+    case FM_REGRESSION_TEST_CASE_RUNTIME_EVENTS:
+        return fm_regression_test_runtime_events_();
+
+    case FM_REGRESSION_TEST_CASE_RUNTIME_ERROR_PATHS:
+        return fm_regression_test_runtime_error_paths_();
+
     case FM_REGRESSION_TEST_CASE_SERVICE_STATE:
         return fm_regression_test_service_state_();
 
@@ -1083,6 +1231,14 @@ static void fm_regression_test_emit_case_(fm_regression_test_case_t p_case,
 
     case FM_REGRESSION_TEST_CASE_RATE_ERROR_PATHS:
         (void) FM_DEBUG_UartStr("REGRESSION_TEST:RATE_ERROR_PATHS:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_RUNTIME_EVENTS:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:RUNTIME_EVENTS:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_RUNTIME_ERROR_PATHS:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:RUNTIME_ERROR_PATHS:");
         break;
 
     case FM_REGRESSION_TEST_CASE_SERVICE_STATE:

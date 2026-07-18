@@ -3,7 +3,7 @@
 ## Active Workstream
 
 Stage:
-- first service boundary sub-slice implemented
+- minimal runtime contract micro-slice implemented
 
 Short name:
 - FMC service/runtime boundary
@@ -24,8 +24,8 @@ Active files/folders:
 Current target:
 - define the smallest useful `fmc_service` / `fmc_runtime` boundary so future
   RTOS, low-power, input, acquisition, persistence, and presentation work has a
-  clear place to connect. The first cut is the pure `fmc_service` live-state
-  and snapshot contract.
+  clear place to connect. The first cut, `fmc_service.*`, is closed. The second
+  cut, minimal RTOS-neutral `fmc_runtime.*` event dispatch, is ready for review.
 
 ## Current State
 
@@ -34,11 +34,15 @@ Current target:
   keyboard short-press bring-up.
 - `fmc_service.*` now owns live FMC state, pulse-delta updates, total reset
   forwarding, and snapshots with derived ACM/TTL visible volume.
+- `fmc_runtime.*` now owns one `fmc_service_t`, accepts minimal product events,
+  and tracks pending presentation updates without owning keyboard, LCD, HAL,
+  queues, or RTOS primitives.
 - `src/apps/product/main` is still a runnable placeholder/smoke app, not the
   real product runtime.
 - Current hardware configuration is smaller than legacy; use
   `legacy/100_main.ioc` only as comparison evidence.
-- Next active task: define the FMC service/runtime boundary.
+- Next active task: review the minimal runtime contract and choose the next
+  micro-slice deliberately.
 
 ## Decisions In Force
 
@@ -52,8 +56,9 @@ Current target:
 
 ## Last Closed Slice
 
-FMC service state/snapshot contract is closed as the first boundary sub-slice.
-Keyboard short-press bring-up was closed previously.
+FMC runtime minimal event-dispatch contract is implemented and ready for
+review. FMC service state/snapshot contract is closed as the first boundary
+sub-slice. Keyboard short-press bring-up was closed previously.
 
 ## Boundaries
 
@@ -70,13 +75,10 @@ Do not add in this slice:
 
 ## Next Step
 
-1. Decide the next sub-slice inside the FMC service/runtime boundary:
-   - runtime event loop skeleton, or
-   - ThreadX/low-power risk study.
-2. Keep the next implementation small enough to preserve agent-assisted
-   development clarity.
-3. If the chosen sub-slice requires CubeMX, ThreadX, or low-power changes,
-   make that decision explicit before editing generated configuration.
+1. Review whether `fmc_runtime` should next receive keyboard-originated product
+   events, acquisition-originated pulse windows, or a product-app smoke wiring.
+2. Keep the next change to one or two small decisions so human/agent review can
+   steer the boundary deliberately.
 
 ## References
 
