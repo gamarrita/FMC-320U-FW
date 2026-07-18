@@ -30,6 +30,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "fmc_input.h"
 #include "fmc_service.h"
 #include "fm_status.h"
 
@@ -50,6 +51,8 @@ typedef enum
     FMC_RUNTIME_EVENT_RESET_ACM,
     /** Reset the TTL total after the caller has authorized the operation. */
     FMC_RUNTIME_EVENT_RESET_TTL,
+    /** Deliver one already recognized semantic product input event. */
+    FMC_RUNTIME_EVENT_INPUT,
     /** Mark the current presentation view as no longer up to date. */
     FMC_RUNTIME_EVENT_PRESENTATION_INVALIDATE
 } fmc_runtime_event_kind_t;
@@ -57,13 +60,20 @@ typedef enum
 /**
  * @brief One event consumed by `FMC_RUNTIME_Dispatch()`.
  *
- * `pulse_delta` is meaningful only for `FMC_RUNTIME_EVENT_PULSE_DELTA` and is
- * ignored for other event kinds.
+ * The active payload is selected by `kind`:
+ * - `data.pulse_delta` for `FMC_RUNTIME_EVENT_PULSE_DELTA`
+ * - `data.input` for `FMC_RUNTIME_EVENT_INPUT`
+ *
+ * Payload fields for other event kinds are ignored.
  */
 typedef struct
 {
     fmc_runtime_event_kind_t kind;
-    uint64_t pulse_delta;
+    union
+    {
+        uint64_t pulse_delta;
+        fmc_input_event_t input;
+    } data;
 } fmc_runtime_event_t;
 
 /**
@@ -73,18 +83,24 @@ typedef struct
  * seed configuration deliberately. Normal consumers should prefer dispatch,
  * snapshot, and presentation-update APIs rather than editing nested state
  * directly.
+ *
+ * `last_input` is valid only when `last_input_valid` is `true`. It preserves
+ * the most recent accepted semantic input for the current minimal runtime
+ * slice; it is not a queue and does not implement menu navigation.
  */
 typedef struct
 {
     fmc_service_t service;
+    fmc_input_event_t last_input;
     bool presentation_update_pending;
+    bool last_input_valid;
 } fmc_runtime_t;
 
 /**
  * @brief Initialize one runtime instance and its owned FMC service.
  *
  * Existing runtime state is overwritten and any pending presentation update is
- * cleared.
+ * cleared. No semantic input is considered accepted after initialization.
  *
  * @param p_runtime Runtime object owned by the caller. `NULL` is ignored.
  */
@@ -98,6 +114,10 @@ void FMC_RUNTIME_Init(fmc_runtime_t *p_runtime);
  * caller can present visible values from a snapshot. A presentation-invalidate
  * event only sets that pending flag.
  *
+ * A valid input event preserves key/action identity in `last_input` and marks
+ * presentation update as pending. The current slice does not map input to menu
+ * navigation, backlight, wake, reset, or edit behavior.
+ *
  * Unsupported event kinds are rejected without modifying runtime state. Errors
  * returned by the owned service are propagated to the caller.
  *
@@ -106,8 +126,8 @@ void FMC_RUNTIME_Init(fmc_runtime_t *p_runtime);
  *        call and may be stack allocated by the caller.
  *
  * @return `FM_STATUS_OK` on success.
- * @return `FM_STATUS_EINVAL` when any pointer is `NULL` or the event kind is
- *         invalid.
+ * @return `FM_STATUS_EINVAL` when any pointer is `NULL`, the event kind is
+ *         invalid, or an input key/action is invalid.
  * @return `FM_STATUS_ERANGE` when the owned service reports a range error,
  *         such as pulse-counter overflow.
  */

@@ -14,6 +14,7 @@
 #include "fm_board_keyboard.h"
 #include "fm_debug.h"
 #include "fm_port_time.h"
+#include "fmc_input.h"
 #include "fmc_model.h"
 #include "fmc_rate.h"
 #include "fmc_runtime.h"
@@ -37,6 +38,7 @@ typedef enum
     FM_REGRESSION_TEST_CASE_RATE_WINDOWS,
     FM_REGRESSION_TEST_CASE_RATE_ERROR_PATHS,
     FM_REGRESSION_TEST_CASE_RUNTIME_EVENTS,
+    FM_REGRESSION_TEST_CASE_RUNTIME_INPUT_EVENTS,
     FM_REGRESSION_TEST_CASE_RUNTIME_ERROR_PATHS,
     FM_REGRESSION_TEST_CASE_SERVICE_STATE,
     FM_REGRESSION_TEST_CASE_SERVICE_ERROR_PATHS,
@@ -73,6 +75,7 @@ static bool fm_regression_test_error_paths_(void);
 static bool fm_regression_test_rate_windows_(void);
 static bool fm_regression_test_rate_error_paths_(void);
 static bool fm_regression_test_runtime_events_(void);
+static bool fm_regression_test_runtime_input_events_(void);
 static bool fm_regression_test_runtime_error_paths_(void);
 static bool fm_regression_test_service_state_(void);
 static bool fm_regression_test_service_error_paths_(void);
@@ -606,7 +609,7 @@ static bool fm_regression_test_runtime_events_(void)
         FMC_MODEL_VOLUME_UNIT_L;
 
     event.kind = FMC_RUNTIME_EVENT_NONE;
-    event.pulse_delta = 0U;
+    event.data.pulse_delta = 0U;
     if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_OK) ||
         FMC_RUNTIME_PresentationUpdateIsPending(&runtime))
     {
@@ -614,7 +617,7 @@ static bool fm_regression_test_runtime_events_(void)
     }
 
     event.kind = FMC_RUNTIME_EVENT_PULSE_DELTA;
-    event.pulse_delta = 2500U;
+    event.data.pulse_delta = 2500U;
     if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_OK) ||
         !FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
         (FMC_RUNTIME_GetSnapshot(&runtime, &snapshot) != FM_STATUS_OK))
@@ -682,6 +685,70 @@ static bool fm_regression_test_runtime_events_(void)
 }
 
 /*
+ * Verifies that semantic input identity reaches runtime without BSP/HAL types
+ * and without changing service totals.
+ */
+static bool fm_regression_test_runtime_input_events_(void)
+{
+    static const fmc_input_key_t keys[] =
+    {
+        FMC_INPUT_KEY_DOWN,
+        FMC_INPUT_KEY_UP,
+        FMC_INPUT_KEY_ENTER,
+        FMC_INPUT_KEY_ESC,
+        FMC_INPUT_KEY_EXT_1,
+        FMC_INPUT_KEY_EXT_2
+    };
+    static const fmc_input_action_t actions[] =
+    {
+        FMC_INPUT_ACTION_SHORT,
+        FMC_INPUT_ACTION_LONG
+    };
+    fmc_runtime_t runtime;
+    fmc_runtime_event_t event;
+    uint8_t key_index;
+    uint8_t action_index;
+
+    FMC_RUNTIME_Init(&runtime);
+    runtime.service.model.acm.pulses = 11U;
+    runtime.service.model.ttl.pulses = 22U;
+
+    event.kind = FMC_RUNTIME_EVENT_INPUT;
+
+    for (key_index = 0U;
+         key_index < (uint8_t) (sizeof(keys) / sizeof(keys[0]));
+         key_index++)
+    {
+        for (action_index = 0U;
+             action_index < (uint8_t) (sizeof(actions) / sizeof(actions[0]));
+             action_index++)
+        {
+            if (FMC_RUNTIME_ClearPresentationUpdatePending(&runtime) !=
+                FM_STATUS_OK)
+            {
+                return false;
+            }
+
+            event.data.input.key = keys[key_index];
+            event.data.input.action = actions[action_index];
+
+            if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_OK) ||
+                !FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
+                !runtime.last_input_valid ||
+                (runtime.last_input.key != keys[key_index]) ||
+                (runtime.last_input.action != actions[action_index]) ||
+                (runtime.service.model.acm.pulses != 11U) ||
+                (runtime.service.model.ttl.pulses != 22U))
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+/*
  * Verifies that invalid runtime calls and service errors stay explicit and do
  * not create new presentation work.
  */
@@ -694,7 +761,7 @@ static bool fm_regression_test_runtime_error_paths_(void)
     FMC_RUNTIME_Init(&runtime);
 
     event.kind = FMC_RUNTIME_EVENT_PULSE_DELTA;
-    event.pulse_delta = 1U;
+    event.data.pulse_delta = 1U;
     if ((FMC_RUNTIME_Dispatch(NULL, &event) != FM_STATUS_EINVAL) ||
         (FMC_RUNTIME_Dispatch(&runtime, NULL) != FM_STATUS_EINVAL) ||
         (FMC_RUNTIME_GetSnapshot(NULL, &snapshot) != FM_STATUS_EINVAL) ||
@@ -715,11 +782,48 @@ static bool fm_regression_test_runtime_error_paths_(void)
 
     runtime.service.model.acm.pulses = UINT64_MAX;
     event.kind = FMC_RUNTIME_EVENT_PULSE_DELTA;
-    event.pulse_delta = 1U;
-    return (FMC_RUNTIME_Dispatch(&runtime, &event) == FM_STATUS_ERANGE) &&
+    event.data.pulse_delta = 1U;
+    if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_ERANGE) ||
+        FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
+        (runtime.service.model.acm.pulses != UINT64_MAX) ||
+        (runtime.service.model.ttl.pulses != 0U))
+    {
+        return false;
+    }
+
+    event.kind = FMC_RUNTIME_EVENT_INPUT;
+    event.data.input.key = FMC_INPUT_KEY_COUNT;
+    event.data.input.action = FMC_INPUT_ACTION_SHORT;
+    if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_EINVAL) ||
+        FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
+        runtime.last_input_valid)
+    {
+        return false;
+    }
+
+    event.data.input.key = FMC_INPUT_KEY_DOWN;
+    event.data.input.action = FMC_INPUT_ACTION_COUNT;
+    if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_EINVAL) ||
+        FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
+        runtime.last_input_valid)
+    {
+        return false;
+    }
+
+    event.data.input.key = (fmc_input_key_t) -1;
+    event.data.input.action = FMC_INPUT_ACTION_SHORT;
+    if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_EINVAL) ||
+        FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
+        runtime.last_input_valid)
+    {
+        return false;
+    }
+
+    event.data.input.key = FMC_INPUT_KEY_DOWN;
+    event.data.input.action = (fmc_input_action_t) -1;
+    return (FMC_RUNTIME_Dispatch(&runtime, &event) == FM_STATUS_EINVAL) &&
            !FMC_RUNTIME_PresentationUpdateIsPending(&runtime) &&
-           (runtime.service.model.acm.pulses == UINT64_MAX) &&
-           (runtime.service.model.ttl.pulses == 0U);
+           !runtime.last_input_valid;
 }
 
 /*
@@ -1163,6 +1267,9 @@ static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case)
     case FM_REGRESSION_TEST_CASE_RUNTIME_EVENTS:
         return fm_regression_test_runtime_events_();
 
+    case FM_REGRESSION_TEST_CASE_RUNTIME_INPUT_EVENTS:
+        return fm_regression_test_runtime_input_events_();
+
     case FM_REGRESSION_TEST_CASE_RUNTIME_ERROR_PATHS:
         return fm_regression_test_runtime_error_paths_();
 
@@ -1235,6 +1342,10 @@ static void fm_regression_test_emit_case_(fm_regression_test_case_t p_case,
 
     case FM_REGRESSION_TEST_CASE_RUNTIME_EVENTS:
         (void) FM_DEBUG_UartStr("REGRESSION_TEST:RUNTIME_EVENTS:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_RUNTIME_INPUT_EVENTS:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:RUNTIME_INPUT_EVENTS:");
         break;
 
     case FM_REGRESSION_TEST_CASE_RUNTIME_ERROR_PATHS:
