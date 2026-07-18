@@ -36,4 +36,4 @@ slice becomes active.
 
 For the active refactor context, use:
 - `WORKING_CONTEXT.md`
-- `docs/contexts/fmc_runtime_boundary.md`
+- `docs/roadmaps/fmc_refactoring.md`

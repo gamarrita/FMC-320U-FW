@@ -3,8 +3,8 @@
 > This tutorial is not part of the active agent route, does not define the
 > current workstream, and does not define the public API contract.
 >
-> For agent work, use:
-> `AGENTS.md -> WORKING_CONTEXT.md -> docs/contexts/<active>.md`.
+> For agent work, start with `AGENTS.md` and `WORKING_CONTEXT.md`, then follow
+> the applicable roadmap and specifications referenced there.
 >
 > The authoritative API contract is `src/product/fmc/fmc_runtime.h`.
 > Do not apply `docs/workflow/doc_closure.md` to delete or compress this file

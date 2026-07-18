@@ -18,13 +18,14 @@ For active work, read in this order:
 1. the user request
 2. `AGENTS.md`
 3. `WORKING_CONTEXT.md`, when present and relevant
-4. the active extended context referenced by `WORKING_CONTEXT.md`
+4. roadmap and specification files referenced by `WORKING_CONTEXT.md`, when
+   applicable
 5. local `README.md` files for the touched folders
 6. `STYLE.md` for naming and code structure questions
 
 `WORKING_CONTEXT.md` should stay short and operational.
-The referenced file under `docs/contexts/` should hold rationale, decisions,
-history, risks, and backlog for the active workstream.
+Roadmaps hold durable phase strategy, dependencies, decision gates, risks, and
+exit criteria. They are not active task logs.
 
 ---
 
@@ -51,6 +52,17 @@ when it is a deliberate current product decision, not because it already exists.
 Prefer maintainable, understandable product design over copying legacy shapes.
 When a decision is architectural or educationally important, make the tradeoff
 visible instead of silently encoding it.
+
+For behavior-preserving FMC work, confirmed requirements in
+`docs/specs/fmc/use_cases.yaml` are the current product behavior authority.
+Legacy documents and firmware are evidence of provenance, not authority over
+that specification.
+
+Before changing observable product behavior:
+- identify the relevant specification sections
+- distinguish confirmed, inferred, and unresolved requirements
+- report conflicts between specification, legacy, tests, and current code
+- do not resolve conflicts silently
 
 ---
 
@@ -80,7 +92,8 @@ Refresh the active context pair when:
 If a context reframe is triggered:
 - do not force the request into the current workstream
 - create or refresh one short `WORKING_CONTEXT.md`
-- create or refresh one matching extended context under `docs/contexts/`
+- reference or update the applicable roadmap/specification only when its
+  durable content changes
 - ask only the minimum blocking questions before generating that pair
 
 ---
@@ -159,14 +172,17 @@ Keep one source of truth per topic.
 Use this split:
 - stable policy in `AGENTS.md`
 - active execution state in `WORKING_CONTEXT.md` when required, not lateral prompts
-- extended rationale and detailed context in `docs/contexts/` when required, not lateral prompts
+- current product behavior in `docs/specs/`
+- durable refactor strategy in `docs/roadmaps/`
 - onboarding and repository maps in `README.md` files
 - naming and code structure in `STYLE.md`
+- public contracts for implemented modules in their headers
 
-Do not duplicate stable policy across multiple files.
+Do not duplicate stable policy, product requirements, roadmap content, or module
+contracts across multiple files.
 
-When `WORKING_CONTEXT.md` and its referenced extended context would diverge,
-update both in the same change.
+`WORKING_CONTEXT.md` controls current scope, sequencing, and temporary
+boundaries. It does not override confirmed product requirements.
 
 When closing a slice or changing active context, apply
 `docs/workflow/doc_closure.md` before the final response.

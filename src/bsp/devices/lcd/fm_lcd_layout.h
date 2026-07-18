@@ -2,8 +2,7 @@
  * @file    fm_lcd_layout.h
  * @brief   Interim semantic LCD glass contract for the redesign path.
  *
- * This header captures the layout-specific part of the active LCD redesign
- * contract currently described in `docs/contexts/lcd_redesign.md`.
+ * This header captures the layout-specific part of the LCD glass contract.
  *
  * Current module intent:
  * - model the LCD glass as coherent visible fields

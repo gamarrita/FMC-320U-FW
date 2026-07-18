@@ -1,89 +1,108 @@
 # WORKING_CONTEXT.md
 
-## Active Workstream
+## Active Milestone
 
-Stage:
-- minimal runtime contract micro-slice implemented
+- FMC runtime foundation
 
-Short name:
-- FMC service/runtime boundary
+## Product Behavior Authority
 
-Extended context:
-- `docs/contexts/fmc_runtime_boundary.md`
+- `docs/specs/fmc/use_cases.yaml`
 
-## Scope Now
+## Milestone Outcome
 
-Active files/folders:
-- `WORKING_CONTEXT.md`
-- `docs/contexts/fmc_runtime_boundary.md`
-- `legacy/`
-- `fmc-320u-v2.ioc`
-- `src/product/fmc/`
-- `src/port/`, `src/bsp/`, and `src/apps/`
+Establish the runtime foundation for the refactored FMC-320 firmware:
 
-Current target:
-- define the smallest useful `fmc_service` / `fmc_runtime` boundary so future
-  RTOS, low-power, input, acquisition, persistence, and presentation work has a
-  clear place to connect. The first cut, `fmc_service.*`, is closed. The second
-  cut, minimal RTOS-neutral `fmc_runtime.*` event dispatch, is ready for review.
+- live FMC state owned through `fmc_service`;
+- RTOS-neutral runtime events for service updates and semantic input;
+- stable snapshots for future presentation;
+- product contracts independent from HAL, GPIO, LCD, BSP, ThreadX, queue, and
+  timer types;
+- a clear path to ThreadX, low-power, input recognition, acquisition, and
+  presentation without redesigning public product contracts.
 
-## Current State
-
-- Validated base: `fmc_model.*`, `fmc_units.*`, `fmc_rate.*`,
-  `fmc_volume.*`, `display_format.*`, LCD bring-ups, debug UART/LEDs, and
-  keyboard short-press bring-up.
-- `fmc_service.*` now owns live FMC state, pulse-delta updates, total reset
-  forwarding, and snapshots with derived ACM/TTL visible volume.
-- `fmc_runtime.*` now owns one `fmc_service_t`, accepts minimal product events,
-  and tracks pending presentation updates without owning keyboard, LCD, HAL,
-  queues, or RTOS primitives.
-- `src/apps/product/main` is still a runnable placeholder/smoke app, not the
-  real product runtime.
-- Current hardware configuration is smaller than legacy; use
-  `legacy/100_main.ioc` only as comparison evidence.
-- Next active task: review the minimal runtime contract and choose the next
-  micro-slice deliberately.
+The milestone does not include the complete UI state machine.
 
 ## Decisions In Force
 
-- CubeMX is the source of truth for MCU hardware configuration.
-- Do not edit `fmc-320u-v2.ioc` or generated hardware init manually.
-- For new hardware-facing work, the human updates CubeMX first; the agent then
-  adds repository wrappers such as `port/`, `bsp/`, apps, and tests.
-- Treat legacy code and `legacy/100_main.ioc` as evidence, not authority.
-- Keep input/runtime boundaries RTOS-neutral until the ThreadX transition is
-  selected deliberately.
+- Confirmed requirements in `docs/specs/fmc/use_cases.yaml` are the current
+  product behavior authority.
+- Legacy sources, including `legacy/specs/fmc/use_cases.docx`, are evidence,
+  not authority over the current specification.
+- `WORKING_CONTEXT.md` controls current scope, sequencing, and temporary
+  boundaries; it does not override confirmed product requirements.
+- Public contracts for implemented modules belong in their headers.
+- BSP, HAL, GPIO, ThreadX, queue, and timer types must not leak into product
+  contracts.
+- Product event contracts remain RTOS-neutral until the ThreadX ownership model
+  is selected deliberately.
 
-## Last Closed Slice
+## Current Decision Gates
 
-FMC runtime minimal event-dispatch contract is implemented and ready for
-review. FMC service state/snapshot contract is closed as the first boundary
-sub-slice. Keyboard short-press bring-up was closed previously.
+- Define semantic input before implementing menu behavior.
+- Preserve input key identity and action identity before mapping consequences
+  such as navigation, editing, wake, backlight, or presentation invalidation.
+- Define ThreadX, ISR-to-thread delivery, timer, and low-power ownership before
+  implementing final short/long recognition.
+- Use `use_cases.yaml` before changing observable product behavior; report
+  specification, legacy, test, or code conflicts instead of resolving them
+  silently.
 
-## Boundaries
+## Next Selected Step
 
-Do not add in this slice:
-- `.ioc` edits
-- generated code edits outside explicit `USER CODE`
-- firmware debounce
-- long press
-- ThreadX enablement or ThreadX queues/timers
-- menu navigation or product runtime orchestration
-- LPTIM, USART3, DMA, flash-map, or other unrelated hardware integration
-  before the corresponding CubeMX configuration has been made by the human
-- broad product runtime orchestration
+- Define semantic input contract and pure tests.
 
-## Next Step
+## Milestone Boundaries
 
-1. Review whether `fmc_runtime` should next receive keyboard-originated product
-   events, acquisition-originated pulse windows, or a product-app smoke wiring.
-2. Keep the next change to one or two small decisions so human/agent review can
-   steer the boundary deliberately.
+Do not include unless explicitly selected by the current user request:
+
+- complete menu navigation;
+- persistence implementation;
+- Bluetooth or printer workflows;
+- complete alarm behavior;
+- optional PT100 behavior;
+- broad CubeMX changes;
+- ThreadX enablement;
+- low-power entry/exit policy;
+- backlight or wake policy;
+- optimization of unrelated legacy code.
+
+## Exit Criteria
+
+This milestone is complete when:
+
+- runtime contracts no longer depend on BSP, HAL, GPIO, LCD, ThreadX, queue, or
+  timer types;
+- semantic keyboard and external-button input can reach runtime without
+  interface changes for future short/long recognition;
+- ThreadX ownership and ISR-to-thread delivery are defined and demonstrated;
+- runtime state can produce stable presentation snapshots;
+- regression tests cover the pure product contracts;
+- at least one hardware bring-up demonstrates the complete input path.
+
+## Maintenance Rule
+
+Update this file only when one of these changes:
+
+- the active milestone;
+- the product behavior authority;
+- a decision in force;
+- a decision gate;
+- the selected next step in a material way;
+- milestone boundaries;
+- exit criteria.
+
+Do not update it only because:
+
+- a commit was made;
+- a file was added;
+- a routine micro-slice was completed;
+- a test passed;
+- the exact implementation status changed.
 
 ## References
 
 - `AGENTS.md`
 - `STYLE.md`
-- `docs/contexts/fmc_runtime_boundary.md`
-- `legacy/analysis/migration_ledger.md`
-- `legacy/analysis/module_inventory.md`
+- `docs/specs/fmc/use_cases.yaml`
+- `docs/roadmaps/fmc_refactoring.md`
+- `docs/workflow/doc_closure.md`

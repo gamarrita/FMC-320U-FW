@@ -1,23 +1,32 @@
 document:
-  title: "FMC-320 LCD and UI behavior refactor reference"
-  document_type: "embedded_firmware_design_reference"
+  title: "FMC-320 current product behavior specification"
+  document_type: "current_product_behavior_specification"
   version: "1.0"
-  status: "working baseline"
+  status: "current working specification"
   intent:
-    - "Single source of truth for Codex-assisted firmware refactor of the FMC-320 LCD/UI behavior"
-    - "Translate the use-case document into a structured, implementation-facing specification"
-    - "Preserve what the operator sees, what the firmware stores, and how each screen behaves"
-    - "Separate confirmed requirements from inferred implementation guidance"
+    - "Define the current product behavior that the refactored FMC-320 firmware must implement"
+    - "Preserve confirmed legacy behavior until superseded by an approved current-product decision"
+    - "Record approved improvements and behavior changes directly in this specification"
+    - "Separate confirmed requirements from inferred implementation guidance and unresolved gaps"
   language: "en"
   source_language: "es"
   authoring_style: "engineering"
   primary_sources:
-    - file: "docs/specs/fmc/use_cases.docx"
-      role: "behavioral requirements and use cases"
+    - file: "legacy/specs/fmc/use_cases.docx"
+      role: "legacy behavioral requirements and use-case evidence"
     - file: "docs/specs/lcd/lcd_true_source.yaml"
       role: "reference structure for Codex-friendly engineering YAML"
+  lineage:
+    derived_from:
+      - "legacy/specs/fmc/use_cases.docx"
+    initial_basis: "normalized translation of legacy product use cases"
+  evolution_policy:
+    - "confirmed legacy behavior remains applicable until superseded by an approved current-product decision"
+    - "approved improvements and behavior changes are recorded in this file"
+    - "this specification may intentionally diverge from legacy evidence"
+    - "legacy evidence does not override the current specification"
   assumptions_policy:
-    rule: "If a fact is not directly supported by the use-case document, mark it as inferred or unresolved"
+    rule: "If a fact is not directly supported by this specification or an approved current-product decision, mark it as inferred or unresolved"
     statuses:
       - "confirmed"
       - "inferred"
@@ -73,10 +82,13 @@ system_requirements:
     max_calendar_drift: "less than 1 minute per year"
     verification_state: "unresolved"
   keypad_semantics:
+    status: "confirmed"
     mechanical_keys:
       short_press: "action is executed on release"
       long_press_threshold_s: 3
       long_press_behavior: "single action at 3 seconds; no repeat until release and new press"
+      short_after_long: "release after a fired long press must not execute the short action"
+      rearm_rule: "a new action requires release and a new press"
     external_pushbuttons:
       behavior: "single function only"
       trigger: "on release"
@@ -168,12 +180,22 @@ input_model:
   external_buttons:
     - EXT_1
     - EXT_2
+  semantic_actions:
+    - SHORT
+    - LONG
+  event_model:
+    status: "confirmed"
+    rule: "Runtime-facing input must preserve product key identity and action identity"
+    contract_note: "The producer may initially emit only SHORT on release, but the product input contract must support SHORT and LONG from the start"
+    non_requirements:
+      - "BSP, GPIO, HAL, RTOS, queue, and timer types are not part of product input events"
   implementation_guidance:
     status: "inferred"
     recommendation:
       - "Represent input as edge-triggered events, not polled actions"
       - "Model long-press generation centrally to keep all screens consistent"
       - "Execute short press only on release if long press was not already fired"
+      - "A provisional release-edge producer may generate SHORT until the full press/release/timer recognizer is implemented"
 
 screen_catalog:
   status: "confirmed_with_partial_inference"
@@ -734,3 +756,11 @@ open_questions_and_gaps:
       topic: "Alarm reset semantics wording"
       state: "unresolved"
       note: "ACM-RATE says KEY_ESC resets flow alarm but also marks it not implemented"
+    - id: "OQ_007"
+      topic: "Operation-screen numeric overflow and invalid-value display"
+      state: "unresolved"
+      note: "The current specification does not define what the operator should see when a total or rate cannot fit or is invalid"
+    - id: "OQ_008"
+      topic: "General user-screen key activity, wake, and backlight policy"
+      state: "unresolved"
+      note: "Configuration-screen key activity keeps the backlight on for 10 seconds, but the general user-screen wake/backlight policy is not yet specified"

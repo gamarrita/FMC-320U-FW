@@ -4,8 +4,9 @@
 
 This file keeps the repo's default stage vocabulary small and stable.
 
-Use `WORKING_CONTEXT.md` first when an active workstream exists.
-Use this file only to interpret stage names consistently.
+Use `WORKING_CONTEXT.md` first when an active workstream exists. Follow the
+applicable roadmap and specifications referenced there. Use this file only to
+interpret stage names consistently.
 
 ## Default Stages
 
@@ -33,13 +34,15 @@ Small tasks may combine stages.
 
 When a request starts a new track or no longer fits the current one:
 - refresh `WORKING_CONTEXT.md`
-- refresh one matching file under `docs/contexts/`
-- keep the short file operational and the long file explanatory
+- update roadmaps or specifications only when their durable content changes
+- keep `WORKING_CONTEXT.md` operational and roadmaps strategic
 
 ## Related Docs
 
 - `AGENTS.md`: stable agent policy
-- `WORKING_CONTEXT.md`: active workstream
+- `WORKING_CONTEXT.md`: active workstream or milestone
+- `docs/roadmaps/`: durable refactor strategy
+- `docs/specs/`: product behavior
 - `STYLE.md`: naming and code structure
 - `CONTRIBUTING.md`: repo hygiene
 - `docs/workflow/doc_closure.md`: documentation closure checklist
