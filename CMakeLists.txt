@@ -45,7 +45,7 @@ set(FM_AVAILABLE_APPS
 )
 
 # Edit this value to select the firmware app built by the canonical flow.
-set(FM_ACTIVE_APP_DEFAULT "bringups/display_format_lcd")
+set(FM_ACTIVE_APP_DEFAULT "bringups/keyboard_input")
 
 # Remove selector entries stored by older revisions.
 unset(FM_ACTIVE_APP CACHE)

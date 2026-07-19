@@ -78,9 +78,7 @@ short/long recognition.
 
 ## Next Selected Step
 
-- Close the ThreadX bootstrap baseline by validating every selectable app with
-  the canonical build flow and required UART or hardware observation.
-- Then define and implement the minimal ThreadX runtime owner thread and
+- Define and implement the minimal ThreadX runtime owner thread and
   ISR-to-thread keyboard delivery skeleton for mechanical-key provisional
   `SHORT` events.
 
