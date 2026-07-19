@@ -265,6 +265,19 @@
 
 /*#define TX_SAFETY_CRITICAL*/
 
+/* Define the LowPower macros and flags */
+
+/* Define a macro that sets up a low power clock and keep track of time */
+
+/* Define the TX_LOW_POWER_TICKLESS to disable the internal ticks */
+#define TX_LOW_POWER_TICKLESS
+
+/* A user defined macro to make the system enter low power mode */
+
+/* A user defined macro to make the system exit low power mode */
+
+/* User's low-power macro to obtain the amount of time (in ticks) the system has been in low power mode */
+
 /* USER CODE BEGIN 2 */
 
 /* USER CODE END 2 */

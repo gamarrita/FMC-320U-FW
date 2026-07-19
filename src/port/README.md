@@ -26,3 +26,11 @@ If the code exists because the platform or base environment changes, it likely b
 `FM_PORT_TIME_SleepMs()` is a ThreadX task-context sleep. It suspends the
 calling task through ThreadX and is not a pre-kernel, ISR, HAL busy-wait, or
 runtime-detected fallback delay API.
+
+## ThreadX Idle Hooks
+
+`FM_PORT_THREADX_IDLE_Enter()` and `FM_PORT_THREADX_IDLE_Exit()` are called by
+ThreadX low-power support while the scheduler enters or leaves idle. The current
+port drives the debug-gated run LED and uses conservative MCU Sleep/WFI. It
+does not enter STOP mode, define product low-power policy, program alternate
+wake timers, or adjust ThreadX ticks.

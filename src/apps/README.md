@@ -45,23 +45,27 @@ If the app has real logic beyond a tiny stub, add one app-local module such as:
 `fm_app_threadx.*` adapts the selected app to the CubeMX ThreadX bootstrap. It
 creates one generic app task and calls `APP_ENTRY_Run()` from that task.
 
+This harness preserves the selectable-app workflow during the ThreadX bootstrap
+baseline. It is not the final product owner thread for `fmc_runtime`.
+
 Generated startup code must reach `MX_ThreadX_Init()` before app code runs.
 Do not call a selected app directly from generated `main.c`.
 
 ## Selecting The Active App
 
-Use `FM_ACTIVE_APP` to choose which app folder is built.
+Edit `FM_ACTIVE_APP_DEFAULT` in the repository `CMakeLists.txt` to choose which
+app folder is built by the canonical flow.
 
 Examples:
-- `cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=product/main`
-- `cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=template`
-- `cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=bringups/debug_panic`
-- `cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=bringups/lcd`
-- `cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=bringups/lcd_blink`
-- `cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=bringups/display_format_lcd`
-- `cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=bringups/keyboard_input`
-- `cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=tests/regression`
+- `set(FM_ACTIVE_APP_DEFAULT "product/main")`
+- `set(FM_ACTIVE_APP_DEFAULT "template")`
+- `set(FM_ACTIVE_APP_DEFAULT "bringups/debug_panic")`
+- `set(FM_ACTIVE_APP_DEFAULT "bringups/lcd")`
+- `set(FM_ACTIVE_APP_DEFAULT "bringups/lcd_blink")`
+- `set(FM_ACTIVE_APP_DEFAULT "bringups/display_format_lcd")`
+- `set(FM_ACTIVE_APP_DEFAULT "bringups/keyboard_input")`
+- `set(FM_ACTIVE_APP_DEFAULT "tests/regression")`
 
-The default app is defined in the repository `CMakeLists.txt`.
-When switching between apps, prefer a fresh configure so the build cache does
-not keep state from the previous app.
+Do not select the normal app through a cached `-DFM_ACTIVE_APP=...` configure
+argument. Multi-app validation should use an isolated build directory or restore
+the canonical app selection before handing the workspace back.

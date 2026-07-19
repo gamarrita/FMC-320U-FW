@@ -24,6 +24,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "fm_app_threadx.h"
+#include "fm_port_threadx_idle.h"
 
 /* USER CODE END Includes */
 
@@ -88,6 +89,63 @@ void MX_ThreadX_Init(void)
   /* USER CODE END Kernel_Start_Error */
 }
 
+/**
+  * @brief  App_ThreadX_LowPower_Timer_Setup
+  * @param  count : TX timer count
+  * @retval None
+  */
+void App_ThreadX_LowPower_Timer_Setup(ULONG count)
+{
+  /* USER CODE BEGIN  App_ThreadX_LowPower_Timer_Setup */
+  FM_PORT_THREADX_IDLE_TimerSetup(count);
+  /* USER CODE END  App_ThreadX_LowPower_Timer_Setup */
+}
+
+/**
+  * @brief  App_ThreadX_LowPower_Enter
+  * @param  None
+  * @retval None
+  */
+void App_ThreadX_LowPower_Enter(void)
+{
+  /* USER CODE BEGIN  App_ThreadX_LowPower_Enter */
+  FM_PORT_THREADX_IDLE_Enter();
+  /* USER CODE END  App_ThreadX_LowPower_Enter */
+}
+
+/**
+  * @brief  App_ThreadX_LowPower_Exit
+  * @param  None
+  * @retval None
+  */
+void App_ThreadX_LowPower_Exit(void)
+{
+  /* USER CODE BEGIN  App_ThreadX_LowPower_Exit */
+  FM_PORT_THREADX_IDLE_Exit();
+  /* USER CODE END  App_ThreadX_LowPower_Exit */
+}
+
+/**
+  * @brief  App_ThreadX_LowPower_Timer_Adjust
+  * @param  None
+  * @retval Amount of time (in ticks)
+  */
+ULONG App_ThreadX_LowPower_Timer_Adjust(void)
+{
+  /* USER CODE BEGIN  App_ThreadX_LowPower_Timer_Adjust */
+  return FM_PORT_THREADX_IDLE_TimerAdjust();
+  /* USER CODE END  App_ThreadX_LowPower_Timer_Adjust */
+}
+
 /* USER CODE BEGIN 1 */
+void tx_low_power_enter(void)
+{
+  App_ThreadX_LowPower_Enter();
+}
+
+void tx_low_power_exit(void)
+{
+  App_ThreadX_LowPower_Exit();
+}
 
 /* USER CODE END 1 */

@@ -13,6 +13,7 @@
 Run a reduced FMC product runtime under ThreadX while preserving the product
 contracts established by the runtime foundation:
 
+- ThreadX as the only active runtime and execution path;
 - live FMC state owned through `fmc_service`;
 - one ThreadX owner thread for the live `fmc_runtime`;
 - serialized ISR-to-thread delivery for mechanical keyboard input;
@@ -36,6 +37,11 @@ short/long recognition.
 - `WORKING_CONTEXT.md` controls current scope, sequencing, and temporary
   boundaries; it does not override confirmed product requirements.
 - Public contracts for implemented modules belong in their headers.
+- ThreadX is the only active development and execution route.
+- The last bare-metal state is retained only as historical comparison baseline
+  at tag `bare-metal-before-threadx`; it is not a parallel architecture.
+- The current `fm_app_threadx.*` harness adapts selectable apps to the CubeMX
+  ThreadX bootstrap. It is not the final `fmc_runtime` owner thread.
 - BSP, HAL, GPIO, ThreadX, queue, and timer types must not leak into product
   contracts.
 - `fmc_runtime` is owned by one dedicated ThreadX thread.
@@ -53,8 +59,9 @@ short/long recognition.
   preferred direction is a simple timer armed on press and disarmed on release
   before the 3 second threshold.
 - The hardware is currently assumed not to produce mechanical key bounce.
-- The human enables ThreadX through CubeMX when the firmware implementation is
-  ready for that step.
+- ThreadX low-power support is enabled for idle/run visibility only. The
+  current slice uses conservative MCU Sleep/WFI, not STOP mode. It does not
+  define product low-power policy, alternate wake timers, or tick adjustment.
 
 ## Current Decision Gates
 
@@ -71,7 +78,9 @@ short/long recognition.
 
 ## Next Selected Step
 
-- Define and implement the minimal ThreadX runtime owner thread and
+- Close the ThreadX bootstrap baseline by validating every selectable app with
+  the canonical build flow and required UART or hardware observation.
+- Then define and implement the minimal ThreadX runtime owner thread and
   ISR-to-thread keyboard delivery skeleton for mechanical-key provisional
   `SHORT` events.
 
@@ -84,7 +93,8 @@ Do not include unless explicitly selected by the current user request:
 - Bluetooth or printer workflows;
 - complete alarm behavior;
 - optional PT100 behavior;
-- broad CubeMX changes beyond the human-selected ThreadX enablement;
+- broad CubeMX changes beyond human-selected ThreadX and low-power-support
+  enablement;
 - low-power entry/exit policy;
 - backlight or wake policy;
 - final 3 second long-press recognition;

@@ -112,6 +112,13 @@ Objective:
 - define and demonstrate ThreadX runtime ownership, serialized ISR-to-thread
   delivery, timer ownership, and low-power interaction.
 
+Runtime direction:
+- ThreadX is the only active firmware runtime from this phase onward.
+- The last bare-metal firmware state is a historical comparison baseline, not a
+  second maintained architecture.
+- Selectable apps may continue through a ThreadX bootstrap harness while the
+  product runtime owner thread is introduced incrementally.
+
 Current selected slice:
 - introduce one dedicated ThreadX owner thread for `fmc_runtime`;
 - deliver mechanical keyboard events from ISR to that owner thread through a
@@ -129,7 +136,7 @@ Current selected slice:
 Dependencies:
 - semantic input contract;
 - runtime contract;
-- CubeMX/middleware decision by the human when configuration changes are needed.
+- CubeMX-generated ThreadX and low-power-support configuration.
 
 Decision gates:
 - detailed runtime owner thread stack, priority, and startup sequencing;
@@ -142,6 +149,8 @@ Risks:
 - enabling ThreadX only for long press and accidentally redesigning startup,
   low-power, queues, timers, and ownership at once;
 - continuing too long on accidental bare-metal assumptions.
+- letting a historical bare-metal baseline become an accidental second product
+  line.
 
 Exit criteria:
 - minimal runtime runs under the selected ThreadX ownership model;

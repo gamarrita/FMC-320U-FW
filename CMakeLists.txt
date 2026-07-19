@@ -33,8 +33,6 @@ enable_language(C ASM)
 
 
 # Select active app
-# Example:
-#   cube-cmake --fresh --preset Debug -DFM_ACTIVE_APP=bringups/lcd
 set(FM_AVAILABLE_APPS
     product/main
     template
@@ -46,23 +44,15 @@ set(FM_AVAILABLE_APPS
     tests/regression
 )
 
-# Default app defined in this file.
-# The cache follows this value only while the user has not explicitly
-# overridden FM_ACTIVE_APP to a different app.
+# Edit this value to select the firmware app built by the canonical flow.
 set(FM_ACTIVE_APP_DEFAULT "bringups/display_format_lcd")
 
-if(NOT DEFINED FM_ACTIVE_APP)
-    set(FM_ACTIVE_APP "${FM_ACTIVE_APP_DEFAULT}" CACHE STRING "Active firmware app")
-elseif(DEFINED FM_ACTIVE_APP_LAST_DEFAULT)
-    if((FM_ACTIVE_APP STREQUAL FM_ACTIVE_APP_LAST_DEFAULT) AND
-       NOT (FM_ACTIVE_APP_DEFAULT STREQUAL FM_ACTIVE_APP_LAST_DEFAULT))
-        set(FM_ACTIVE_APP "${FM_ACTIVE_APP_DEFAULT}" CACHE STRING "Active firmware app" FORCE)
-    endif()
-endif()
+# Remove selector entries stored by older revisions.
+unset(FM_ACTIVE_APP CACHE)
+unset(FM_ACTIVE_APP_LAST_DEFAULT CACHE)
+set(FM_ACTIVE_APP "${FM_ACTIVE_APP_DEFAULT}")
 
 set(FM_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
-set(FM_ACTIVE_APP_LAST_DEFAULT "${FM_ACTIVE_APP_DEFAULT}" CACHE INTERNAL
-    "Last FM_ACTIVE_APP default value from CMakeLists.txt" FORCE)
 
 if(NOT FM_ACTIVE_APP IN_LIST FM_AVAILABLE_APPS)
     message(FATAL_ERROR
@@ -82,6 +72,10 @@ add_executable(${CMAKE_PROJECT_NAME})
 
 # Add STM32CubeMX generated sources
 add_subdirectory(cmake/stm32cubemx)
+
+if(TARGET ThreadX)
+    target_compile_definitions(ThreadX PRIVATE TX_LOW_POWER)
+endif()
 
 # Link directories setup
 target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
@@ -113,6 +107,7 @@ set(FM_COMMON_SOURCES
     ${FM_SRC_DIR}/port/fm_port_rtc.c
     ${FM_SRC_DIR}/port/fm_port_spi1.c
     ${FM_SRC_DIR}/port/fm_port_time.c
+    ${FM_SRC_DIR}/port/fm_port_threadx_idle.c
     ${FM_SRC_DIR}/port/fm_port_usart1.c
 )
 
