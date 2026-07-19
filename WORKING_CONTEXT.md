@@ -2,7 +2,7 @@
 
 ## Active Milestone
 
-- FMC runtime foundation
+- FMC reduced product runtime on ThreadX
 
 ## Product Behavior Authority
 
@@ -10,17 +10,22 @@
 
 ## Milestone Outcome
 
-Establish the runtime foundation for the refactored FMC-320 firmware:
+Run a reduced FMC product runtime under ThreadX while preserving the product
+contracts established by the runtime foundation:
 
 - live FMC state owned through `fmc_service`;
-- RTOS-neutral runtime events for service updates and semantic input;
+- one ThreadX owner thread for the live `fmc_runtime`;
+- serialized ISR-to-thread delivery for mechanical keyboard input;
+- RTOS-neutral runtime events for service updates and semantic input inside
+  the product boundary;
 - stable snapshots for future presentation;
 - product contracts independent from HAL, GPIO, LCD, BSP, ThreadX, queue, and
   timer types;
-- a clear path to ThreadX, low-power, input recognition, acquisition, and
-  presentation without redesigning public product contracts.
+- a reduced path from mechanical keyboard release to provisional semantic
+  `SHORT` runtime input.
 
-The milestone does not include the complete UI state machine.
+The milestone does not include the complete UI state machine or final
+short/long recognition.
 
 ## Decisions In Force
 
@@ -33,24 +38,42 @@ The milestone does not include the complete UI state machine.
 - Public contracts for implemented modules belong in their headers.
 - BSP, HAL, GPIO, ThreadX, queue, and timer types must not leak into product
   contracts.
-- Product event contracts remain RTOS-neutral until the ThreadX ownership model
-  is selected deliberately.
+- `fmc_runtime` is owned by one dedicated ThreadX thread.
+- ISR paths must not call `FMC_RUNTIME_Dispatch()` directly.
+- ISR-to-runtime delivery uses a ThreadX queue with an app-level keyboard event
+  payload, not a `fmc_runtime_event_t` as the ISR-facing contract.
+- The initial queue depth is 8 events.
+- Queue overflow is considered abnormal for mechanical keyboard input. The
+  implementation may panic or reset the queue and enqueue the newest event, but
+  must make the abnormal condition explicit.
+- Until final recognition is implemented, release events from mechanical keys
+  produce provisional `SHORT` runtime input and press events do not dispatch a
+  runtime input event.
+- Timer ownership for final long-press recognition is deferred. The current
+  preferred direction is a simple timer armed on press and disarmed on release
+  before the 3 second threshold.
+- The hardware is currently assumed not to produce mechanical key bounce.
+- The human enables ThreadX through CubeMX when the firmware implementation is
+  ready for that step.
 
 ## Current Decision Gates
 
 - Define semantic input before implementing menu behavior.
 - Preserve input key identity and action identity before mapping consequences
   such as navigation, editing, wake, backlight, or presentation invalidation.
-- Define ThreadX, ISR-to-thread delivery, timer, and low-power ownership before
-  implementing final short/long recognition.
+- Define the minimal ThreadX runtime owner, ISR-to-thread keyboard queue, and
+  overflow behavior before implementing final short/long recognition.
+- Defer low-power, wake, backlight, and final timer ownership decisions until
+  their selected slices.
 - Use `use_cases.yaml` before changing observable product behavior; report
   specification, legacy, test, or code conflicts instead of resolving them
   silently.
 
 ## Next Selected Step
 
-- Define the app-level board-to-product input adapter and prepare the
-  ThreadX/ISR-delivery decision gate.
+- Define and implement the minimal ThreadX runtime owner thread and
+  ISR-to-thread keyboard delivery skeleton for mechanical-key provisional
+  `SHORT` events.
 
 ## Milestone Boundaries
 
@@ -61,10 +84,12 @@ Do not include unless explicitly selected by the current user request:
 - Bluetooth or printer workflows;
 - complete alarm behavior;
 - optional PT100 behavior;
-- broad CubeMX changes;
-- ThreadX enablement;
+- broad CubeMX changes beyond the human-selected ThreadX enablement;
 - low-power entry/exit policy;
 - backlight or wake policy;
+- final 3 second long-press recognition;
+- debounce implementation;
+- external buttons `EXT_1` and `EXT_2`;
 - optimization of unrelated legacy code.
 
 ## Exit Criteria
@@ -73,12 +98,14 @@ This milestone is complete when:
 
 - runtime contracts no longer depend on BSP, HAL, GPIO, LCD, ThreadX, queue, or
   timer types;
-- semantic keyboard and external-button input can reach runtime without
+- semantic mechanical-key input can reach runtime under ThreadX without
   interface changes for future short/long recognition;
-- ThreadX ownership and ISR-to-thread delivery are defined and demonstrated;
+- ThreadX ownership and ISR-to-thread delivery are implemented and
+  demonstrated for the reduced product runtime;
 - runtime state can produce stable presentation snapshots;
 - regression tests cover the pure product contracts;
-- at least one hardware bring-up demonstrates the complete input path.
+- at least one hardware bring-up demonstrates the mechanical keyboard input
+  path into the runtime owner thread.
 
 ## Maintenance Rule
 

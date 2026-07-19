@@ -8,7 +8,7 @@ It is policy, not the universal task entrypoint.
 It is not extended technical documentation.
 
 Use:
-- `STYLE.md` for naming and code structure
+- `STYLE.md` for naming, code structure and new contracts locations. 
 
 ---
 

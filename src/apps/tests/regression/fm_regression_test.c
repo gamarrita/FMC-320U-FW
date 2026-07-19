@@ -13,6 +13,7 @@
 #include "fm_board.h"
 #include "fm_board_keyboard.h"
 #include "fm_debug.h"
+#include "fm_main_input_adapter.h"
 #include "fm_port_time.h"
 #include "fmc_input.h"
 #include "fmc_model.h"
@@ -47,6 +48,7 @@ typedef enum
     FM_REGRESSION_TEST_CASE_DISPLAY_FORMAT_VALUES,
     FM_REGRESSION_TEST_CASE_DISPLAY_FORMAT_ERROR_PATHS,
     FM_REGRESSION_TEST_CASE_KEYBOARD_MAPPING,
+    FM_REGRESSION_TEST_CASE_MAIN_INPUT_ADAPTER,
     FM_REGRESSION_TEST_CASE_COUNT
 } fm_regression_test_case_t;
 
@@ -61,6 +63,12 @@ typedef struct
     uint16_t gpio_pin;
     fm_board_keyboard_key_t expected_key;
 } fm_regression_keyboard_case_t;
+
+typedef struct
+{
+    fm_board_keyboard_key_t board_key;
+    fmc_input_key_t expected_input_key;
+} fm_regression_main_input_adapter_case_t;
 
 /* Private function declarations */
 static bool fm_regression_test_double_eq_(double p_actual,
@@ -84,6 +92,7 @@ static bool fm_regression_test_volume_error_paths_(void);
 static bool fm_regression_test_display_format_values_(void);
 static bool fm_regression_test_display_format_error_paths_(void);
 static bool fm_regression_test_keyboard_mapping_(void);
+static bool fm_regression_test_main_input_adapter_(void);
 static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case);
 static void fm_regression_test_emit_case_(fm_regression_test_case_t p_case,
                                                bool p_passed);
@@ -1281,6 +1290,70 @@ static bool fm_regression_test_keyboard_mapping_(void)
            !FM_BOARD_KeyboardKeyFromGpioPin(KEY_DOWN_Pin, NULL);
 }
 
+/*
+ * Verifies the product app adapter from board keyboard identity to provisional
+ * runtime SHORT input events.
+ */
+static bool fm_regression_test_main_input_adapter_(void)
+{
+    static const fm_regression_main_input_adapter_case_t cases[] =
+    {
+        { FM_BOARD_KEYBOARD_KEY_DOWN, FMC_INPUT_KEY_DOWN },
+        { FM_BOARD_KEYBOARD_KEY_UP, FMC_INPUT_KEY_UP },
+        { FM_BOARD_KEYBOARD_KEY_ENTER, FMC_INPUT_KEY_ENTER },
+        { FM_BOARD_KEYBOARD_KEY_ESC, FMC_INPUT_KEY_ESC }
+    };
+    fmc_runtime_event_t event;
+    uint8_t index;
+
+    for (index = 0U;
+         index < (uint8_t) (sizeof(cases) / sizeof(cases[0]));
+         index++)
+    {
+        event.kind = FMC_RUNTIME_EVENT_NONE;
+        event.data.input.key = FMC_INPUT_KEY_COUNT;
+        event.data.input.action = FMC_INPUT_ACTION_COUNT;
+
+        if (!FM_MAIN_INPUT_ADAPTER_ShortEventFromBoardKey(
+                cases[index].board_key,
+                &event) ||
+            (event.kind != FMC_RUNTIME_EVENT_INPUT) ||
+            (event.data.input.key != cases[index].expected_input_key) ||
+            (event.data.input.action != FMC_INPUT_ACTION_SHORT))
+        {
+            return false;
+        }
+    }
+
+    event.kind = FMC_RUNTIME_EVENT_NONE;
+    event.data.input.key = FMC_INPUT_KEY_DOWN;
+    event.data.input.action = FMC_INPUT_ACTION_SHORT;
+
+    if (FM_MAIN_INPUT_ADAPTER_ShortEventFromBoardKey(
+            FM_BOARD_KEYBOARD_KEY_COUNT,
+            &event) ||
+        (event.kind != FMC_RUNTIME_EVENT_NONE) ||
+        (event.data.input.key != FMC_INPUT_KEY_DOWN) ||
+        (event.data.input.action != FMC_INPUT_ACTION_SHORT))
+    {
+        return false;
+    }
+
+    if (FM_MAIN_INPUT_ADAPTER_ShortEventFromBoardKey(
+            (fm_board_keyboard_key_t) -1,
+            &event) ||
+        (event.kind != FMC_RUNTIME_EVENT_NONE) ||
+        (event.data.input.key != FMC_INPUT_KEY_DOWN) ||
+        (event.data.input.action != FMC_INPUT_ACTION_SHORT))
+    {
+        return false;
+    }
+
+    return !FM_MAIN_INPUT_ADAPTER_ShortEventFromBoardKey(
+        FM_BOARD_KEYBOARD_KEY_DOWN,
+        NULL);
+}
+
 static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case)
 {
     switch (p_case)
@@ -1341,6 +1414,9 @@ static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case)
 
     case FM_REGRESSION_TEST_CASE_KEYBOARD_MAPPING:
         return fm_regression_test_keyboard_mapping_();
+
+    case FM_REGRESSION_TEST_CASE_MAIN_INPUT_ADAPTER:
+        return fm_regression_test_main_input_adapter_();
 
     default:
         return false;
@@ -1426,6 +1502,10 @@ static void fm_regression_test_emit_case_(fm_regression_test_case_t p_case,
 
     case FM_REGRESSION_TEST_CASE_KEYBOARD_MAPPING:
         (void) FM_DEBUG_UartStr("REGRESSION_TEST:KEYBOARD_MAPPING:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_MAIN_INPUT_ADAPTER:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:MAIN_INPUT_ADAPTER:");
         break;
 
     default:

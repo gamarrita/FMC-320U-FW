@@ -7,6 +7,10 @@ Contain selectable firmware applications used through `FM_ACTIVE_APP`.
 Each folder below this tree represents one runnable firmware profile for the
 same firmware base.
 
+The active runtime is ThreadX. The selected app still provides
+`APP_ENTRY_Run()`, but that entry point is called from the shared ThreadX app
+harness after the kernel starts. `APP_ENTRY_Run()` may block forever.
+
 ## Categories
 
 - `product/`
@@ -35,6 +39,14 @@ If the app has real logic beyond a tiny stub, add one app-local module such as:
 - `fm_<name>.c`
 
 `app_entry.c` should stay thin and delegate to the app-local module.
+
+## ThreadX Harness
+
+`fm_app_threadx.*` adapts the selected app to the CubeMX ThreadX bootstrap. It
+creates one generic app task and calls `APP_ENTRY_Run()` from that task.
+
+Generated startup code must reach `MX_ThreadX_Init()` before app code runs.
+Do not call a selected app directly from generated `main.c`.
 
 ## Selecting The Active App
 

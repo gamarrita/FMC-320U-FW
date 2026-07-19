@@ -109,8 +109,22 @@ Exit criteria:
 ## Phase 5: ThreadX, ISR Delivery, Timers, And Low Power
 
 Objective:
-- define and demonstrate runtime ownership, serialized delivery, timer
-  ownership, and low-power interaction.
+- define and demonstrate ThreadX runtime ownership, serialized ISR-to-thread
+  delivery, timer ownership, and low-power interaction.
+
+Current selected slice:
+- introduce one dedicated ThreadX owner thread for `fmc_runtime`;
+- deliver mechanical keyboard events from ISR to that owner thread through a
+  ThreadX queue;
+- use an app-level keyboard event payload at the ISR-to-thread boundary;
+- use an initial queue depth of 8 events;
+- treat keyboard queue overflow as abnormal and make it explicit through panic
+  or queue reset plus newest-event enqueue;
+- convert mechanical-key release events to provisional `SHORT` runtime input;
+- preserve press events for the future recognizer without dispatching runtime
+  input from them yet;
+- defer final `LONG` recognition, low-power policy, presentation ownership,
+  wake/backlight policy, and external buttons.
 
 Dependencies:
 - semantic input contract;
@@ -118,9 +132,9 @@ Dependencies:
 - CubeMX/middleware decision by the human when configuration changes are needed.
 
 Decision gates:
-- runtime owner thread;
-- ISR-to-thread mechanism and overflow policy;
-- timer ownership for long press, periodic ticks, and debounce if selected;
+- detailed runtime owner thread stack, priority, and startup sequencing;
+- exact ThreadX queue storage ownership and overflow action;
+- timer ownership for long press and periodic ticks;
 - wake source and low-power ownership;
 - presentation/backlight activity ownership.
 

@@ -20,3 +20,9 @@ It should not become a layer for product functional logic.
 
 ## Practical guideline
 If the code exists because the platform or base environment changes, it likely belongs here.
+
+## Time
+
+`FM_PORT_TIME_SleepMs()` is a ThreadX task-context sleep. It suspends the
+calling task through ThreadX and is not a pre-kernel, ISR, HAL busy-wait, or
+runtime-detected fallback delay API.

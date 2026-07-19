@@ -90,6 +90,7 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 # Shared sources for every app.
 set(FM_COMMON_SOURCES
+    ${FM_SRC_DIR}/apps/fm_app_threadx.c
     ${FM_SRC_DIR}/libs/fm_debug.c
     ${FM_SRC_DIR}/bsp/fm_board.c
     ${FM_SRC_DIR}/bsp/fm_board_keyboard.c
@@ -124,6 +125,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     ${FM_APP_INCLUDES}
+    ${FM_SRC_DIR}/apps
     ${FM_SRC_DIR}/libs
     ${FM_SRC_DIR}/bsp
     ${FM_SRC_DIR}/product/fmc
