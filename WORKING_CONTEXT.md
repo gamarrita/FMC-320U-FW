@@ -63,6 +63,8 @@ short/long recognition.
   uses CubeMX-generated LPTIM1 plus a local STOP2 compensation layer for idle
   wake and tick adjustment; product-level wake/backlight policy remains
   deferred.
+- Hardware smoke validation on target confirms ThreadX idle low power is
+  working, with observed current dropping to approximately 23 uA.
 
 ## Current Decision Gates
 
