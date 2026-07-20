@@ -59,9 +59,10 @@ short/long recognition.
   preferred direction is a simple timer armed on press and disarmed on release
   before the 3 second threshold.
 - The hardware is currently assumed not to produce mechanical key bounce.
-- ThreadX low-power support is enabled for idle/run visibility only. The
-  current slice uses conservative MCU Sleep/WFI, not STOP mode. It does not
-  define product low-power policy, alternate wake timers, or tick adjustment.
+- ThreadX low-power support uses the ST scheduler hook path. The current port
+  uses CubeMX-generated LPTIM1 plus a local STOP2 compensation layer for idle
+  wake and tick adjustment; product-level wake/backlight policy remains
+  deferred.
 
 ## Current Decision Gates
 

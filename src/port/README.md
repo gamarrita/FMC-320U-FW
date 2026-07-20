@@ -30,7 +30,6 @@ runtime-detected fallback delay API.
 ## ThreadX Idle Hooks
 
 `FM_PORT_THREADX_IDLE_Enter()` and `FM_PORT_THREADX_IDLE_Exit()` are called by
-ThreadX low-power support while the scheduler enters or leaves idle. The current
-port drives the debug-gated run LED and uses conservative MCU Sleep/WFI. It
-does not enter STOP mode, define product low-power policy, program alternate
-wake timers, or adjust ThreadX ticks.
+ThreadX low-power support while the scheduler enters or leaves idle. The port
+uses CubeMX-generated LPTIM1 configuration as the STOP2 wake timer source and
+keeps the low-power compensation code outside generated regions.

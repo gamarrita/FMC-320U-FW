@@ -113,6 +113,11 @@ Generated `Core/` sources and headers are CubeMX-managed:
 - prefer edits only inside explicit `USER CODE` regions when they exist
 - do not restructure generated regions outside `USER CODE`
 - keep manual edits minimal and easy to preserve across regeneration
+- do not add, remove, reorder, or compensate calls to CubeMX-generated
+  initialization functions such as `SystemClock_Config()` or `MX_*_Init()` from
+  `USER CODE` without explicit human approval; those calls are part of the
+  CubeMX-generated startup contract and must normally be changed through
+  CubeMX Project Manager / Advanced Settings
 
 If protected code or generated code outside `USER CODE` appears to require
 changes:

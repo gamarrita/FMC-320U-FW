@@ -20,6 +20,10 @@
 #include "app_threadx.h"
 #include "main.h"
 #include "icache.h"
+#include "lptim.h"
+#include "rtc.h"
+#include "spi.h"
+#include "usart.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -83,11 +87,16 @@ int main(void)
   SystemPower_Config();
 
   /* USER CODE BEGIN SysInit */
+  SystemClock_Config();
 
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
+  MX_RTC_Init();
+  MX_USART1_UART_Init();
   MX_ICACHE_Init();
+  MX_SPI1_Init();
+  MX_LPTIM1_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */

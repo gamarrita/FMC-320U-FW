@@ -12,6 +12,12 @@ void FM_PORT_RCC_Init(void)
     RCC_OscInitTypeDef osc_init = { 0 };
     RCC_ClkInitTypeDef clk_init = { 0 };
 
+    if ((HAL_IS_BIT_SET(RCC->BDCR, RCC_BDCR_LSERDY))
+            && (__HAL_RCC_GET_SYSCLK_SOURCE() == RCC_SYSCLKSOURCE_STATUS_MSI))
+    {
+        return;
+    }
+
     if (HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE4) != HAL_OK)
     {
         Error_Handler();
