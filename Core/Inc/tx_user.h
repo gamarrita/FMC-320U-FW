@@ -279,6 +279,17 @@
 /* User's low-power macro to obtain the amount of time (in ticks) the system has been in low power mode */
 
 /* USER CODE BEGIN 2 */
+#ifndef __ASSEMBLER__
+void App_ThreadX_LowPower_Timer_Setup(unsigned long count);
+void App_ThreadX_LowPower_Enter(void);
+void App_ThreadX_LowPower_Exit(void);
+unsigned long App_ThreadX_LowPower_Timer_Adjust(void);
+
+#define TX_LOW_POWER_TIMER_SETUP(count) App_ThreadX_LowPower_Timer_Setup(count)
+#define TX_LOW_POWER_USER_ENTER App_ThreadX_LowPower_Enter()
+#define TX_LOW_POWER_USER_EXIT App_ThreadX_LowPower_Exit()
+#define TX_LOW_POWER_USER_TIMER_ADJUST App_ThreadX_LowPower_Timer_Adjust()
+#endif /* __ASSEMBLER__ */
 
 /* USER CODE END 2 */
 

@@ -138,14 +138,5 @@ ULONG App_ThreadX_LowPower_Timer_Adjust(void)
 }
 
 /* USER CODE BEGIN 1 */
-void tx_low_power_enter(void)
-{
-  App_ThreadX_LowPower_Enter();
-}
-
-void tx_low_power_exit(void)
-{
-  App_ThreadX_LowPower_Exit();
-}
 
 /* USER CODE END 1 */

@@ -19,6 +19,7 @@ set(MX_Include_Dirs
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Middlewares/ST/threadx/common/inc
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Drivers/CMSIS/Device/ST/STM32U5xx/Include
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Middlewares/ST/threadx/ports/cortex_m33/gnu/inc
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Middlewares/ST/threadx/utility/low_power
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Drivers/CMSIS/Include
 )
 
@@ -74,6 +75,7 @@ set(STM32_Drivers_Src
 
 
 set(ThreadX_Src
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Middlewares/ST/threadx/utility/low_power/tx_low_power.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Middlewares/ST/threadx/ports/cortex_m33/gnu/src/tx_thread_context_restore.S
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Middlewares/ST/threadx/ports/cortex_m33/gnu/src/tx_thread_context_save.S
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Middlewares/ST/threadx/ports/cortex_m33/gnu/src/tx_thread_interrupt_control.S

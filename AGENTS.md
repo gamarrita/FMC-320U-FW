@@ -103,6 +103,7 @@ If a context reframe is triggered:
 Without explicit human approval, do not edit:
 - `drivers/CMSIS/`
 - `drivers/STM32U5xx_HAL_Driver/`
+- `Middlewares/`
 - `fmc-320u-v2.ioc`
 - `cmake/stm32cubemx/CMakeLists.txt`
 - `startup_stm32u575xx.s`

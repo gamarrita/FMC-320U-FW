@@ -49,6 +49,16 @@ Significa:
 - usar los bundles STM32 correctos para `ninja`, toolchain GNU y utilidades
 - respetar los presets de `CMakePresets.json`
 
+Compensación conocida:
+- CubeMX registra ThreadX Low Power Support como define de assembler
+  `TX_LOW_POWER` en `.mxproject`, pero el CMake generado no lo propaga al
+  target `ThreadX`.
+- El `CMakeLists.txt` raíz, que no es generado por CubeMX, añade
+  `TX_LOW_POWER` al target `ThreadX` para que el scheduler ASM llame la utility
+  oficial `threadx/utility/low_power/tx_low_power.c`.
+- La lógica de usuario sigue viviendo en `USER CODE` y se conecta mediante las
+  macros de `Core/Inc/tx_user.h`.
+
 La configuración que fija esto hoy está en:
 - `.vscode/settings.json`
 - `CMakePresets.json`

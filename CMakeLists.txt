@@ -45,7 +45,7 @@ set(FM_AVAILABLE_APPS
 )
 
 # Edit this value to select the firmware app built by the canonical flow.
-set(FM_ACTIVE_APP_DEFAULT "bringups/keyboard_input")
+set(FM_ACTIVE_APP_DEFAULT "product/main")
 
 # Remove selector entries stored by older revisions.
 unset(FM_ACTIVE_APP CACHE)
@@ -73,6 +73,9 @@ add_executable(${CMAKE_PROJECT_NAME})
 # Add STM32CubeMX generated sources
 add_subdirectory(cmake/stm32cubemx)
 
+# CubeMX records ThreadX low-power as an assembler define in .mxproject, but
+# the generated CMake target does not propagate it. The canonical CMake build
+# needs this define so tx_thread_schedule.S calls the official low-power utility.
 if(TARGET ThreadX)
     target_compile_definitions(ThreadX PRIVATE TX_LOW_POWER)
 endif()
