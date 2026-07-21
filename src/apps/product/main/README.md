@@ -25,6 +25,16 @@ GPIO EXTI IRQ
 -> FMC_RUNTIME_Dispatch()
 ```
 
+Current periodic refresh flow:
+
+```text
+ThreadX periodic timer, 1 second
+-> bounded timer callback publishes FM_MAIN_EVENT_PERIODIC_REFRESH
+-> same product/main app-level queue
+-> FM_MAIN_Main() receives the event in the existing FM_APP ThreadX thread
+-> temporary SIGNAL LED toggle through the board API
+```
+
 ## Boundaries
 
 Do not place pure product behavior here. Product rules and runtime contracts
@@ -33,11 +43,17 @@ belong under `src/product/fmc/`.
 Do not place board pin, HAL, GPIO, EXTI, CubeMX, ThreadX, queue, or timer
 details in product contracts.
 
-For the current input slice, this folder owns the app-level ThreadX keyboard
-queue. `FM_MAIN_Main()` runs inside the existing `FM_APP` ThreadX thread and is
-the only owner of the live `fmc_runtime_t`. It adapts mechanical board keys
-`DOWN`, `UP`, `ENTER`, and `ESC` into provisional FMC runtime input events with
-action `SHORT`.
+For the current input slice, this folder owns the app-level ThreadX owner
+event queue. `FM_MAIN_Main()` runs inside the existing `FM_APP` ThreadX thread
+and is the only owner of the live `fmc_runtime_t`. It adapts mechanical board
+keys `DOWN`, `UP`, `ENTER`, and `ESC` into provisional FMC runtime input events
+with action `SHORT`.
+
+The 1 second periodic refresh event is also serialized through the owner queue
+so ThreadX always has a temporal wake deadline for tickless/low-power support.
+Later slices may consume this source for measurement and presentation updates.
+The current SIGNAL LED toggle is temporary visibility for the refresh source
+and is not part of the FMC product contract.
 
 Do not add another product thread unless there is a concrete concurrent
 responsibility, such as presentation, acquisition, communication, or timer work

@@ -116,17 +116,17 @@ Runtime direction:
 - ThreadX is the only active firmware runtime from this phase onward.
 - The last bare-metal firmware state is a historical comparison baseline, not a
   second maintained architecture.
-- Selectable apps may continue through a ThreadX bootstrap harness while the
-  product runtime owner thread is introduced incrementally.
+- Selectable apps continue through a ThreadX bootstrap harness. For
+  `product/main`, the existing `FM_APP` thread runs the `FM_MAIN_Main()` owner
+  loop directly.
 
 Current selected slice:
-- introduce one dedicated ThreadX owner thread for `fmc_runtime`;
-- deliver mechanical keyboard events from ISR to that owner thread through a
-  ThreadX queue;
-- use an app-level keyboard event payload at the ISR-to-thread boundary;
+- use the existing `FM_APP` ThreadX thread as the only owner of `fmc_runtime`;
+- deliver mechanical keyboard and provisional periodic refresh events to that
+  owner through one ThreadX queue;
+- use app-level event payloads at producer-to-owner boundaries;
 - use an initial queue depth of 8 events;
-- treat keyboard queue overflow as abnormal and make it explicit through panic
-  or queue reset plus newest-event enqueue;
+- treat owner queue overflow as abnormal and make it explicit;
 - convert mechanical-key release events to provisional `SHORT` runtime input;
 - preserve press events for the future recognizer without dispatching runtime
   input from them yet;
@@ -139,9 +139,9 @@ Dependencies:
 - CubeMX-generated ThreadX and low-power-support configuration.
 
 Decision gates:
-- detailed runtime owner thread stack, priority, and startup sequencing;
+- owner loop startup sequencing in the existing `FM_APP` thread;
 - exact ThreadX queue storage ownership and overflow action;
-- timer ownership for long press and periodic ticks;
+- timer ownership for final long press recognition;
 - wake source and low-power ownership;
 - presentation/backlight activity ownership.
 

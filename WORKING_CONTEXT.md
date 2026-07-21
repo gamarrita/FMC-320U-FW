@@ -47,8 +47,10 @@ short/long recognition.
   contracts.
 - `fmc_runtime` is owned by one dedicated ThreadX thread.
 - ISR paths must not call `FMC_RUNTIME_Dispatch()` directly.
-- ISR-to-runtime delivery uses a ThreadX queue with an app-level keyboard event
-  payload, not a `fmc_runtime_event_t` as the ISR-facing contract.
+- ISR-to-runtime delivery uses a ThreadX owner queue with app-level event
+  payloads, not a `fmc_runtime_event_t` as the ISR-facing contract. The queue
+  currently carries keyboard events and a provisional 1 second periodic refresh
+  event.
 - The initial queue depth is 8 events.
 - Queue overflow is considered abnormal for mechanical keyboard input. The
   implementation may panic or reset the queue and enqueue the newest event, but
@@ -72,7 +74,7 @@ short/long recognition.
 - Define semantic input before implementing menu behavior.
 - Preserve input key identity and action identity before mapping consequences
   such as navigation, editing, wake, backlight, or presentation invalidation.
-- Define the minimal ThreadX runtime owner, ISR-to-thread keyboard queue, and
+- Define the minimal ThreadX runtime owner, ISR-to-thread owner queue, and
   overflow behavior before implementing final short/long recognition.
 - Defer low-power, wake, backlight, and final timer ownership decisions until
   their selected slices.
@@ -82,10 +84,11 @@ short/long recognition.
 
 ## Next Selected Step
 
-- Hardware-smoke validate the `product/main` keyboard path into the runtime
-  owner thread. If edge polarity or generated EXTI configuration blocks the
-  provisional `SHORT` path, resolve that through CubeMX-approved hardware
-  configuration before adding final long-press recognition.
+- Hardware-smoke validate the `product/main` owner-loop path: keyboard events,
+  1 second periodic refresh, SIGNAL LED toggle, and STOP2 wake/tick continuity.
+  If edge polarity or generated EXTI configuration blocks the provisional
+  `SHORT` path, resolve that through CubeMX-approved hardware configuration
+  before adding final long-press recognition.
 
 ## Milestone Boundaries
 

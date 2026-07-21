@@ -13,6 +13,7 @@
 #include "fm_board.h"
 #include "fm_board_keyboard.h"
 #include "fm_debug.h"
+#include "fm_main_event.h"
 #include "fm_main_input_adapter.h"
 #include "fm_port_time.h"
 #include "fmc_input.h"
@@ -49,6 +50,7 @@ typedef enum
     FM_REGRESSION_TEST_CASE_DISPLAY_FORMAT_ERROR_PATHS,
     FM_REGRESSION_TEST_CASE_KEYBOARD_MAPPING,
     FM_REGRESSION_TEST_CASE_MAIN_INPUT_ADAPTER,
+    FM_REGRESSION_TEST_CASE_MAIN_EVENT_QUEUE,
     FM_REGRESSION_TEST_CASE_COUNT
 } fm_regression_test_case_t;
 
@@ -93,6 +95,7 @@ static bool fm_regression_test_display_format_values_(void);
 static bool fm_regression_test_display_format_error_paths_(void);
 static bool fm_regression_test_keyboard_mapping_(void);
 static bool fm_regression_test_main_input_adapter_(void);
+static bool fm_regression_test_main_event_queue_(void);
 static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case);
 static void fm_regression_test_emit_case_(fm_regression_test_case_t p_case,
                                                bool p_passed);
@@ -1354,6 +1357,92 @@ static bool fm_regression_test_main_input_adapter_(void)
         NULL);
 }
 
+/*
+ * Verifies the app-level owner-loop event payload used by product/main.
+ *
+ * Periodic refresh stays in the app composition layer, coexists with keyboard
+ * delivery in the same queue, and reports queue-full publication explicitly.
+ */
+static bool fm_regression_test_main_event_queue_(void)
+{
+    TX_QUEUE queue;
+    ULONG storage[2U * FM_MAIN_EVENT_QUEUE_MESSAGE_WORDS];
+    fm_main_event_t event = {0U};
+    fm_main_event_t received = {0U};
+    bool passed = false;
+
+    if ((FM_MAIN_EVENT_Publish(NULL, &event) != FM_STATUS_EINVAL) ||
+        (FM_MAIN_EVENT_Publish(&queue, NULL) != FM_STATUS_EINVAL))
+    {
+        return false;
+    }
+
+    if (tx_queue_create(&queue,
+                        (CHAR *) "REG_MAIN_EVENT",
+                        FM_MAIN_EVENT_QUEUE_MESSAGE_WORDS,
+                        storage,
+                        sizeof(storage)) != TX_SUCCESS)
+    {
+        return false;
+    }
+
+    FM_MAIN_EVENT_MakePeriodicRefresh(&event);
+    if ((FM_MAIN_EVENT_Publish(&queue, &event) != FM_STATUS_OK) ||
+        (tx_queue_receive(&queue, &received, TX_NO_WAIT) != TX_SUCCESS) ||
+        ((fm_main_event_kind_t) received.kind !=
+         FM_MAIN_EVENT_PERIODIC_REFRESH))
+    {
+        goto done;
+    }
+
+    FM_MAIN_EVENT_MakeKeyboard(&event,
+                               FM_BOARD_KEYBOARD_KEY_DOWN,
+                               FM_BOARD_KEYBOARD_EDGE_FALLING);
+    if (FM_MAIN_EVENT_Publish(&queue, &event) != FM_STATUS_OK)
+    {
+        goto done;
+    }
+
+    FM_MAIN_EVENT_MakePeriodicRefresh(&event);
+    if (FM_MAIN_EVENT_Publish(&queue, &event) != FM_STATUS_OK)
+    {
+        goto done;
+    }
+
+    if ((tx_queue_receive(&queue, &received, TX_NO_WAIT) != TX_SUCCESS) ||
+        ((fm_main_event_kind_t) received.kind != FM_MAIN_EVENT_KEYBOARD) ||
+        ((fm_board_keyboard_key_t) received.key !=
+         FM_BOARD_KEYBOARD_KEY_DOWN) ||
+        ((fm_board_keyboard_edge_t) received.edge !=
+         FM_BOARD_KEYBOARD_EDGE_FALLING))
+    {
+        goto done;
+    }
+
+    if ((tx_queue_receive(&queue, &received, TX_NO_WAIT) != TX_SUCCESS) ||
+        ((fm_main_event_kind_t) received.kind !=
+         FM_MAIN_EVENT_PERIODIC_REFRESH))
+    {
+        goto done;
+    }
+
+    FM_MAIN_EVENT_MakeKeyboard(&event,
+                               FM_BOARD_KEYBOARD_KEY_UP,
+                               FM_BOARD_KEYBOARD_EDGE_FALLING);
+    if ((FM_MAIN_EVENT_Publish(&queue, &event) != FM_STATUS_OK) ||
+        (FM_MAIN_EVENT_Publish(&queue, &event) != FM_STATUS_OK) ||
+        (FM_MAIN_EVENT_Publish(&queue, &event) != FM_STATUS_ERANGE))
+    {
+        goto done;
+    }
+
+    passed = true;
+
+done:
+    (void) tx_queue_delete(&queue);
+    return passed;
+}
+
 static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case)
 {
     switch (p_case)
@@ -1417,6 +1506,9 @@ static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case)
 
     case FM_REGRESSION_TEST_CASE_MAIN_INPUT_ADAPTER:
         return fm_regression_test_main_input_adapter_();
+
+    case FM_REGRESSION_TEST_CASE_MAIN_EVENT_QUEUE:
+        return fm_regression_test_main_event_queue_();
 
     default:
         return false;
@@ -1506,6 +1598,10 @@ static void fm_regression_test_emit_case_(fm_regression_test_case_t p_case,
 
     case FM_REGRESSION_TEST_CASE_MAIN_INPUT_ADAPTER:
         (void) FM_DEBUG_UartStr("REGRESSION_TEST:MAIN_INPUT_ADAPTER:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_MAIN_EVENT_QUEUE:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:MAIN_EVENT_QUEUE:");
         break;
 
     default:
