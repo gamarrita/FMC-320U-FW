@@ -81,9 +81,10 @@ short/long recognition.
 
 ## Next Selected Step
 
-- Define and implement the minimal ThreadX runtime owner thread and
-  ISR-to-thread keyboard delivery skeleton for mechanical-key provisional
-  `SHORT` events.
+- Hardware-smoke validate the `product/main` keyboard path into the runtime
+  owner thread. If edge polarity or generated EXTI configuration blocks the
+  provisional `SHORT` path, resolve that through CubeMX-approved hardware
+  configuration before adding final long-press recognition.
 
 ## Milestone Boundaries
 

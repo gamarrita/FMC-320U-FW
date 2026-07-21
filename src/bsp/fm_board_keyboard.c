@@ -21,8 +21,13 @@ typedef struct
 
 static void fm_board_keyboard_exti_callback_(uint16_t gpio_pin,
                                              fm_port_gpio_exti_edge_t edge);
+static fm_board_keyboard_edge_t fm_board_keyboard_edge_from_port_(
+    fm_port_gpio_exti_edge_t edge);
 static void fm_board_keyboard_on_exti_(uint16_t gpio_pin,
                                        fm_port_gpio_exti_edge_t edge);
+
+static volatile fm_board_keyboard_callback_t g_fm_board_keyboard_callback =
+    NULL;
 
 static const fm_board_keyboard_map_t g_fm_board_keyboard_map[] =
 {
@@ -58,6 +63,12 @@ void FM_BOARD_KeyboardInit(void)
     FM_PORT_GPIO_EXTI_Init();
 }
 
+void FM_BOARD_KeyboardSetCallback(
+    fm_board_keyboard_callback_t p_callback)
+{
+    g_fm_board_keyboard_callback = p_callback;
+}
+
 bool FM_BOARD_KeyboardKeyFromGpioPin(uint16_t gpio_pin,
                                      fm_board_keyboard_key_t *p_key)
 {
@@ -83,10 +94,23 @@ bool FM_BOARD_KeyboardKeyFromGpioPin(uint16_t gpio_pin,
     return false;
 }
 
+static fm_board_keyboard_edge_t fm_board_keyboard_edge_from_port_(
+    fm_port_gpio_exti_edge_t edge)
+{
+    if (edge == FM_PORT_GPIO_EXTI_EDGE_FALLING)
+    {
+        return FM_BOARD_KEYBOARD_EDGE_FALLING;
+    }
+
+    return FM_BOARD_KEYBOARD_EDGE_RISING;
+}
+
 /* IRQ path: translate the board pin and defer UART formatting to fm_debug. */
 static void fm_board_keyboard_on_exti_(uint16_t gpio_pin,
                                        fm_port_gpio_exti_edge_t edge)
 {
+    fm_board_keyboard_callback_t p_callback;
+    fm_board_keyboard_edge_t board_edge;
     uint8_t index;
 
     for (index = 0U;
@@ -96,6 +120,7 @@ static void fm_board_keyboard_on_exti_(uint16_t gpio_pin,
     {
         if (g_fm_board_keyboard_map[index].gpio_pin == gpio_pin)
         {
+            board_edge = fm_board_keyboard_edge_from_port_(edge);
             if (edge == FM_PORT_GPIO_EXTI_EDGE_FALLING)
             {
                 (void) FM_DEBUG_LogConstISR(
@@ -105,6 +130,12 @@ static void fm_board_keyboard_on_exti_(uint16_t gpio_pin,
             {
                 (void) FM_DEBUG_LogConstISR(
                     g_fm_board_keyboard_map[index].p_rising_msg);
+            }
+
+            p_callback = g_fm_board_keyboard_callback;
+            if (p_callback != NULL)
+            {
+                p_callback(g_fm_board_keyboard_map[index].key, board_edge);
             }
 
             return;

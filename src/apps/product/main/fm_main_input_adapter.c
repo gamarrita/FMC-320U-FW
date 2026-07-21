@@ -29,6 +29,15 @@ bool FM_MAIN_INPUT_ADAPTER_ShortEventFromBoardKey(
     return true;
 }
 
+/**
+ * @brief Translate a supported board key into an FMC semantic input key.
+ *
+ * @param board_key Mechanical board key identity.
+ * @param p_key Caller-owned semantic key destination.
+ *
+ * @return `true` when `board_key` is supported and @p p_key was updated.
+ * @return `false` when `board_key` is unsupported or @p p_key is `NULL`.
+ */
 static bool fm_main_input_adapter_key_from_board_(
     fm_board_keyboard_key_t board_key,
     fmc_input_key_t *p_key)

@@ -30,6 +30,26 @@ typedef enum
     FM_BOARD_KEYBOARD_KEY_COUNT
 } fm_board_keyboard_key_t;
 
+typedef enum
+{
+    /** Board keyboard rising edge as reported by the port EXTI adapter. */
+    FM_BOARD_KEYBOARD_EDGE_RISING = 0,
+    /** Board keyboard falling edge as reported by the port EXTI adapter. */
+    FM_BOARD_KEYBOARD_EDGE_FALLING
+} fm_board_keyboard_edge_t;
+
+/**
+ * @brief Board keyboard event callback.
+ *
+ * @param key  Board keyboard key identity.
+ * @param edge Board keyboard edge observed for that key.
+ *
+ * @warning Runs in IRQ context. Keep work bounded and non-blocking.
+ */
+typedef void (*fm_board_keyboard_callback_t)(
+    fm_board_keyboard_key_t key,
+    fm_board_keyboard_edge_t edge);
+
 /**
  * @brief Initialize the board keyboard interrupt path.
  *
@@ -37,9 +57,23 @@ typedef enum
  *          initializes the CubeMX-generated GPIO/EXTI configuration.
  *
  * The registered EXTI callback runs in IRQ context and keeps work bounded by
- * using ISR-safe debug logging.
+ * using ISR-safe debug logging and the optional board keyboard callback.
  */
 void FM_BOARD_KeyboardInit(void);
+
+/**
+ * @brief Register the board keyboard event callback.
+ *
+ * The callback receives board-level key and edge values after GPIO pin mapping.
+ * GPIO, HAL, and EXTI details remain hidden inside the board/port layers.
+ *
+ * @param p_callback Callback to run from the keyboard IRQ path, or `NULL` to
+ *        unregister.
+ *
+ * @warning The callback runs in IRQ context.
+ */
+void FM_BOARD_KeyboardSetCallback(
+    fm_board_keyboard_callback_t p_callback);
 
 /**
  * @brief Map a CubeMX GPIO pin value to a board keyboard key.

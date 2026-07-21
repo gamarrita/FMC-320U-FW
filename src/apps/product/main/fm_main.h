@@ -1,38 +1,34 @@
 /**
  * @file    fm_main.h
- * @brief   Punto de entrada de la aplicación Flowmeet (capa APP).
- * @date    2025-09-14
- * @author  Flowmeet
+ * @brief   Reduced FMC product app entry under ThreadX.
  *
  * @details
- *   Este módulo es todavía un placeholder/smoke app del producto, no el runtime
- *   final. Inicializa servicios de board/debug/RTC y luego ejecuta un loop
- *   simple de LED/UART/sleep para validar la línea básica de aplicación.
+ *   This module wires board services to the RTOS-neutral `fmc_runtime`
+ *   contract. It owns the app-level ThreadX queue used to serialize keyboard
+ *   IRQ delivery and the dedicated runtime owner thread that dispatches
+ *   provisional mechanical-key `SHORT` events.
  */
 
 #ifndef FM_MAIN_H_
 #define FM_MAIN_H_
 
-/* =========================== Includes ==================================== */
-#include "main.h"
-#include <stdint.h>
-
-/* =========================== Public API =================================== */
 /**
- * @brief  Inicializa la aplicación placeholder de producto.
+ * @brief Initialize the reduced product app runtime wiring.
  *
- * Configura board, RTC y debug. Las fallas de inicialización de capas bajas
- * pueden terminar en `Error_Handler()`.
+ * Configures board, RTC, debug, the keyboard delivery queue, the dedicated
+ * runtime owner thread, and the board keyboard IRQ callback.
  *
  * @warning Foreground startup only.
+ * @warning Call once after ThreadX has started.
+ * @warning Initialization failures are fatal contract violations.
  */
 void FM_MAIN_Init(void);
 
 /**
- * @brief  Ejecuta el loop placeholder de producto.
+ * @brief Run the reduced product app supervisor loop.
  *
- * Llama a `FM_MAIN_Init()`, alterna el LED de señal, emite un mensaje UART de
- * smoke test, duerme 500 ms y hace flush de debug en cada iteración.
+ * Calls `FM_MAIN_Init()` once, then periodically flushes deferred debug events
+ * while the dedicated runtime owner thread blocks on keyboard input.
  *
  * @warning Foreground app entry. Does not return during normal operation.
  */
