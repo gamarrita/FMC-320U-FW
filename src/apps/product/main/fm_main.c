@@ -50,24 +50,14 @@ void FM_MAIN_Init(void)
  */
 void FM_MAIN_Main(void)
 {
-	char msg[] = "Go to simulated sleep!!!\n";
+	char msg[] = "Go to sleep!!!\n";
 	FM_MAIN_Init();
-
 
 	fm_debug_led_state_t led_toogle = FM_DEBUG_LED_OFF;
 
     for (;;)
     {
-        // LED blink, no necesario, se ve al LED de bajo consumo como testigo de que el sistema está corre.
-        // FM_DEBUG_LedActive(1);
-        // FM_PORT_TIME_SleepMs(100U);
-        // FM_DEBUG_LedActive(0);
-        // FM_PORT_TIME_SleepMs(100U);
-
-        // Toggle LED state
-        // led_toogle ^= 1; /* toggle LED state */
-        // FM_DEBUG_LedSignal(led_toogle);
-
+        
         // Bloking UART message (legacy helper, not IRQ-safe)
         FM_DEBUG_UartMsg(msg, sizeof(msg) - 1U);
 

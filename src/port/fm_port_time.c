@@ -11,6 +11,16 @@
 #include "fm_debug.h"
 #include "tx_api.h"
 
+/**
+ * @brief Convert milliseconds to ThreadX ticks, rounding up.
+ *
+ * @param time_ms Delay interval in milliseconds.
+ * @param p_ticks Destination for the converted ThreadX tick count.
+ *
+ * @retval true Conversion succeeded and @p p_ticks was updated.
+ * @retval false Invalid output pointer, invalid tick rate, or arithmetic
+ *         overflow.
+ */
 static bool fm_port_time_ms_to_ticks_(uint32_t time_ms, ULONG *p_ticks);
 
 void FM_PORT_TIME_SleepMs(uint32_t time_ms)

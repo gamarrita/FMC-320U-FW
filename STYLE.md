@@ -182,6 +182,32 @@ Do not comment what the code already says.
 
 Use simple, explicit error handling. Keep ownership of recovery clear.
 
+Use `fm_status_t` for authored public functions when the caller can reasonably
+handle invalid arguments, range limits, unsupported cases, or invalid state.
+Document each returned status in the public header.
+
+Use `bool` only for narrow predicates or simple accept/fail adapters where the
+caller does not need to distinguish failure causes. Do not use `bool` to hide
+recoverable status decisions in product or service contracts.
+
+Use `void` public functions only when the operation cannot fail in a meaningful
+caller-visible way, when invalid input is explicitly ignored by contract, or
+when failure is a documented fatal contract violation.
+
+`fm_debug` is diagnostic infrastructure, not the primary error contract. Prefer:
+- returning `fm_status_t` for recoverable or caller-owned decisions;
+- `FM_DEBUG_ReportError*()` for non-fatal diagnostic recording;
+- `FM_DEBUG_Panic*()` only after the module contract has made the condition
+  fatal or non-returning.
+
+Do not make debug and release builds follow different product error contracts.
+Build configuration may change observability, but not whether a public
+operation returns status, ignores invalid input, degrades, or panics.
+
+When a repeated fatal category such as contract violation needs consistent
+diagnostics, extend the `fm_debug` public contract deliberately instead of
+encoding the policy only in ad hoc panic strings.
+
 ---
 
 ## Decision Rule
