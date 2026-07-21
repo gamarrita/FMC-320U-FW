@@ -14,8 +14,7 @@
  *   A ThreadX periodic timer also publishes `FM_MAIN_EVENT_PERIODIC_REFRESH`
  *   once per second into the same owner queue. The refresh source provides a
  *   regular low-power wake deadline and a future measurement/presentation
- *   update cadence. The current SIGNAL LED toggle is temporary app-composition
- *   behavior, not product runtime behavior.
+ *   update cadence.
  */
 
 #ifndef FM_MAIN_H_
@@ -39,8 +38,8 @@ void FM_MAIN_Init(void);
  * Calls `FM_MAIN_Init()` once, initializes the local `fmc_runtime_t`, registers
  * the keyboard IRQ publisher, then waits on the app-level event queue. Keyboard
  * events may dispatch accepted semantic input to runtime. Periodic refresh
- * events currently toggle the SIGNAL LED through the board API. This function
- * does not create another ThreadX thread.
+ * events currently run a no-op placeholder reserved for later refresh work.
+ * This function does not create another ThreadX thread.
  *
  * @warning Foreground app entry. Does not return during normal operation.
  */

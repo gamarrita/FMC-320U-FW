@@ -32,7 +32,7 @@ ThreadX periodic timer, 1 second
 -> bounded timer callback publishes FM_MAIN_EVENT_PERIODIC_REFRESH
 -> same product/main app-level queue
 -> FM_MAIN_Main() receives the event in the existing FM_APP ThreadX thread
--> temporary SIGNAL LED toggle through the board API
+-> no-op placeholder reserved for future refresh work
 ```
 
 ## Boundaries
@@ -52,8 +52,8 @@ with action `SHORT`.
 The 1 second periodic refresh event is also serialized through the owner queue
 so ThreadX always has a temporal wake deadline for tickless/low-power support.
 Later slices may consume this source for measurement and presentation updates.
-The current SIGNAL LED toggle is temporary visibility for the refresh source
-and is not part of the FMC product contract.
+The current handler is intentionally a no-op placeholder and is not part of the
+FMC product contract.
 
 Do not add another product thread unless there is a concrete concurrent
 responsibility, such as presentation, acquisition, communication, or timer work

@@ -85,7 +85,7 @@ short/long recognition.
 ## Next Selected Step
 
 - Hardware-smoke validate the `product/main` owner-loop path: keyboard events,
-  1 second periodic refresh, SIGNAL LED toggle, and STOP2 wake/tick continuity.
+  1 second periodic refresh wake-up, and STOP2 wake/tick continuity.
   If edge polarity or generated EXTI configuration blocks the provisional
   `SHORT` path, resolve that through CubeMX-approved hardware configuration
   before adding final long-press recognition.

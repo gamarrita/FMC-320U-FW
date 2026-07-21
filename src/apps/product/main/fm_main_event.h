@@ -44,9 +44,9 @@ void FM_MAIN_EVENT_MakeKeyboard(fm_main_event_t *p_event,
 /**
  * @brief Populate an app-level periodic refresh event.
  *
- * This event is currently consumed by `product/main` for a temporary SIGNAL
- * LED toggle. Later slices may use the same source to update measurements or
- * presentation without changing the product-domain runtime contract.
+ * This event is currently consumed by `product/main` as a no-op placeholder.
+ * Later slices may use the same source to update measurements or presentation
+ * without changing the product-domain runtime contract.
  *
  * @param p_event Caller-owned event destination.
  */

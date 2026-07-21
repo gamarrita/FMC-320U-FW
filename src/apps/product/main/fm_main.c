@@ -26,23 +26,116 @@ static ULONG fm_main_event_queue_storage[
 static volatile ULONG fm_main_event_queue_overflow_count;
 static volatile ULONG fm_main_event_queue_send_error_count;
 
+/**
+ * @brief Board keyboard callback that serializes a key edge into the owner queue.
+ *
+ * @param key Board-level key identity reported by the keyboard BSP.
+ * @param edge Board-level edge reported by the keyboard BSP.
+ *
+ * @warning Runs in the producer context selected by the board keyboard module.
+ *          It must not call the product runtime directly.
+ */
 static void fm_main_keyboard_callback_(fm_board_keyboard_key_t key,
                                        fm_board_keyboard_edge_t edge);
+
+/**
+ * @brief Publish one app-level event into the private owner queue.
+ *
+ * Queue overflow and unexpected send failures are recorded for later reporting
+ * by the owner loop. This helper is bounded and never waits.
+ *
+ * @param p_event Event to copy into the owner queue.
+ */
 static void fm_main_event_publish_(const fm_main_event_t *p_event);
+
+/**
+ * @brief Report producer-side queue publication errors from the owner context.
+ *
+ * Converts accumulated overflow and send-error counters into non-fatal debug
+ * diagnostics. The counters may be incremented by ISR/timer producers.
+ */
 static void fm_main_event_report_publish_errors_(void);
+
+/**
+ * @brief Increment a shared event counter under a short interrupt lock.
+ *
+ * @param p_counter Counter shared between producer contexts and the owner loop.
+ */
 static void fm_main_counter_increment_(volatile ULONG *p_counter);
+
+/**
+ * @brief Dispatch one app-level event received by the owner loop.
+ *
+ * Keyboard events may be adapted and dispatched to `fmc_runtime`. Periodic
+ * refresh events remain in the composition layer as a future refresh hook.
+ *
+ * @param p_runtime Runtime owned by `FM_MAIN_Main()`.
+ * @param p_event Event received from the owner queue.
+ */
 static void fm_main_event_handle_(fmc_runtime_t *p_runtime,
-                                  const fm_main_event_t *p_event,
-                                  bool *p_signal_led_on);
+                                  const fm_main_event_t *p_event);
+
+/**
+ * @brief Handle one keyboard event in the runtime owner context.
+ *
+ * Accepted key-release events are converted into provisional semantic `SHORT`
+ * input and dispatched to the runtime.
+ *
+ * @param p_runtime Runtime owned by `FM_MAIN_Main()`.
+ * @param p_event Keyboard event received from the owner queue.
+ */
 static void fm_main_keyboard_handle_event_(
     fmc_runtime_t *p_runtime,
     const fm_main_event_t *p_event);
+
+/**
+ * @brief Convert an app-level keyboard event into a runtime input event.
+ *
+ * Press edges are ignored for now and kept available for the future long-press
+ * recognizer. Falling edges are mapped through the main input adapter.
+ *
+ * @param p_event App-level keyboard event.
+ * @param p_runtime_event Destination runtime event.
+ *
+ * @return `true` when a runtime event was produced.
+ * @return `false` when the event is ignored or cannot be mapped.
+ */
 static bool fm_main_keyboard_event_to_runtime_(
     const fm_main_event_t *p_event,
     fmc_runtime_event_t *p_runtime_event);
+
+/**
+ * @brief ThreadX periodic timer callback for the product main refresh source.
+ *
+ * Publishes `FM_MAIN_EVENT_PERIODIC_REFRESH` with no wait. It deliberately
+ * avoids runtime dispatch, board LED access, and blocking work.
+ *
+ * @param input ThreadX timer input value. Unused.
+ */
 static void fm_main_periodic_refresh_timer_callback_(ULONG input);
-static void fm_main_periodic_refresh_handle_(bool *p_signal_led_on);
+
+/**
+ * @brief Handle one periodic refresh event in the owner loop.
+ *
+ * The refresh source is reserved for later measurement and presentation
+ * updates. It currently has no product-visible effect.
+ */
+static void fm_main_periodic_refresh_handle_(void);
+
+/**
+ * @brief Require a successful ThreadX status or stop in a debug panic.
+ *
+ * @param status ThreadX status to validate.
+ * @param p_msg Panic message used when status is not `TX_SUCCESS`.
+ */
 static void fm_main_require_tx_success_(UINT status, const char *p_msg);
+
+/**
+ * @brief Require `FM_STATUS_OK` or stop in a debug panic.
+ *
+ * @param status Project status to validate.
+ * @param p_msg Panic message used when status is not `FM_STATUS_OK`.
+ */
 static void fm_main_require_status_ok_(fm_status_t status, const char *p_msg);
 
 static void fm_main_keyboard_callback_(fm_board_keyboard_key_t key,
@@ -112,8 +205,7 @@ static void fm_main_counter_increment_(volatile ULONG *p_counter)
 }
 
 static void fm_main_event_handle_(fmc_runtime_t *p_runtime,
-                                  const fm_main_event_t *p_event,
-                                  bool *p_signal_led_on)
+                                  const fm_main_event_t *p_event)
 {
     if (p_event == NULL)
     {
@@ -127,7 +219,7 @@ static void fm_main_event_handle_(fmc_runtime_t *p_runtime,
         break;
 
     case FM_MAIN_EVENT_PERIODIC_REFRESH:
-        fm_main_periodic_refresh_handle_(p_signal_led_on);
+        fm_main_periodic_refresh_handle_();
         break;
 
     case FM_MAIN_EVENT_COUNT:
@@ -198,23 +290,10 @@ static void fm_main_periodic_refresh_timer_callback_(ULONG input)
     fm_main_event_publish_(&event);
 }
 
-static void fm_main_periodic_refresh_handle_(bool *p_signal_led_on)
+static void fm_main_periodic_refresh_handle_(void)
 {
-    if (p_signal_led_on == NULL)
-    {
-        return;
-    }
-
-    if (*p_signal_led_on)
-    {
-        FM_BOARD_LedSignalOff();
-        *p_signal_led_on = false;
-    }
-    else
-    {
-        FM_BOARD_LedSignalOn();
-        *p_signal_led_on = true;
-    }
+    /* Future refresh work will update measurements and presentation here. */
+    (void) 0;
 }
 
 static void fm_main_require_tx_success_(UINT status, const char *p_msg)
@@ -270,7 +349,6 @@ void FM_MAIN_Main(void)
 {
     fmc_runtime_t runtime;
     fm_main_event_t event;
-    bool signal_led_on = false;
     UINT status;
 
     FM_MAIN_Init();
@@ -289,7 +367,7 @@ void FM_MAIN_Main(void)
         fm_main_require_tx_success_(status, "FM_MAIN:EVENT_QUEUE_RX");
 
         fm_main_event_report_publish_errors_();
-        fm_main_event_handle_(&runtime, &event, &signal_led_on);
+        fm_main_event_handle_(&runtime, &event);
         FM_DEBUG_Flush();
     }
 }
