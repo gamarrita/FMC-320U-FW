@@ -20,7 +20,7 @@ GPIO EXTI IRQ
 -> port GPIO EXTI callback
 -> board keyboard maps pin to board key and edge
 -> product/main keyboard callback sends an app-level event to a ThreadX queue
--> product/main runtime owner thread receives the event
+-> FM_MAIN_Main() receives the event in the existing FM_APP ThreadX thread
 -> fm_main_input_adapter converts the board key to a provisional FMC SHORT
 -> FMC_RUNTIME_Dispatch()
 ```
@@ -34,9 +34,14 @@ Do not place board pin, HAL, GPIO, EXTI, CubeMX, ThreadX, queue, or timer
 details in product contracts.
 
 For the current input slice, this folder owns the app-level ThreadX keyboard
-queue and one dedicated owner thread for `fmc_runtime`. It adapts mechanical
-board keys `DOWN`, `UP`, `ENTER`, and `ESC` into provisional FMC runtime input
-events with action `SHORT`.
+queue. `FM_MAIN_Main()` runs inside the existing `FM_APP` ThreadX thread and is
+the only owner of the live `fmc_runtime_t`. It adapts mechanical board keys
+`DOWN`, `UP`, `ENTER`, and `ESC` into provisional FMC runtime input events with
+action `SHORT`.
+
+Do not add another product thread unless there is a concrete concurrent
+responsibility, such as presentation, acquisition, communication, or timer work
+that cannot live in the owner loop cleanly.
 
 This layer does not implement final short versus long recognition. It observes
 the current board keyboard edge only to produce provisional `SHORT` events.

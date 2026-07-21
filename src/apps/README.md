@@ -46,7 +46,14 @@ If the app has real logic beyond a tiny stub, add one app-local module such as:
 creates one generic app task and calls `APP_ENTRY_Run()` from that task.
 
 This harness preserves the selectable-app workflow during the ThreadX bootstrap
-baseline. It is not the final product owner thread for `fmc_runtime`.
+baseline. For `product/main`, this same `FM_APP` thread runs
+`FM_MAIN_Main()` and is the owner loop for the live `fmc_runtime_t`; that
+function does not return during normal operation. Keyboard ISRs only publish
+events into the app-level queue, and only the owner loop dispatches them to
+`fmc_runtime`.
+
+Add extra ThreadX threads only when a concrete concurrent responsibility needs
+separate blocking, priority, or lifetime ownership.
 
 Generated startup code must reach `MX_ThreadX_Init()` before app code runs.
 Do not call a selected app directly from generated `main.c`.

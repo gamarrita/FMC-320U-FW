@@ -41,7 +41,8 @@ short/long recognition.
 - The last bare-metal state is retained only as historical comparison baseline
   at tag `bare-metal-before-threadx`; it is not a parallel architecture.
 - The current `fm_app_threadx.*` harness adapts selectable apps to the CubeMX
-  ThreadX bootstrap. It is not the final `fmc_runtime` owner thread.
+  ThreadX bootstrap. For `product/main`, its `FM_APP` thread executes
+  `FM_MAIN_Main()` as the live `fmc_runtime` owner loop.
 - BSP, HAL, GPIO, ThreadX, queue, and timer types must not leak into product
   contracts.
 - `fmc_runtime` is owned by one dedicated ThreadX thread.

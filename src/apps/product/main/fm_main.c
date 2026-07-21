@@ -11,19 +11,13 @@
 #include "fm_debug.h"
 #include "fm_main_input_adapter.h"
 #include "fm_port_rtc.h"
-#include "fm_port_time.h"
 #include "fmc_runtime.h"
 #include "fm_status.h"
 #include "tx_api.h"
 
-#define FM_MAIN_RUNTIME_STACK_SIZE_BYTES       (2048U)
-#define FM_MAIN_RUNTIME_PRIORITY               (9U)
-#define FM_MAIN_RUNTIME_PREEMPTION_THRESHOLD   (9U)
-#define FM_MAIN_RUNTIME_TIME_SLICE             (TX_NO_TIME_SLICE)
 #define FM_MAIN_KEYBOARD_QUEUE_DEPTH           (8U)
 #define FM_MAIN_KEYBOARD_QUEUE_MESSAGE_WORDS   (3U)
 #define FM_MAIN_KEYBOARD_EVENT_FLAG_OVERFLOW   (1UL << 0)
-#define FM_MAIN_IDLE_FLUSH_MS                  (100U)
 
 typedef struct
 {
@@ -32,46 +26,22 @@ typedef struct
     ULONG flags;
 } fm_main_keyboard_event_t;
 
-static TX_THREAD fm_main_runtime_thread;
 static TX_QUEUE fm_main_keyboard_queue;
-static ULONG fm_main_runtime_stack[
-    FM_MAIN_RUNTIME_STACK_SIZE_BYTES / sizeof(ULONG)];
 static ULONG fm_main_keyboard_queue_storage[
     FM_MAIN_KEYBOARD_QUEUE_DEPTH * FM_MAIN_KEYBOARD_QUEUE_MESSAGE_WORDS];
-static fmc_runtime_t fm_main_runtime;
 
-static void fm_main_runtime_thread_entry_(ULONG input);
 static void fm_main_keyboard_callback_(fm_board_keyboard_key_t key,
                                        fm_board_keyboard_edge_t edge);
 static void fm_main_keyboard_publish_isr_(fm_board_keyboard_key_t key,
                                           fm_board_keyboard_edge_t edge);
 static void fm_main_keyboard_handle_event_(
+    fmc_runtime_t *p_runtime,
     const fm_main_keyboard_event_t *p_keyboard_event);
 static bool fm_main_keyboard_event_to_runtime_(
     const fm_main_keyboard_event_t *p_keyboard_event,
     fmc_runtime_event_t *p_runtime_event);
 static void fm_main_require_tx_success_(UINT status, const char *p_msg);
 static void fm_main_require_status_ok_(fm_status_t status, const char *p_msg);
-
-static void fm_main_runtime_thread_entry_(ULONG input)
-{
-    fm_main_keyboard_event_t keyboard_event;
-    UINT status;
-
-    (void) input;
-
-    FMC_RUNTIME_Init(&fm_main_runtime);
-
-    for (;;)
-    {
-        status = tx_queue_receive(&fm_main_keyboard_queue,
-                                  &keyboard_event,
-                                  TX_WAIT_FOREVER);
-        fm_main_require_tx_success_(status, "FM_MAIN:KEY_QUEUE_RX");
-
-        fm_main_keyboard_handle_event_(&keyboard_event);
-    }
-}
 
 static void fm_main_keyboard_callback_(fm_board_keyboard_key_t key,
                                        fm_board_keyboard_edge_t edge)
@@ -117,10 +87,16 @@ static void fm_main_keyboard_publish_isr_(fm_board_keyboard_key_t key,
 }
 
 static void fm_main_keyboard_handle_event_(
+    fmc_runtime_t *p_runtime,
     const fm_main_keyboard_event_t *p_keyboard_event)
 {
     fmc_runtime_event_t runtime_event;
     fm_status_t status;
+
+    if ((p_runtime == NULL) || (p_keyboard_event == NULL))
+    {
+        return;
+    }
 
     if ((p_keyboard_event->flags &
          FM_MAIN_KEYBOARD_EVENT_FLAG_OVERFLOW) != 0U)
@@ -133,7 +109,7 @@ static void fm_main_keyboard_handle_event_(
         return;
     }
 
-    status = FMC_RUNTIME_Dispatch(&fm_main_runtime, &runtime_event);
+    status = FMC_RUNTIME_Dispatch(p_runtime, &runtime_event);
     fm_main_require_status_ok_(status, "FM_MAIN:RUNTIME_DISPATCH");
 
     (void) FM_DEBUG_UartStr("FM_MAIN:INPUT_SHORT\n");
@@ -192,32 +168,30 @@ void FM_MAIN_Init(void)
                              fm_main_keyboard_queue_storage,
                              sizeof(fm_main_keyboard_queue_storage));
     fm_main_require_tx_success_(status, "FM_MAIN:KEY_QUEUE_CREATE");
+}
 
-    status = tx_thread_create(&fm_main_runtime_thread,
-                              (CHAR *) "FMC_RUNTIME",
-                              fm_main_runtime_thread_entry_,
-                              0U,
-                              fm_main_runtime_stack,
-                              sizeof(fm_main_runtime_stack),
-                              FM_MAIN_RUNTIME_PRIORITY,
-                              FM_MAIN_RUNTIME_PREEMPTION_THRESHOLD,
-                              FM_MAIN_RUNTIME_TIME_SLICE,
-                              TX_AUTO_START);
-    fm_main_require_tx_success_(status, "FM_MAIN:RUNTIME_THREAD_CREATE");
+void FM_MAIN_Main(void)
+{
+    fmc_runtime_t runtime;
+    fm_main_keyboard_event_t keyboard_event;
+    UINT status;
+
+    FM_MAIN_Init();
+    FMC_RUNTIME_Init(&runtime);
 
     FM_BOARD_KeyboardSetCallback(fm_main_keyboard_callback_);
     FM_BOARD_KeyboardInit();
 
     (void) FM_DEBUG_UartStr("FM_MAIN:READY\n");
-}
-
-void FM_MAIN_Main(void)
-{
-    FM_MAIN_Init();
 
     for (;;)
     {
+        status = tx_queue_receive(&fm_main_keyboard_queue,
+                                  &keyboard_event,
+                                  TX_WAIT_FOREVER);
+        fm_main_require_tx_success_(status, "FM_MAIN:KEY_QUEUE_RX");
+
+        fm_main_keyboard_handle_event_(&runtime, &keyboard_event);
         FM_DEBUG_Flush();
-        FM_PORT_TIME_SleepMs(FM_MAIN_IDLE_FLUSH_MS);
     }
 }
