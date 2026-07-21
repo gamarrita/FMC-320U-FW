@@ -11,6 +11,7 @@
 #include "fm_debug.h"
 #include "fm_main_event.h"
 #include "fm_main_input_adapter.h"
+#include "fm_main_input_recognizer.h"
 #include "fm_port_rtc.h"
 #include "fmc_runtime.h"
 #include "fm_status.h"
@@ -18,9 +19,18 @@
 
 #define FM_MAIN_EVENT_QUEUE_DEPTH              (8U)
 #define FM_MAIN_PERIODIC_REFRESH_TICKS         ((ULONG) TX_TIMER_TICKS_PER_SECOND)
+#define FM_MAIN_KEY_HOLD_TICKS                 ((ULONG) (3UL * TX_TIMER_TICKS_PER_SECOND))
+
+typedef struct
+{
+    fmc_runtime_t runtime;
+    fm_main_input_recognizer_t input_recognizer;
+    ULONG key_hold_start_ticks;
+} fm_main_owner_state_t;
 
 static TX_QUEUE fm_main_event_queue;
 static TX_TIMER fm_main_periodic_refresh_timer;
+static TX_TIMER fm_main_key_hold_timer;
 static ULONG fm_main_event_queue_storage[
     FM_MAIN_EVENT_QUEUE_DEPTH * FM_MAIN_EVENT_QUEUE_MESSAGE_WORDS];
 static volatile ULONG fm_main_event_queue_overflow_count;
@@ -66,43 +76,101 @@ static void fm_main_counter_increment_(volatile ULONG *p_counter);
 /**
  * @brief Dispatch one app-level event received by the owner loop.
  *
- * Keyboard events may be adapted and dispatched to `fmc_runtime`. Periodic
+ * Keyboard and key-hold timeout events are processed by the owner-loop input
+ * recognizer before dispatching semantic input to `fmc_runtime`. Periodic
  * refresh events remain in the composition layer as a future refresh hook.
  *
- * @param p_runtime Runtime owned by `FM_MAIN_Main()`.
+ * @param p_owner Owner-loop state.
  * @param p_event Event received from the owner queue.
  */
-static void fm_main_event_handle_(fmc_runtime_t *p_runtime,
+static void fm_main_event_handle_(fm_main_owner_state_t *p_owner,
                                   const fm_main_event_t *p_event);
 
 /**
  * @brief Handle one keyboard event in the runtime owner context.
  *
- * Accepted key-release events are converted into provisional semantic `SHORT`
- * input and dispatched to the runtime.
+ * RISING starts a key hold and arms the long-press timer. FALLING emits SHORT
+ * only when the hold did not already emit LONG.
  *
- * @param p_runtime Runtime owned by `FM_MAIN_Main()`.
+ * @param p_owner Owner-loop state.
  * @param p_event Keyboard event received from the owner queue.
  */
 static void fm_main_keyboard_handle_event_(
-    fmc_runtime_t *p_runtime,
+    fm_main_owner_state_t *p_owner,
     const fm_main_event_t *p_event);
 
 /**
- * @brief Convert an app-level keyboard event into a runtime input event.
+ * @brief ThreadX key-hold timer callback for long-press recognition.
  *
- * Press edges are ignored for now and kept available for the future long-press
- * recognizer. Falling edges are mapped through the main input adapter.
+ * Publishes `FM_MAIN_EVENT_KEY_HOLD_TIMEOUT` with no wait. It deliberately
+ * avoids runtime dispatch and recognizer state changes.
  *
- * @param p_event App-level keyboard event.
- * @param p_runtime_event Destination runtime event.
- *
- * @return `true` when a runtime event was produced.
- * @return `false` when the event is ignored or cannot be mapped.
+ * @param input ThreadX timer input value. Unused.
  */
-static bool fm_main_keyboard_event_to_runtime_(
-    const fm_main_event_t *p_event,
-    fmc_runtime_event_t *p_runtime_event);
+static void fm_main_key_hold_timer_callback_(ULONG input);
+
+/**
+ * @brief Handle one key-hold timeout in the owner loop.
+ *
+ * The timeout is consumed only if it still belongs to an active hold that has
+ * reached the configured 3 second threshold.
+ *
+ * @param p_owner Owner-loop state.
+ */
+static void fm_main_key_hold_timeout_handle_(fm_main_owner_state_t *p_owner);
+
+/**
+ * @brief Apply one recognizer output in the owner loop.
+ *
+ * Executes requested timer changes first, then dispatches any generated runtime
+ * input event.
+ *
+ * @param p_owner Owner-loop state.
+ * @param p_output Recognizer output to apply.
+ */
+static void fm_main_input_recognizer_output_apply_(
+    fm_main_owner_state_t *p_owner,
+    const fm_main_input_recognizer_output_t *p_output);
+
+/**
+ * @brief Report recognizer abnormal-state statuses as non-fatal diagnostics.
+ *
+ * @param status Recognizer status to report.
+ */
+static void fm_main_input_recognizer_status_report_(fm_status_t status);
+
+/**
+ * @brief Dispatch one semantic runtime input and log its action.
+ *
+ * @param p_runtime Runtime owned by `FM_MAIN_Main()`.
+ * @param p_event Runtime input event.
+ */
+static void fm_main_runtime_dispatch_input_(
+    fmc_runtime_t *p_runtime,
+    const fmc_runtime_event_t *p_event);
+
+/**
+ * @brief Start or restart the one-shot long-press timer.
+ *
+ * @param p_owner Owner-loop state that receives the timer start tick.
+ */
+static void fm_main_key_hold_timer_start_(fm_main_owner_state_t *p_owner);
+
+/**
+ * @brief Cancel the one-shot long-press timer.
+ */
+static void fm_main_key_hold_timer_cancel_(void);
+
+/**
+ * @brief Check whether a timeout event is old enough for the current hold.
+ *
+ * @param p_owner Owner-loop state.
+ *
+ * @return `true` when the configured hold threshold has elapsed.
+ * @return `false` for stale or early timeout delivery.
+ */
+static bool fm_main_key_hold_timeout_is_current_(
+    const fm_main_owner_state_t *p_owner);
 
 /**
  * @brief ThreadX periodic timer callback for the product main refresh source.
@@ -204,7 +272,7 @@ static void fm_main_counter_increment_(volatile ULONG *p_counter)
     (void) tx_interrupt_control(interrupt_posture);
 }
 
-static void fm_main_event_handle_(fmc_runtime_t *p_runtime,
+static void fm_main_event_handle_(fm_main_owner_state_t *p_owner,
                                   const fm_main_event_t *p_event)
 {
     if (p_event == NULL)
@@ -215,11 +283,15 @@ static void fm_main_event_handle_(fmc_runtime_t *p_runtime,
     switch ((fm_main_event_kind_t) p_event->kind)
     {
     case FM_MAIN_EVENT_KEYBOARD:
-        fm_main_keyboard_handle_event_(p_runtime, p_event);
+        fm_main_keyboard_handle_event_(p_owner, p_event);
         break;
 
     case FM_MAIN_EVENT_PERIODIC_REFRESH:
         fm_main_periodic_refresh_handle_();
+        break;
+
+    case FM_MAIN_EVENT_KEY_HOLD_TIMEOUT:
+        fm_main_key_hold_timeout_handle_(p_owner);
         break;
 
     case FM_MAIN_EVENT_COUNT:
@@ -230,10 +302,115 @@ static void fm_main_event_handle_(fmc_runtime_t *p_runtime,
 }
 
 static void fm_main_keyboard_handle_event_(
-    fmc_runtime_t *p_runtime,
+    fm_main_owner_state_t *p_owner,
     const fm_main_event_t *p_event)
 {
-    fmc_runtime_event_t runtime_event;
+    fm_main_input_recognizer_output_t output = {0};
+    fm_status_t status;
+
+    if ((p_owner == NULL) || (p_event == NULL))
+    {
+        return;
+    }
+
+    if ((fm_main_event_kind_t) p_event->kind != FM_MAIN_EVENT_KEYBOARD)
+    {
+        return;
+    }
+
+    status = FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
+        &p_owner->input_recognizer,
+        (fm_board_keyboard_key_t) p_event->key,
+        (fm_board_keyboard_edge_t) p_event->edge,
+        &output);
+    fm_main_input_recognizer_status_report_(status);
+    fm_main_input_recognizer_output_apply_(p_owner, &output);
+}
+
+static void fm_main_key_hold_timer_callback_(ULONG input)
+{
+    fm_main_event_t event;
+
+    (void) input;
+
+    FM_MAIN_EVENT_MakeKeyHoldTimeout(&event);
+    fm_main_event_publish_(&event);
+}
+
+static void fm_main_key_hold_timeout_handle_(fm_main_owner_state_t *p_owner)
+{
+    fm_main_input_recognizer_output_t output = {0};
+    fm_status_t status;
+
+    if (p_owner == NULL)
+    {
+        return;
+    }
+
+    if (!fm_main_key_hold_timeout_is_current_(p_owner))
+    {
+        FM_DEBUG_ReportError(FM_DEBUG_ERR_TIMEOUT);
+        return;
+    }
+
+    status = FM_MAIN_INPUT_RECOGNIZER_HandleHoldTimeout(
+        &p_owner->input_recognizer,
+        &output);
+    fm_main_input_recognizer_status_report_(status);
+    fm_main_input_recognizer_output_apply_(p_owner, &output);
+}
+
+static void fm_main_input_recognizer_output_apply_(
+    fm_main_owner_state_t *p_owner,
+    const fm_main_input_recognizer_output_t *p_output)
+{
+    if ((p_owner == NULL) || (p_output == NULL))
+    {
+        return;
+    }
+
+    switch (p_output->timer_action)
+    {
+    case FM_MAIN_INPUT_RECOGNIZER_TIMER_START:
+        fm_main_key_hold_timer_start_(p_owner);
+        break;
+
+    case FM_MAIN_INPUT_RECOGNIZER_TIMER_CANCEL:
+        fm_main_key_hold_timer_cancel_();
+        break;
+
+    case FM_MAIN_INPUT_RECOGNIZER_TIMER_NONE:
+    default:
+        break;
+    }
+
+    if (p_output->runtime_event_valid)
+    {
+        fm_main_runtime_dispatch_input_(&p_owner->runtime,
+                                        &p_output->runtime_event);
+    }
+}
+
+static void fm_main_input_recognizer_status_report_(fm_status_t status)
+{
+    if (status == FM_STATUS_OK)
+    {
+        return;
+    }
+
+    if (status == FM_STATUS_ESTATE)
+    {
+        FM_DEBUG_ReportError(FM_DEBUG_ERR_BACKEND);
+        return;
+    }
+
+    fm_main_require_status_ok_(status, "FM_MAIN:INPUT_RECOGNIZER");
+}
+
+static void fm_main_runtime_dispatch_input_(
+    fmc_runtime_t *p_runtime,
+    const fmc_runtime_event_t *p_event)
+{
     fm_status_t status;
 
     if ((p_runtime == NULL) || (p_event == NULL))
@@ -241,43 +418,63 @@ static void fm_main_keyboard_handle_event_(
         return;
     }
 
-    if (!fm_main_keyboard_event_to_runtime_(p_event, &runtime_event))
+    status = FMC_RUNTIME_Dispatch(p_runtime, p_event);
+    fm_main_require_status_ok_(status, "FM_MAIN:RUNTIME_DISPATCH");
+
+    if (p_event->data.input.action == FMC_INPUT_ACTION_LONG)
+    {
+        (void) FM_DEBUG_UartStr("FM_MAIN:INPUT_LONG\n");
+    }
+    else
+    {
+        (void) FM_DEBUG_UartStr("FM_MAIN:INPUT_SHORT\n");
+    }
+}
+
+static void fm_main_key_hold_timer_start_(fm_main_owner_state_t *p_owner)
+{
+    UINT status;
+
+    if (p_owner == NULL)
     {
         return;
     }
 
-    status = FMC_RUNTIME_Dispatch(p_runtime, &runtime_event);
-    fm_main_require_status_ok_(status, "FM_MAIN:RUNTIME_DISPATCH");
+    status = tx_timer_deactivate(&fm_main_key_hold_timer);
+    fm_main_require_tx_success_(status, "FM_MAIN:KEY_HOLD_TIMER_STOP");
 
-    (void) FM_DEBUG_UartStr("FM_MAIN:INPUT_SHORT\n");
+    status = tx_timer_change(&fm_main_key_hold_timer,
+                             FM_MAIN_KEY_HOLD_TICKS,
+                             0U);
+    fm_main_require_tx_success_(status, "FM_MAIN:KEY_HOLD_TIMER_CHANGE");
+
+    p_owner->key_hold_start_ticks = tx_time_get();
+
+    status = tx_timer_activate(&fm_main_key_hold_timer);
+    fm_main_require_tx_success_(status, "FM_MAIN:KEY_HOLD_TIMER_START");
 }
 
-static bool fm_main_keyboard_event_to_runtime_(
-    const fm_main_event_t *p_event,
-    fmc_runtime_event_t *p_runtime_event)
+static void fm_main_key_hold_timer_cancel_(void)
 {
-    fm_board_keyboard_key_t key;
-    fm_board_keyboard_edge_t edge;
+    UINT status;
 
-    if ((p_event == NULL) || (p_runtime_event == NULL))
+    status = tx_timer_deactivate(&fm_main_key_hold_timer);
+    fm_main_require_tx_success_(status, "FM_MAIN:KEY_HOLD_TIMER_CANCEL");
+}
+
+static bool fm_main_key_hold_timeout_is_current_(
+    const fm_main_owner_state_t *p_owner)
+{
+    ULONG elapsed_ticks;
+
+    if (p_owner == NULL)
     {
         return false;
     }
 
-    if ((fm_main_event_kind_t) p_event->kind != FM_MAIN_EVENT_KEYBOARD)
-    {
-        return false;
-    }
+    elapsed_ticks = tx_time_get() - p_owner->key_hold_start_ticks;
 
-    key = (fm_board_keyboard_key_t) p_event->key;
-    edge = (fm_board_keyboard_edge_t) p_event->edge;
-
-    if (edge != FM_BOARD_KEYBOARD_EDGE_FALLING)
-    {
-        return false;
-    }
-
-    return FM_MAIN_INPUT_ADAPTER_ShortEventFromBoardKey(key, p_runtime_event);
+    return elapsed_ticks >= FM_MAIN_KEY_HOLD_TICKS;
 }
 
 static void fm_main_periodic_refresh_timer_callback_(ULONG input)
@@ -330,9 +527,10 @@ void FM_MAIN_Init(void)
                              sizeof(fm_main_event_queue_storage));
     fm_main_require_tx_success_(status, "FM_MAIN:EVENT_QUEUE_CREATE");
 
-    if (FM_MAIN_PERIODIC_REFRESH_TICKS == 0U)
+    if ((FM_MAIN_PERIODIC_REFRESH_TICKS == 0U) ||
+        (FM_MAIN_KEY_HOLD_TICKS == 0U))
     {
-        FM_DEBUG_PanicMsg("FM_MAIN:REFRESH_TICKS_ZERO");
+        FM_DEBUG_PanicMsg("FM_MAIN:TIMER_TICKS_ZERO");
     }
 
     status = tx_timer_create(&fm_main_periodic_refresh_timer,
@@ -343,16 +541,27 @@ void FM_MAIN_Init(void)
                              FM_MAIN_PERIODIC_REFRESH_TICKS,
                              TX_AUTO_ACTIVATE);
     fm_main_require_tx_success_(status, "FM_MAIN:REFRESH_TIMER_CREATE");
+
+    status = tx_timer_create(&fm_main_key_hold_timer,
+                             (CHAR *) "FM_MAIN_KEY_HOLD",
+                             fm_main_key_hold_timer_callback_,
+                             0U,
+                             FM_MAIN_KEY_HOLD_TICKS,
+                             0U,
+                             TX_NO_ACTIVATE);
+    fm_main_require_tx_success_(status, "FM_MAIN:KEY_HOLD_TIMER_CREATE");
 }
 
 void FM_MAIN_Main(void)
 {
-    fmc_runtime_t runtime;
+    fm_main_owner_state_t owner;
     fm_main_event_t event;
     UINT status;
 
     FM_MAIN_Init();
-    FMC_RUNTIME_Init(&runtime);
+    FMC_RUNTIME_Init(&owner.runtime);
+    FM_MAIN_INPUT_RECOGNIZER_Init(&owner.input_recognizer);
+    owner.key_hold_start_ticks = 0U;
 
     FM_BOARD_KeyboardSetCallback(fm_main_keyboard_callback_);
     FM_BOARD_KeyboardInit();
@@ -367,7 +576,7 @@ void FM_MAIN_Main(void)
         fm_main_require_tx_success_(status, "FM_MAIN:EVENT_QUEUE_RX");
 
         fm_main_event_report_publish_errors_();
-        fm_main_event_handle_(&runtime, &event);
+        fm_main_event_handle_(&owner, &event);
         FM_DEBUG_Flush();
     }
 }

@@ -15,6 +15,7 @@
 #include "fm_debug.h"
 #include "fm_main_event.h"
 #include "fm_main_input_adapter.h"
+#include "fm_main_input_recognizer.h"
 #include "fm_port_time.h"
 #include "fmc_input.h"
 #include "fmc_model.h"
@@ -50,6 +51,7 @@ typedef enum
     FM_REGRESSION_TEST_CASE_DISPLAY_FORMAT_ERROR_PATHS,
     FM_REGRESSION_TEST_CASE_KEYBOARD_MAPPING,
     FM_REGRESSION_TEST_CASE_MAIN_INPUT_ADAPTER,
+    FM_REGRESSION_TEST_CASE_MAIN_INPUT_RECOGNIZER,
     FM_REGRESSION_TEST_CASE_MAIN_EVENT_QUEUE,
     FM_REGRESSION_TEST_CASE_COUNT
 } fm_regression_test_case_t;
@@ -95,6 +97,7 @@ static bool fm_regression_test_display_format_values_(void);
 static bool fm_regression_test_display_format_error_paths_(void);
 static bool fm_regression_test_keyboard_mapping_(void);
 static bool fm_regression_test_main_input_adapter_(void);
+static bool fm_regression_test_main_input_recognizer_(void);
 static bool fm_regression_test_main_event_queue_(void);
 static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case);
 static void fm_regression_test_emit_case_(fm_regression_test_case_t p_case,
@@ -1352,9 +1355,177 @@ static bool fm_regression_test_main_input_adapter_(void)
         return false;
     }
 
+    event.kind = FMC_RUNTIME_EVENT_NONE;
+    event.data.input.key = FMC_INPUT_KEY_COUNT;
+    event.data.input.action = FMC_INPUT_ACTION_COUNT;
+
+    if (!FM_MAIN_INPUT_ADAPTER_EventFromBoardKey(
+            FM_BOARD_KEYBOARD_KEY_ESC,
+            FMC_INPUT_ACTION_LONG,
+            &event) ||
+        (event.kind != FMC_RUNTIME_EVENT_INPUT) ||
+        (event.data.input.key != FMC_INPUT_KEY_ESC) ||
+        (event.data.input.action != FMC_INPUT_ACTION_LONG))
+    {
+        return false;
+    }
+
+    event.kind = FMC_RUNTIME_EVENT_NONE;
+    event.data.input.key = FMC_INPUT_KEY_ESC;
+    event.data.input.action = FMC_INPUT_ACTION_LONG;
+
+    if (FM_MAIN_INPUT_ADAPTER_EventFromBoardKey(
+            FM_BOARD_KEYBOARD_KEY_ESC,
+            FMC_INPUT_ACTION_COUNT,
+            &event) ||
+        (event.kind != FMC_RUNTIME_EVENT_NONE) ||
+        (event.data.input.key != FMC_INPUT_KEY_ESC) ||
+        (event.data.input.action != FMC_INPUT_ACTION_LONG))
+    {
+        return false;
+    }
+
     return !FM_MAIN_INPUT_ADAPTER_ShortEventFromBoardKey(
         FM_BOARD_KEYBOARD_KEY_DOWN,
         NULL);
+}
+
+/*
+ * Verifies the product/main mechanical-key recognizer contract.
+ *
+ * RISING starts the hold, timeout emits one LONG, and FALLING emits SHORT only
+ * when the hold did not already emit LONG.
+ */
+static bool fm_regression_test_main_input_recognizer_(void)
+{
+    fm_main_input_recognizer_t recognizer;
+    fm_main_input_recognizer_output_t output = {0};
+
+    FM_MAIN_INPUT_RECOGNIZER_Init(&recognizer);
+
+    if ((FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
+             NULL,
+             FM_BOARD_KEYBOARD_KEY_DOWN,
+             FM_BOARD_KEYBOARD_EDGE_RISING,
+             &output) != FM_STATUS_EINVAL) ||
+        (FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
+             &recognizer,
+             FM_BOARD_KEYBOARD_KEY_COUNT,
+             FM_BOARD_KEYBOARD_EDGE_RISING,
+             &output) != FM_STATUS_EINVAL) ||
+        (FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
+             &recognizer,
+             FM_BOARD_KEYBOARD_KEY_DOWN,
+             (fm_board_keyboard_edge_t) 99,
+             &output) != FM_STATUS_EINVAL) ||
+        (FM_MAIN_INPUT_RECOGNIZER_HandleHoldTimeout(
+             NULL,
+             &output) != FM_STATUS_EINVAL))
+    {
+        return false;
+    }
+
+    if ((FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
+             &recognizer,
+             FM_BOARD_KEYBOARD_KEY_DOWN,
+             FM_BOARD_KEYBOARD_EDGE_FALLING,
+             &output) != FM_STATUS_ESTATE) ||
+        (output.timer_action != FM_MAIN_INPUT_RECOGNIZER_TIMER_NONE) ||
+        output.runtime_event_valid)
+    {
+        return false;
+    }
+
+    if ((FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
+             &recognizer,
+             FM_BOARD_KEYBOARD_KEY_DOWN,
+             FM_BOARD_KEYBOARD_EDGE_RISING,
+             &output) != FM_STATUS_OK) ||
+        (output.timer_action != FM_MAIN_INPUT_RECOGNIZER_TIMER_START) ||
+        output.runtime_event_valid)
+    {
+        return false;
+    }
+
+    if ((FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
+             &recognizer,
+             FM_BOARD_KEYBOARD_KEY_DOWN,
+             FM_BOARD_KEYBOARD_EDGE_FALLING,
+             &output) != FM_STATUS_OK) ||
+        (output.timer_action != FM_MAIN_INPUT_RECOGNIZER_TIMER_CANCEL) ||
+        !output.runtime_event_valid ||
+        (output.runtime_event.kind != FMC_RUNTIME_EVENT_INPUT) ||
+        (output.runtime_event.data.input.key != FMC_INPUT_KEY_DOWN) ||
+        (output.runtime_event.data.input.action != FMC_INPUT_ACTION_SHORT))
+    {
+        return false;
+    }
+
+    if ((FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
+             &recognizer,
+             FM_BOARD_KEYBOARD_KEY_UP,
+             FM_BOARD_KEYBOARD_EDGE_RISING,
+             &output) != FM_STATUS_OK) ||
+        (output.timer_action != FM_MAIN_INPUT_RECOGNIZER_TIMER_START) ||
+        output.runtime_event_valid)
+    {
+        return false;
+    }
+
+    if ((FM_MAIN_INPUT_RECOGNIZER_HandleHoldTimeout(
+             &recognizer,
+             &output) != FM_STATUS_OK) ||
+        (output.timer_action != FM_MAIN_INPUT_RECOGNIZER_TIMER_NONE) ||
+        !output.runtime_event_valid ||
+        (output.runtime_event.kind != FMC_RUNTIME_EVENT_INPUT) ||
+        (output.runtime_event.data.input.key != FMC_INPUT_KEY_UP) ||
+        (output.runtime_event.data.input.action != FMC_INPUT_ACTION_LONG))
+    {
+        return false;
+    }
+
+    if ((FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
+             &recognizer,
+             FM_BOARD_KEYBOARD_KEY_UP,
+             FM_BOARD_KEYBOARD_EDGE_FALLING,
+             &output) != FM_STATUS_OK) ||
+        (output.timer_action != FM_MAIN_INPUT_RECOGNIZER_TIMER_CANCEL) ||
+        output.runtime_event_valid)
+    {
+        return false;
+    }
+
+    if ((FM_MAIN_INPUT_RECOGNIZER_HandleHoldTimeout(
+             &recognizer,
+             &output) != FM_STATUS_ESTATE) ||
+        output.runtime_event_valid)
+    {
+        return false;
+    }
+
+    if ((FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
+             &recognizer,
+             FM_BOARD_KEYBOARD_KEY_DOWN,
+             FM_BOARD_KEYBOARD_EDGE_RISING,
+             &output) != FM_STATUS_OK) ||
+        (FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
+             &recognizer,
+             FM_BOARD_KEYBOARD_KEY_ENTER,
+             FM_BOARD_KEYBOARD_EDGE_RISING,
+             &output) != FM_STATUS_ESTATE) ||
+        (output.timer_action != FM_MAIN_INPUT_RECOGNIZER_TIMER_START) ||
+        output.runtime_event_valid)
+    {
+        return false;
+    }
+
+    return (FM_MAIN_INPUT_RECOGNIZER_HandleHoldTimeout(
+                &recognizer,
+                &output) == FM_STATUS_OK) &&
+           output.runtime_event_valid &&
+           (output.runtime_event.kind == FMC_RUNTIME_EVENT_INPUT) &&
+           (output.runtime_event.data.input.key == FMC_INPUT_KEY_ENTER) &&
+           (output.runtime_event.data.input.action == FMC_INPUT_ACTION_LONG);
 }
 
 /*
@@ -1422,6 +1593,15 @@ static bool fm_regression_test_main_event_queue_(void)
     if ((tx_queue_receive(&queue, &received, TX_NO_WAIT) != TX_SUCCESS) ||
         ((fm_main_event_kind_t) received.kind !=
          FM_MAIN_EVENT_PERIODIC_REFRESH))
+    {
+        goto done;
+    }
+
+    FM_MAIN_EVENT_MakeKeyHoldTimeout(&event);
+    if ((FM_MAIN_EVENT_Publish(&queue, &event) != FM_STATUS_OK) ||
+        (tx_queue_receive(&queue, &received, TX_NO_WAIT) != TX_SUCCESS) ||
+        ((fm_main_event_kind_t) received.kind !=
+         FM_MAIN_EVENT_KEY_HOLD_TIMEOUT))
     {
         goto done;
     }
@@ -1506,6 +1686,9 @@ static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case)
 
     case FM_REGRESSION_TEST_CASE_MAIN_INPUT_ADAPTER:
         return fm_regression_test_main_input_adapter_();
+
+    case FM_REGRESSION_TEST_CASE_MAIN_INPUT_RECOGNIZER:
+        return fm_regression_test_main_input_recognizer_();
 
     case FM_REGRESSION_TEST_CASE_MAIN_EVENT_QUEUE:
         return fm_regression_test_main_event_queue_();
@@ -1598,6 +1781,10 @@ static void fm_regression_test_emit_case_(fm_regression_test_case_t p_case,
 
     case FM_REGRESSION_TEST_CASE_MAIN_INPUT_ADAPTER:
         (void) FM_DEBUG_UartStr("REGRESSION_TEST:MAIN_INPUT_ADAPTER:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_MAIN_INPUT_RECOGNIZER:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:MAIN_INPUT_RECOGNIZER:");
         break;
 
     case FM_REGRESSION_TEST_CASE_MAIN_EVENT_QUEUE:

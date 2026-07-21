@@ -22,11 +22,10 @@ contracts established by the runtime foundation:
 - stable snapshots for future presentation;
 - product contracts independent from HAL, GPIO, LCD, BSP, ThreadX, queue, and
   timer types;
-- a reduced path from mechanical keyboard release to provisional semantic
-  `SHORT` runtime input.
+- a reduced path from mechanical keyboard edges to semantic `SHORT` and `LONG`
+  runtime input.
 
-The milestone does not include the complete UI state machine or final
-short/long recognition.
+The milestone does not include the complete UI state machine.
 
 ## Decisions In Force
 
@@ -45,37 +44,50 @@ short/long recognition.
   `FM_MAIN_Main()` as the live `fmc_runtime` owner loop.
 - BSP, HAL, GPIO, ThreadX, queue, and timer types must not leak into product
   contracts.
-- `fmc_runtime` is owned by one dedicated ThreadX thread.
+- `fmc_runtime` is owned by the existing `FM_APP` ThreadX thread.
 - ISR paths must not call `FMC_RUNTIME_Dispatch()` directly.
 - ISR-to-runtime delivery uses a ThreadX owner queue with app-level event
   payloads, not a `fmc_runtime_event_t` as the ISR-facing contract. The queue
-  currently carries keyboard events and a provisional 1 second periodic refresh
-  event.
+  currently carries keyboard events, key-hold timeout events, and a
+  provisional 1 second periodic refresh event.
 - The initial queue depth is 8 events.
 - Queue overflow is considered abnormal for mechanical keyboard input. The
   implementation may panic or reset the queue and enqueue the newest event, but
   must make the abnormal condition explicit.
-- Until final recognition is implemented, release events from mechanical keys
-  produce provisional `SHORT` runtime input and press events do not dispatch a
-  runtime input event.
-- Timer ownership for final long-press recognition is deferred. The current
-  preferred direction is a simple timer armed on press and disarmed on release
-  before the 3 second threshold.
+- The minimal owner-loop short/long recognizer lives in `product/main`.
+  Hardware-observed RISING starts one active hold, the 3 second timeout emits
+  one semantic `LONG`, and FALLING emits semantic `SHORT` only when no `LONG`
+  was already emitted for that hold.
+- Timer ownership for the short/long recognizer belongs in `product/main`,
+  not in `src/product/fmc`. It uses a simple one-shot timer armed on RISING and
+  cancelled on FALLING before the 3 second threshold.
 - The hardware is currently assumed not to produce mechanical key bounce.
+- The human corrected CubeMX keyboard GPIO mode to falling-and-rising EXTI and
+  regenerated/flashed the firmware. Hardware UART smoke confirms RISING and
+  FALLING delivery for DOWN, UP, ENTER, and ESC.
 - ThreadX low-power support uses the ST scheduler hook path. The current port
   uses CubeMX-generated LPTIM1 plus a local STOP2 compensation layer for idle
   wake and tick adjustment; product-level wake/backlight policy remains
   deferred.
 - Hardware smoke validation on target confirms ThreadX idle low power is
   working, with observed current dropping to approximately 23 uA.
+- Prior hardware smoke validation on target confirmed the `product/main`
+  owner-loop keyboard path for DOWN, UP, ENTER, and ESC falling edges as
+  provisional `SHORT` input events. It also confirmed the 1 second periodic
+  refresh wake-up path through visible screen refresh.
+- Hardware smoke validation on target confirms the implemented short/long
+  recognizer for DOWN, UP, ENTER, and ESC: each key emits `SHORT` when RISING
+  is followed by FALLING before 3 seconds, each key emits one `LONG` while held
+  past approximately 3 seconds, and release after `LONG` does not emit a
+  duplicate `SHORT`.
 
 ## Current Decision Gates
 
 - Define semantic input before implementing menu behavior.
 - Preserve input key identity and action identity before mapping consequences
   such as navigation, editing, wake, backlight, or presentation invalidation.
-- Define the minimal ThreadX runtime owner, ISR-to-thread owner queue, and
-  overflow behavior before implementing final short/long recognition.
+- Close the minimal short/long recognizer slice before adding menu, wake,
+  backlight, debounce, or richer input consequences.
 - Defer low-power, wake, backlight, and final timer ownership decisions until
   their selected slices.
 - Use `use_cases.yaml` before changing observable product behavior; report
@@ -84,11 +96,10 @@ short/long recognition.
 
 ## Next Selected Step
 
-- Hardware-smoke validate the `product/main` owner-loop path: keyboard events,
-  1 second periodic refresh wake-up, and STOP2 wake/tick continuity.
-  If edge polarity or generated EXTI configuration blocks the provisional
-  `SHORT` path, resolve that through CubeMX-approved hardware configuration
-  before adding final long-press recognition.
+- Apply doc closure for the completed minimal short/long recognizer slice.
+  Preserve the current boundaries: menu consequences, debounce, wake,
+  backlight, external buttons, and richer presentation behavior remain outside
+  this working context unless explicitly selected next.
 
 ## Milestone Boundaries
 
@@ -103,7 +114,7 @@ Do not include unless explicitly selected by the current user request:
   enablement;
 - low-power entry/exit policy;
 - backlight or wake policy;
-- final 3 second long-press recognition;
+- complete menu consequences of short/long input;
 - debounce implementation;
 - external buttons `EXT_1` and `EXT_2`;
 - optimization of unrelated legacy code.
@@ -114,8 +125,9 @@ This milestone is complete when:
 
 - runtime contracts no longer depend on BSP, HAL, GPIO, LCD, ThreadX, queue, or
   timer types;
-- semantic mechanical-key input can reach runtime under ThreadX without
-  interface changes for future short/long recognition;
+- semantic mechanical-key `SHORT` and `LONG` input can reach runtime under
+  ThreadX without leaking BSP, GPIO, ThreadX, queue, or timer details into the
+  product contract;
 - ThreadX ownership and ISR-to-thread delivery are implemented and
   demonstrated for the reduced product runtime;
 - runtime state can produce stable presentation snapshots;

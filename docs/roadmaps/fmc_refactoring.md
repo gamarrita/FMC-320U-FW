@@ -122,16 +122,15 @@ Runtime direction:
 
 Current selected slice:
 - use the existing `FM_APP` ThreadX thread as the only owner of `fmc_runtime`;
-- deliver mechanical keyboard and provisional periodic refresh events to that
-  owner through one ThreadX queue;
+- deliver mechanical keyboard, key-hold timeout, and provisional periodic
+  refresh events to that owner through one ThreadX queue;
 - use app-level event payloads at producer-to-owner boundaries;
 - use an initial queue depth of 8 events;
 - treat owner queue overflow as abnormal and make it explicit;
-- convert mechanical-key release events to provisional `SHORT` runtime input;
-- preserve press events for the future recognizer without dispatching runtime
-  input from them yet;
-- defer final `LONG` recognition, low-power policy, presentation ownership,
-  wake/backlight policy, and external buttons.
+- recognize mechanical-key `SHORT` and `LONG` in `product/main` using
+  hardware-confirmed RISING/FALLING edges and a one-shot 3 second timer;
+- defer low-power policy, presentation ownership, wake/backlight policy,
+  debounce, menu consequences, and external buttons.
 
 Dependencies:
 - semantic input contract;
@@ -141,7 +140,7 @@ Dependencies:
 Decision gates:
 - owner loop startup sequencing in the existing `FM_APP` thread;
 - exact ThreadX queue storage ownership and overflow action;
-- timer ownership for final long press recognition;
+- hardware smoke validation for the minimal short/long recognizer;
 - wake source and low-power ownership;
 - presentation/backlight activity ownership.
 

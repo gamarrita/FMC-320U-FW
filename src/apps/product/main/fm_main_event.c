@@ -34,6 +34,19 @@ void FM_MAIN_EVENT_MakePeriodicRefresh(fm_main_event_t *p_event)
     p_event->flags = 0U;
 }
 
+void FM_MAIN_EVENT_MakeKeyHoldTimeout(fm_main_event_t *p_event)
+{
+    if (p_event == NULL)
+    {
+        return;
+    }
+
+    p_event->kind = (ULONG) FM_MAIN_EVENT_KEY_HOLD_TIMEOUT;
+    p_event->key = 0U;
+    p_event->edge = 0U;
+    p_event->flags = 0U;
+}
+
 fm_status_t FM_MAIN_EVENT_Publish(TX_QUEUE *p_queue,
                                   const fm_main_event_t *p_event)
 {

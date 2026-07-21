@@ -3,8 +3,9 @@
  * @brief   App-level event payload for the product main owner loop.
  *
  * These events serialize producer contexts into `FM_MAIN_Main()`. They are not
- * product-domain runtime events: ThreadX, queues, BSP keyboard edges, and the
- * provisional periodic refresh source remain in the app composition layer.
+ * product-domain runtime events: ThreadX, queues, BSP keyboard edges, key-hold
+ * timeouts, and the provisional periodic refresh source remain in the app
+ * composition layer.
  */
 #ifndef FM_MAIN_EVENT_H
 #define FM_MAIN_EVENT_H
@@ -19,6 +20,7 @@ typedef enum
 {
     FM_MAIN_EVENT_KEYBOARD = 0,
     FM_MAIN_EVENT_PERIODIC_REFRESH,
+    FM_MAIN_EVENT_KEY_HOLD_TIMEOUT,
     FM_MAIN_EVENT_COUNT
 } fm_main_event_kind_t;
 
@@ -51,6 +53,16 @@ void FM_MAIN_EVENT_MakeKeyboard(fm_main_event_t *p_event,
  * @param p_event Caller-owned event destination.
  */
 void FM_MAIN_EVENT_MakePeriodicRefresh(fm_main_event_t *p_event);
+
+/**
+ * @brief Populate an app-level key-hold timeout event.
+ *
+ * This event is produced by the ThreadX one-shot key-hold timer and consumed
+ * only by the `FM_MAIN_Main()` owner loop. It is not a product-domain event.
+ *
+ * @param p_event Caller-owned event destination.
+ */
+void FM_MAIN_EVENT_MakeKeyHoldTimeout(fm_main_event_t *p_event);
 
 /**
  * @brief Publish one app-level event to a ThreadX queue without waiting.
