@@ -1,164 +1,128 @@
-# WORKING_CONTEXT.md
+# Working Context: FMC Phase 6 Presentation And UI State Machine
 
-## Active Milestone
+## Active Workstream
 
-- FMC reduced product runtime on ThreadX
+Implement the first product-visible presentation and UI state-machine slice for
+`product/main`.
 
-## Product Behavior Authority
-
+Product behavior authority:
 - `docs/specs/fmc/use_cases.yaml`
+
+Durable phase strategy:
+- `docs/roadmaps/fmc_refactoring.md`, Phase 6
+
+Operational references:
+- `AGENTS.md`
+- `STYLE.md`
+- `src/apps/product/main/README.md`
+- `src/product/fmc/README.md`
+- `docs/workflow/doc_closure.md`
+
+## Current Baseline
+
+Phase 5 is closed for the selected input/runtime slice:
+- the existing `FM_APP` ThreadX thread runs `FM_MAIN_Main()`;
+- `FM_MAIN_Main()` is the only owner of the live `fmc_runtime_t`;
+- keyboard ISR callbacks, key-hold timeout, and periodic refresh are serialized
+  through the product/main owner queue;
+- mechanical `SHORT` and `LONG` input is hardware-smoke validated for `DOWN`,
+  `UP`, `ENTER`, and `ESC`;
+- the periodic refresh event wakes the owner loop every second and is currently
+  a no-op placeholder reserved for measurement and presentation work.
 
 ## Milestone Outcome
 
-Run a reduced FMC product runtime under ThreadX while preserving the product
-contracts established by the runtime foundation:
+The firmware should gain one narrow, auditable user-visible LCD path driven by
+the existing owner loop:
+- screen state is owned by `product/main` or by a small app-level presentation
+  helper called only from that owner loop;
+- rendering uses board/LCD contracts and existing formatting helpers;
+- `src/product/fmc` remains independent of ThreadX, HAL, GPIO, queues, timers,
+  BSP, and LCD details;
+- behavior implemented in the slice is traceable to
+  `docs/specs/fmc/use_cases.yaml`;
+- unresolved product behavior is reported instead of guessed.
 
-- ThreadX as the only active runtime and execution path;
-- live FMC state owned through `fmc_service`;
-- one ThreadX owner thread for the live `fmc_runtime`;
-- serialized ISR-to-thread delivery for mechanical keyboard input;
-- RTOS-neutral runtime events for service updates and semantic input inside
-  the product boundary;
-- stable snapshots for future presentation;
-- product contracts independent from HAL, GPIO, LCD, BSP, ThreadX, queue, and
-  timer types;
-- a reduced path from mechanical keyboard edges to semantic `SHORT` and `LONG`
-  runtime input.
+## Selected First Slice
 
-The milestone does not include the complete UI state machine.
+Recommended first implementation target:
+1. `SCREEN_STARTUP_ALL_SEGMENTS` for 3 seconds.
+2. `SCREEN_FIRMWARE_VERSION` for 3 seconds.
+3. `SCREEN_TTL_RATE` as the steady user screen.
+
+Within this slice:
+- `ESC SHORT` may advance/skip startup screens when specified by the product
+  spec;
+- other key consequences are implemented only where the selected spec section
+  is confirmed;
+- the existing periodic refresh event may drive presentation refresh;
+- timer callbacks publish bounded owner-queue events only;
+- LCD writes happen from the owner loop, not from ISR or timer callbacks.
+
+Before coding this slice, audit whether the existing LCD/BSP API can express:
+- all visible segments on;
+- firmware version with the `VE` legend;
+- TTL/RATE rows and indicators needed by `SCREEN_TTL_RATE`;
+- any required backlight operation already exposed through board contracts.
+
+If a needed operation is missing from the public LCD or board contract, stop and
+report the smallest contract extension instead of writing through HAL, GPIO,
+LCD RAM internals, or generated code.
 
 ## Decisions In Force
 
-- Confirmed requirements in `docs/specs/fmc/use_cases.yaml` are the current
-  product behavior authority.
-- Legacy sources, including `legacy/specs/fmc/use_cases.docx`, are evidence,
-  not authority over the current specification.
-- `WORKING_CONTEXT.md` controls current scope, sequencing, and temporary
-  boundaries; it does not override confirmed product requirements.
-- Public contracts for implemented modules belong in their headers.
-- ThreadX is the only active development and execution route.
-- The last bare-metal state is retained only as historical comparison baseline
-  at tag `bare-metal-before-threadx`; it is not a parallel architecture.
-- The current `fm_app_threadx.*` harness adapts selectable apps to the CubeMX
-  ThreadX bootstrap. For `product/main`, its `FM_APP` thread executes
-  `FM_MAIN_Main()` as the live `fmc_runtime` owner loop.
-- BSP, HAL, GPIO, ThreadX, queue, and timer types must not leak into product
-  contracts.
-- `fmc_runtime` is owned by the existing `FM_APP` ThreadX thread.
-- ISR paths must not call `FMC_RUNTIME_Dispatch()` directly.
-- ISR-to-runtime delivery uses a ThreadX owner queue with app-level event
-  payloads, not a `fmc_runtime_event_t` as the ISR-facing contract. The queue
-  currently carries keyboard events, key-hold timeout events, and a
-  provisional 1 second periodic refresh event.
-- The initial queue depth is 8 events.
-- Queue overflow is considered abnormal for mechanical keyboard input. The
-  implementation may panic or reset the queue and enqueue the newest event, but
-  must make the abnormal condition explicit.
-- The minimal owner-loop short/long recognizer lives in `product/main`.
-  Hardware-observed RISING starts one active hold, the 3 second timeout emits
-  one semantic `LONG`, and FALLING emits semantic `SHORT` only when no `LONG`
-  was already emitted for that hold.
-- Timer ownership for the short/long recognizer belongs in `product/main`,
-  not in `src/product/fmc`. It uses a simple one-shot timer armed on RISING and
-  cancelled on FALLING before the 3 second threshold.
-- The hardware is currently assumed not to produce mechanical key bounce.
-- The human corrected CubeMX keyboard GPIO mode to falling-and-rising EXTI and
-  regenerated/flashed the firmware. Hardware UART smoke confirms RISING and
-  FALLING delivery for DOWN, UP, ENTER, and ESC.
-- ThreadX low-power support uses the ST scheduler hook path. The current port
-  uses CubeMX-generated LPTIM1 plus a local STOP2 compensation layer for idle
-  wake and tick adjustment; product-level wake/backlight policy remains
-  deferred.
-- Hardware smoke validation on target confirms ThreadX idle low power is
-  working, with observed current dropping to approximately 23 uA.
-- Prior hardware smoke validation on target confirmed the `product/main`
-  owner-loop keyboard path for DOWN, UP, ENTER, and ESC falling edges as
-  provisional `SHORT` input events. It also confirmed the 1 second periodic
-  refresh wake-up path through visible screen refresh.
-- Hardware smoke validation on target confirms the implemented short/long
-  recognizer for DOWN, UP, ENTER, and ESC: each key emits `SHORT` when RISING
-  is followed by FALLING before 3 seconds, each key emits one `LONG` while held
-  past approximately 3 seconds, and release after `LONG` does not emit a
-  duplicate `SHORT`.
+- Do not create a second product thread without a concrete concurrent
+  responsibility that cannot live in the owner loop cleanly.
+- Keep startup/screen timing serialized through owner-loop events.
+- Keep public contracts documented in headers, not in this context file.
+- Use `display_format` only for numeric/text formatting; it must not become the
+  owner of screen state or LCD hardware writes.
+- Treat LCD segment mapping gaps, numeric overflow/invalid display,
+  wake/backlight policy, debounce, alarms, config editing, external buttons,
+  printer, Bluetooth, and optional PT100 behavior as deferred unless the user
+  selects them explicitly.
+- Preserve CubeMX as hardware configuration source of truth. Do not edit
+  protected or generated hardware configuration paths without explicit human
+  approval.
 
-## Current Decision Gates
+## Audit Gates For The Next Agent
 
-- Define semantic input before implementing menu behavior.
-- Preserve input key identity and action identity before mapping consequences
-  such as navigation, editing, wake, backlight, or presentation invalidation.
-- Close the minimal short/long recognizer slice before adding menu, wake,
-  backlight, debounce, or richer input consequences.
-- Defer low-power, wake, backlight, and final timer ownership decisions until
-  their selected slices.
-- Use `use_cases.yaml` before changing observable product behavior; report
-  specification, legacy, test, or code conflicts instead of resolving them
-  silently.
+Before implementation:
+- identify the exact `use_cases.yaml` sections used by the selected slice;
+- classify each required behavior as confirmed, inferred, or unresolved;
+- list the public LCD/board/runtime contracts that will be consumed;
+- state whether any new public contract is required.
 
-## Next Selected Step
+During implementation:
+- keep changes small and reviewable;
+- keep `fmc_runtime_t` ownership in `FM_MAIN_Main()`;
+- keep ISR and timer callbacks bounded and non-blocking;
+- avoid adding persistent UI abstractions until the first slice proves the
+  shape.
 
-- Apply doc closure for the completed minimal short/long recognizer slice.
-  Preserve the current boundaries: menu consequences, debounce, wake,
-  backlight, external buttons, and richer presentation behavior remain outside
-  this working context unless explicitly selected next.
+Verification expected for code changes:
+- focused tests for selected screen-state transitions and formatting decisions;
+- canonical build flow from `docs/canonical-build/stm32cube-cli-workflow.md`
+  when buildability or runtime behavior changes;
+- hardware smoke for selected visible LCD behavior, key skip behavior, and
+  continued periodic wake behavior when the slice reaches the board.
 
-## Milestone Boundaries
+## Out Of Scope For This Context
 
-Do not include unless explicitly selected by the current user request:
+- full user menu navigation beyond the selected slice;
+- configuration menu behavior;
+- persistence, RTC editing, pulse acquisition, real rate updates, alarms,
+  printer, Bluetooth, optional PT100, or release validation;
+- redesigning the LCD stack or recreating a broad presentation design document.
 
-- complete menu navigation;
-- persistence implementation;
-- Bluetooth or printer workflows;
-- complete alarm behavior;
-- optional PT100 behavior;
-- broad CubeMX changes beyond human-selected ThreadX and low-power-support
-  enablement;
-- low-power entry/exit policy;
-- backlight or wake policy;
-- complete menu consequences of short/long input;
-- debounce implementation;
-- external buttons `EXT_1` and `EXT_2`;
-- optimization of unrelated legacy code.
+## Closure Criteria
 
-## Exit Criteria
-
-This milestone is complete when:
-
-- runtime contracts no longer depend on BSP, HAL, GPIO, LCD, ThreadX, queue, or
-  timer types;
-- semantic mechanical-key `SHORT` and `LONG` input can reach runtime under
-  ThreadX without leaking BSP, GPIO, ThreadX, queue, or timer details into the
-  product contract;
-- ThreadX ownership and ISR-to-thread delivery are implemented and
-  demonstrated for the reduced product runtime;
-- runtime state can produce stable presentation snapshots;
-- regression tests cover the pure product contracts;
-- at least one hardware bring-up demonstrates the mechanical keyboard input
-  path into the runtime owner thread.
-
-## Maintenance Rule
-
-Update this file only when one of these changes:
-
-- the active milestone;
-- the product behavior authority;
-- a decision in force;
-- a decision gate;
-- the selected next step in a material way;
-- milestone boundaries;
-- exit criteria.
-
-Do not update it only because:
-
-- a commit was made;
-- a file was added;
-- a routine micro-slice was completed;
-- a test passed;
-- the exact implementation status changed.
-
-## References
-
-- `AGENTS.md`
-- `STYLE.md`
-- `docs/specs/fmc/use_cases.yaml`
-- `docs/roadmaps/fmc_refactoring.md`
-- `docs/workflow/doc_closure.md`
+This context can close when:
+- the selected Phase 6 slice is implemented or deliberately deferred with a
+  recorded reason;
+- implemented behavior is traceable to `use_cases.yaml`;
+- ownership and boundaries are reflected in the relevant header or README when
+  they become implemented facts;
+- tests/build/smoke evidence for the slice is recorded in the final report or
+  durable docs where appropriate;
+- `docs/workflow/doc_closure.md` has been applied.

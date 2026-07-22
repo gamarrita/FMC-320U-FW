@@ -102,8 +102,8 @@ Risks:
 Exit criteria:
 - product input types include mechanical keys, external buttons, SHORT, and
   LONG;
-- provisional release-to-SHORT production can be replaced by a recognizer
-  without changing runtime input interfaces;
+- short/long recognition can produce runtime input without changing runtime
+  input interfaces;
 - pure tests prove key/action identity is preserved.
 
 ## Phase 5: ThreadX, ISR Delivery, Timers, And Low Power
@@ -120,7 +120,7 @@ Runtime direction:
   `product/main`, the existing `FM_APP` thread runs the `FM_MAIN_Main()` owner
   loop directly.
 
-Current selected slice:
+Completed slice:
 - use the existing `FM_APP` ThreadX thread as the only owner of `fmc_runtime`;
 - deliver mechanical keyboard, key-hold timeout, and provisional periodic
   refresh events to that owner through one ThreadX queue;
@@ -129,6 +129,8 @@ Current selected slice:
 - treat owner queue overflow as abnormal and make it explicit;
 - recognize mechanical-key `SHORT` and `LONG` in `product/main` using
   hardware-confirmed RISING/FALLING edges and a one-shot 3 second timer;
+- hardware-smoke validate DOWN, UP, ENTER, and ESC for SHORT, LONG, and no
+  duplicate SHORT after LONG;
 - defer low-power policy, presentation ownership, wake/backlight policy,
   debounce, menu consequences, and external buttons.
 
@@ -140,7 +142,6 @@ Dependencies:
 Decision gates:
 - owner loop startup sequencing in the existing `FM_APP` thread;
 - exact ThreadX queue storage ownership and overflow action;
-- hardware smoke validation for the minimal short/long recognizer;
 - wake source and low-power ownership;
 - presentation/backlight activity ownership.
 
