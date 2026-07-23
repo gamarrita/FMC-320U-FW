@@ -1,0 +1,117 @@
+# FMC Product Documentation
+
+## Purpose
+
+This directory is the owner of current, reviewed FMC-320U product
+documentation. It gives the whole product broad, superficial coverage and
+provides stable destinations for requirements, observable behavior, and user
+interface knowledge.
+
+Documentation depth follows the next programming slice. Broad coverage does
+not mean that every statement is accepted or detailed.
+
+## Decision And Evidence Model
+
+Substantive statements use one of these decision states:
+
+- `Accepted`: a current product decision approved by the human or established
+  by an unambiguous current contract.
+- `Candidate`: a proposal or working input that still needs review.
+- `Unresolved`: available information is insufficient or contradictory.
+- `Deferred`: the domain is real, but detailed decisions are intentionally
+  postponed.
+
+`Evidence` is not a decision state. It identifies provenance or support for a
+statement. A detailed source, a legacy implementation, or a `confirmed` entry
+in a working inventory does not make a statement `Accepted`.
+
+## Document Ownership
+
+| Document | Owns | Does not own |
+|---|---|---|
+| [Requirements](requirements.md) | Product obligations | Detailed flows, UI design, firmware architecture |
+| [Behavior](behavior.md) | Cross-cutting observable behavior | Normative obligations already owned by requirements, screen-by-screen navigation |
+| [User interface](user_interface.md) | Visible and operable experience | LCD physical mapping, driver design, complete state machine |
+
+The documents may reference one another but should not duplicate normative
+content.
+
+Related repository roles:
+
+- `docs/specs/` contains structured technical specifications, normalized
+  inventories, and engineering inputs.
+- `docs/specs/fmc/use_cases.yaml` is an evolving working inventory, not a
+  universal product contract.
+- `docs/specs/lcd/lcd_true_source.yaml` is the technical authority for LCD
+  glass elements and physical mapping.
+- public headers own implemented module contracts.
+- `legacy/` preserves historical evidence, not current authority.
+- `WORKING_CONTEXT.md` owns the single active documentation or implementation
+  cut; the roadmap owns durable sequencing.
+
+## Product Overview
+
+**Accepted:** FMC-320U is the product line documented here, and its current
+implemented product core models flow measurement through pulse-backed totals,
+unit-aware volume and rate calculations, and semantic operator input.
+
+Evidence:
+- root `README.md`;
+- `src/product/fmc/` public headers.
+
+**Candidate:** The complete field product is a battery-powered flow computer
+with configuration, persistence, RTC, alarms, logging, printing,
+communications, and optional sensing functions.
+
+Evidence:
+- `docs/specs/fmc/use_cases.yaml`;
+- `legacy/analysis/module_inventory.md`;
+- `legacy/analysis/migration_ledger.md`.
+
+## Functional Coverage Map
+
+This map reports documentation coverage, not firmware implementation status.
+
+| Domain | Product aspect | Owner | Depth | Decision state | Evidence | Deepen when |
+|---|---|---|---|---|---|---|
+| Power, startup, and recovery | Power-on, initialization, restore, low-power concerns | [Behavior](behavior.md) | Surface | Candidate | Roadmap; working inventory; legacy `fm_init`/`fmx_lp` inventory | Startup or power slice |
+| Pulse and signal acquisition | Turning physical observations into pulse deltas | [Requirements](requirements.md) | Surface | Candidate | Runtime contract; roadmap; legacy inventory | Phase 7 dependency |
+| Flow-rate calculation | Deriving active-unit rate from pulse and time windows | [Requirements](requirements.md) | Focused core | Accepted | `fmc_rate.h`; `fmc_units.h` | Acquisition or display slice |
+| Totalization | ACM/TTL accumulation, visible totals, and resets | [Requirements](requirements.md) | Focused core | Accepted | `fmc_model.h`; `fmc_volume.h`; `fmc_service.h` | Operational reset flow |
+| Presentation | Projection of product state into visible output | [User interface](user_interface.md) | Surface | Candidate | Roadmap Phase 6A; LCD contracts | Phase 6A |
+| Operator input | Semantic keys and actions after hardware translation | [User interface](user_interface.md) | Focused vocabulary | Accepted | `fmc_input.h`; product app README | Selected input slice |
+| Navigation | Context-dependent visible consequences of operator input | [User interface](user_interface.md) | Surface | Candidate | Working inventory; legacy user/setup inventory | Phase 6B |
+| Configuration and calibration | Editable measurement and product settings | [Requirements](requirements.md) | Surface | Candidate | Model contract; working inventory; legacy inventory | Configuration slice |
+| Persistence and defaults | Retention, restore, validation, and factory data | [Requirements](requirements.md) | Surface | Candidate | Roadmap; working inventory; legacy inventory | Phase 7 |
+| RTC and time | Current time, editing, validity, and timestamp use | [Behavior](behavior.md) | Surface | Candidate | Roadmap; working inventory; legacy `fm_rtc` inventory | RTC-dependent slice |
+| Alarms, status, and recovery | Operator-visible abnormal conditions and recovery | [Behavior](behavior.md) | Surface | Candidate | Working inventory; roadmap | Selected operational flow |
+| Information logging | Event selection, timestamping, retention, and retrieval | [Requirements](requirements.md) | Surface | Deferred | Working inventory; legacy log inventory | Logging slice |
+| Communications and commands | External protocol and command behavior | [Requirements](requirements.md) | Surface | Deferred | Legacy command/USART inventory | Transport decision |
+| Printing | Ticket content and print workflow | [User interface](user_interface.md) | Surface | Deferred | Working inventory; legacy `fm_ppt` inventory | Reporting slice |
+| Bluetooth | Connection window and communication workflow | [User interface](user_interface.md) | Surface | Deferred | Working inventory; legacy `fm_mxc` inventory | Communications slice |
+| Optional sensing | PT100 and other optional product extensions | [Requirements](requirements.md) | Surface | Deferred | Working inventory; roadmap | Product selection |
+| Diagnostics, service, and validation | Product-facing diagnostic or service behavior | [Requirements](requirements.md) | Surface | Unresolved | Current bring-ups; command/debug legacy inventory | Service requirement |
+
+## Technical Authority Boundary
+
+**Accepted:** Product documentation may name LCD fields, symbols, and
+capabilities needed by the operator experience. It must reference
+`docs/specs/lcd/lcd_true_source.yaml` for physical glass facts and must not copy
+COM/SEG tables, controller registers, RAM bits, or routing maps.
+
+Evidence:
+- `AGENTS.md`;
+- `docs/specs/lcd/lcd_true_source.yaml`.
+
+## Next Planned Depth
+
+**Accepted:** Phase 6A is the next planned slice to deepen after this
+documentation backbone is audited and accepted. It is not active
+implementation.
+
+Evidence:
+- `docs/roadmaps/fmc_refactoring.md`.
+
+Its planned visible scope is limited to startup all-segments, firmware version,
+and steady TTL/RATE presentation. Exact content, timing, transitions, and
+formatting remain decisions for the focused Phase 6A documentation cut.

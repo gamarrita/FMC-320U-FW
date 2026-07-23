@@ -42,7 +42,9 @@ When a request starts a new track or no longer fits the current one:
 - `AGENTS.md`: stable agent policy
 - `WORKING_CONTEXT.md`: active workstream or milestone
 - `docs/roadmaps/`: durable refactor strategy
-- `docs/specs/`: product behavior
+- `docs/product/`: current reviewed product documentation
+- `docs/specs/`: structured technical specifications, inventories, and
+  engineering inputs
 - `STYLE.md`: naming and code structure
 - `CONTRIBUTING.md`: repo hygiene
 - `docs/workflow/doc_closure.md`: documentation closure checklist

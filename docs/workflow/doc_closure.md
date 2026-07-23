@@ -19,9 +19,10 @@ deleted, compressed, and still-questionable docs.
 - Delete or compress old plans, option comparisons, slice narration,
   duplicated validation history, and rationale already visible in code, tests,
   specs, or Git history.
-- Keep one source of truth per topic: product behavior in specs, active scope in
-  `WORKING_CONTEXT.md`, durable strategy in roadmaps, and implemented module
-  contracts in headers.
+- Keep one source of truth per topic: current product documentation in
+  `docs/product/`, structured technical specifications and inventories in
+  `docs/specs/`, active scope in `WORKING_CONTEXT.md`, durable strategy in
+  roadmaps, and implemented module contracts in headers.
 - Do not duplicate product requirements in contexts, roadmaps, READMEs, or
   module documentation.
 
@@ -44,7 +45,8 @@ Required:
 - Durable refactor strategy, phases, dependencies, decision gates, and exit
   criteria: `docs/roadmaps/`
 - Folder ownership: local `README.md` files
-- Product behavior: `docs/specs/`
+- Current product documentation: `docs/product/`
+- Structured technical specifications and normalized inventories: `docs/specs/`
 - Implemented module contracts: public headers
 - Historical legacy evidence: `legacy/`
 

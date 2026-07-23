@@ -30,12 +30,13 @@ For agents:
 - start with `AGENTS.md`
 - use `docs/project/WORKFLOW.md` for continuity across conversations
 - use `WORKING_CONTEXT.md` for the active workstream
-- use the referenced roadmaps and specifications for durable strategy and
-  product behavior
+- use the referenced product documentation, roadmaps, and specifications for
+  accepted behavior, durable strategy, and technical authority
 - use `STYLE.md` for naming and code structure
 
 For humans:
 - use local `README.md` files to understand folder ownership
+- use `docs/product/fmc/README.md` for current FMC product documentation
 - use `CONTRIBUTING.md` for commit and changelog hygiene
 - use `docs/workflow/README.md` for the stage model
 
