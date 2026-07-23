@@ -1,128 +1,118 @@
-# Working Context: FMC Phase 6 Screen Specification Normalization
+# Working Context: Product Documentation Reframe
 
-## Active Workstream
+## Active Objective
 
-Prepare the product-screen behavior specification needed before implementing
-Phase 6 presentation and UI state-machine code.
+Reframe the repository documentation so that the repository, rather than a
+conversation, is the persistent project memory and can identify the next
+reviewable work slice.
 
-This is a documentation workstream. It pauses the previous Phase 6
-implementation context until the selected screen behavior documents are created
-and reviewed by the human.
+This is the only active workstream. It is documentation-only and prepares later
+product documentation and Phase 6A; it does not activate either implementation
+work or Phase 6A.
 
-Current source to normalize:
-- `docs/specs/fmc/use_cases.yaml`
+## Motivation
 
-Legacy evidence:
-- original legacy use-case Word document, when available to the agent
+Current documents overstate the authority of one evolving use-case file, start
+the presentation slice before the broader product documentation is organized,
+and do not define a complete human-agent-repository continuity workflow. A new
+conversation therefore cannot reliably reconstruct current scope, authorities,
+and the next cut from the repository alone.
 
-Durable phase strategy:
-- `docs/roadmaps/fmc_refactoring.md`, Phase 6
+## Scope
 
-Operational references:
-- `AGENTS.md`
-- `docs/specs/README.md`
-- `docs/specs/fmc/screen_spec_style.md`
-- `docs/workflow/doc_closure.md`
+- define the human-agent-repository workflow;
+- distinguish stable policy, active context, durable strategy, current
+  authorities, working inputs, and historical evidence;
+- align the FMC roadmap with the documentation-first program sequence;
+- establish the planned product-documentation backbone and the strategy of
+  broad superficial coverage followed by incremental depth;
+- prepare, but do not implement, the later Phase 6A presentation slice;
+- keep repository entrypoints and references consistent.
 
-## Reason For Reframe
+## Out Of Scope
 
-The monolithic `use_cases.yaml` mixes screen behavior, inferred guidance,
-legacy evidence, test and validation notes, unresolved behavior, shared
-workflows, and future features. That shape is risky for Phase 6 because an
-agent could implement unexpected behavior by treating nearby evidence, legacy
-test notes, or inferred content as confirmed screen requirements.
+- creating `docs/product/fmc/` or documents for individual screens;
+- changing firmware, build files, generated code, CubeMX configuration, or
+  protected files;
+- implementing or activating Phase 6A;
+- migrating Word content or transcribing `docs/specs/fmc/use_cases.yaml`;
+- reconciling legacy key, transition, or behavior contradictions;
+- defining screen schemas or reproducing the legacy firmware exactly;
+- redesigning the interface or adding parallel status/handoff documents;
+- deleting useful legacy evidence.
 
-The next step is to create smaller, human-reviewable screen behavior documents
-before product UI code is written.
+## Sources To Consult
 
-## Milestone Outcome
+Repository policy and workflow:
+- `AGENTS.md`;
+- `docs/project/WORKFLOW.md`;
+- `docs/workflow/README.md`;
+- `docs/workflow/doc_closure.md`.
 
-Produce a minimal screen-specification set that is easier for humans and agents
-to audit:
-- each selected screen can be reviewed from one small document;
-- behavior, legacy evidence, unresolved notes, and implementation guesses are
-  not mixed together;
-- inherited test or validation methods are not promoted to current
-  requirements;
-- legacy screen IDs are not forced into the new documents unless the agent
-  justifies a useful traceability method;
-- no product behavior becomes current implementation authority until the human
-  reviews and accepts the new documents.
+Durable strategy and product inputs:
+- `docs/roadmaps/fmc_refactoring.md`;
+- `docs/specs/README.md`;
+- `docs/specs/fmc/use_cases.yaml`;
+- `docs/specs/fmc/screen_spec_style.md`;
+- `docs/specs/lcd/lcd_true_source.yaml`;
+- `legacy/README.md`.
 
-## Selected Documentation Slice
-
-Normalize only the screens needed for the first Phase 6 implementation slice:
-- startup all segments;
-- firmware version;
-- TTL/RATE steady user screen.
-
-The agent may propose stable screen keys or IDs only if they improve
-traceability or future implementation. Do not force legacy names such as
-`SCREEN_STARTUP_ALL_SEGMENTS` to be the primary human-facing contract.
-
-## Expected Workflow
-
-1. Audit the current `use_cases.yaml` and available legacy Word evidence for
-   the selected three screens.
-2. Propose a small target document structure before doing a broad split.
-3. Create only the minimal files needed for the selected documentation slice.
-4. Separate confirmed behavior from inferred notes and unresolved notes.
-5. Keep legacy test IDs, validation procedures, and historical acceptance notes
-   out of the screen behavior contract. If retained, place them only in
-   traceability evidence.
-6. Mark the old `use_cases.yaml` role clearly so it does not compete silently
-   with the new files.
-7. Stop after producing the new documents and report them for human review.
-
-## Human Review Gate
-
-Do not implement Phase 6 presentation, LCD rendering, screen-state code,
-navigation, timers, or product UI behavior from the new screen documents until
-the human explicitly reviews and accepts them.
-
-The agent may reorganize evidence. The agent must not convert evidence,
-validation notes, or unresolved items into confirmed behavior without human
-approval.
+`docs/specs/lcd/lcd_true_source.yaml` remains the technical authority for the
+LCD glass and mapping. `docs/specs/fmc/use_cases.yaml` is a useful evolving
+inventory and design input; it is not an automatically accepted, complete, or
+universal current-product contract. Legacy material is evidence, not authority
+by default.
 
 ## Decisions In Force
 
-- This context is documentation-only.
-- Do not change C code, build files, generated code, CubeMX configuration, or
-  protected hardware configuration files.
-- Preserve `src/product/fmc` independence from ThreadX, HAL, BSP, GPIO, queues,
-  timers, and LCD details as an implementation boundary for the later Phase 6
-  coding context.
-- Keep the current Phase 5 runtime baseline as background only: existing
-  `FM_APP` owner loop, app-level queue, semantic input, and periodic refresh.
-- Do not inherit the legacy validation method as current test policy.
-- Do not force legacy screen IDs as the new contract shape.
-- Prefer Markdown or lightweight structured documents that a human can read
-  comfortably. Use YAML only when structure clearly helps.
-- Prefer local unresolved notes in each screen document instead of creating a
-  separate gaps document for this slice.
-- Defer config screens, alarms, printer, Bluetooth, optional PT100, RTC,
-  persistence, acquisition, and full menu traversal unless needed only as
-  references or unresolved notes for the selected three screens.
+- Conversations are disposable working sessions; durable decisions, accepted
+  requirements, active scope, and next work belong in the repository.
+- Documentation will first cover the product broadly and superficially, then
+  deepen incrementally according to the next programming slice.
+- Markdown is the default for requirements, behavior, and interface
+  documentation. Structured formats are used only when they provide a concrete
+  technical advantage.
+- Product documentation is expected eventually under `docs/product/fmc/`, with
+  a small backbone for overview, requirements, behavior, and user interface,
+  but that structure is not created in this cut.
+- Product requirements become authoritative only through explicit review and
+  placement in the applicable current product documentation or contract.
+- Legacy firmware and documents may inform design but are not permanent
+  authorities and are not reproduced automatically.
+- Legacy contradictions remain visible and unresolved until a later slice
+  requires a decision.
+- Phase 6A is later work limited to the three initial visible states and their
+  presentation path. This context only prepares the documentation needed to
+  select and specify that work.
+- Do not commit or push without explicit human authorization.
 
-## Boundaries
+## Deliverables
 
-Out of scope for this documentation context:
-- implementation of the UI state machine;
-- LCD/BSP contract changes;
-- new validation framework or inherited legacy test migration;
-- full split of every future screen if it makes the first review harder;
-- product decisions about unresolved behavior;
-- commits unless explicitly requested.
+- `docs/project/WORKFLOW.md` defines continuity across conversations and
+  auditable work on an identifiable branch or commit;
+- this file names one active documentation cut, its boundaries, sources, and
+  closure criteria;
+- `docs/roadmaps/fmc_refactoring.md` records the full documentation-first
+  sequence, dependencies, and bounded Phase 6A/6B work;
+- `AGENTS.md` links the workflow and no longer promotes
+  `docs/specs/fmc/use_cases.yaml` as a universal authority;
+- the root `README.md` exposes the project workflow entrypoint.
 
-## Closure Criteria
+## Verifiable Closure Criteria
 
-This context can close when:
-- the selected three screen documents exist in a concise, human-reviewable
-  form;
-- the role of `use_cases.yaml` after the split is explicit;
-- unresolved behavior is visible and not encoded as confirmed behavior;
-- any retained legacy test or validation information is clearly traceability
-  evidence, not the current validation contract;
-- the human has reviewed the produced documents or explicitly decides how to
-  proceed;
-- `docs/workflow/doc_closure.md` has been applied before commit.
+This context closes when:
+- a new conversation can reconstruct project authority, active state, and the
+  next cut using only repository files;
+- `docs/project/WORKFLOW.md` includes the complete new-conversation cycle, a
+  copyable base prompt, and branch/commit audit guidance;
+- this is the only active workstream and remains documentation-only;
+- the roadmap states the approved sequence and its general dependencies;
+- Phase 6A is explicitly future work with the approved bounded scope;
+- all repository references that could present `use_cases.yaml` as a universal
+  contract or authority are found and correctly limited;
+- `docs/specs/lcd/lcd_true_source.yaml` remains the technical LCD authority;
+- references and paths touched by this cut are valid;
+- the diff contains no firmware changes, premature product-documentation split,
+  or Phase 6A implementation;
+- `docs/workflow/doc_closure.md` has been applied and final Git status is
+  reported.

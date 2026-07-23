@@ -1,13 +1,17 @@
 document:
-  title: "FMC-320 current product behavior specification"
-  document_type: "current_product_behavior_specification"
+  title: "FMC-320 product behavior working inventory"
+  document_type: "product_behavior_working_inventory"
   version: "1.0"
-  status: "current working specification"
+  status: "working input; review required per slice"
+  authority:
+    role: "evolving inventory and design input"
+    scope: "not a complete or universal current-product contract"
+    promotion_rule: "requirements become authoritative only after explicit review and placement in the applicable current product documentation or contract"
   intent:
-    - "Define the current product behavior that the refactored FMC-320 firmware must implement"
-    - "Preserve confirmed legacy behavior until superseded by an approved current-product decision"
-    - "Record approved improvements and behavior changes directly in this specification"
-    - "Separate confirmed requirements from inferred implementation guidance and unresolved gaps"
+    - "Collect candidate product behavior for incremental review"
+    - "Preserve legacy provenance without making inherited behavior authoritative by default"
+    - "Record working proposals, evidence classifications, and unresolved gaps"
+    - "Support later promotion of reviewed requirements into their owning product documentation or contract"
   language: "en"
   source_language: "es"
   authoring_style: "engineering"
@@ -21,12 +25,12 @@ document:
       - "legacy/specs/fmc/use_cases.docx"
     initial_basis: "normalized translation of legacy product use cases"
   evolution_policy:
-    - "confirmed legacy behavior remains applicable until superseded by an approved current-product decision"
-    - "approved improvements and behavior changes are recorded in this file"
-    - "this specification may intentionally diverge from legacy evidence"
-    - "legacy evidence does not override the current specification"
+    - "legacy behavior remains evidence until explicitly accepted as a current-product decision"
+    - "working improvements and behavior changes may be collected in this file for review"
+    - "this inventory may intentionally diverge from legacy evidence"
+    - "legacy evidence does not automatically override reviewed current-product documentation"
   assumptions_policy:
-    rule: "If a fact is not directly supported by this specification or an approved current-product decision, mark it as inferred or unresolved"
+    rule: "Classify inventory entries as confirmed, inferred, or unresolved by their support; confirmed here does not by itself mean approved as a current-product requirement"
     statuses:
       - "confirmed"
       - "inferred"
