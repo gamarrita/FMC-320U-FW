@@ -2,20 +2,23 @@
 
 ## Purpose
 
-This file defines how to write FMC screen behavior documents for Phase 6.
+This file preserves the proposed style for a future approved FMC screen
+documentation slice. It is not an active plan and does not authorize creating
+screen files or starting Phase 6A.
 
 It is documentation style, not firmware coding style. Use `STYLE.md` for C
 code, public contracts, naming, comments, and module boundaries.
 
 ## Scope
 
-Apply this style to product-screen behavior documents under:
+When an approved future context calls for product-screen behavior documents,
+apply this style to files under:
 
 ```text
 docs/specs/fmc/screens/
 ```
 
-The first documentation slice covers only:
+The previously proposed initial slice was limited to:
 - startup all segments;
 - firmware version;
 - TTL/RATE steady user screen.
@@ -42,7 +45,7 @@ Optional future tools:
 - `Vale` for prose terminology and editorial consistency;
 - schema validation only if a later slice introduces stable structured data.
 
-Do not add new tooling only to complete the first documentation slice.
+Do not add new tooling only to complete a screen documentation slice.
 
 ## File Naming
 
@@ -119,17 +122,17 @@ Legacy test IDs, smoke procedures, acceptance notes, or measurement scripts are
 not part of the screen behavior contract. If they are useful, keep them only as
 legacy evidence or traceability notes inside the relevant screen document.
 
-Current validation for Phase 6 will be designed by the implementation slice
-after the human accepts the screen behavior documents.
+Validation for a future Phase 6A slice will be designed by that implementation
+slice after the human accepts its screen behavior documents.
 
 ## Legacy Evidence
 
 Legacy sources are evidence, not automatic authority.
 
 When preserving legacy-derived behavior, name the source briefly without copying
-large source passages. If legacy evidence conflicts with the current
-specification or with known hardware behavior, record the conflict and stop for
-human review.
+large source passages. If legacy evidence conflicts with reviewed current
+product documentation or known hardware behavior, record the conflict and stop
+for human review.
 
 ## Human Review Gate
 
@@ -140,8 +143,9 @@ behavior from a new screen document until that review has happened.
 
 ## Agent Workflow
 
-For each selected screen:
-1. read the current `use_cases.yaml` screen entry and related shared sections;
+Only when an approved active context selects screens:
+1. read the relevant `use_cases.yaml` working-inventory entries and related
+   shared sections as inputs, not automatically accepted requirements;
 2. read the available legacy Word evidence when available;
 3. extract only behavior needed to understand the selected screen;
 4. classify each extracted fact as confirmed, inferred, unresolved, or legacy

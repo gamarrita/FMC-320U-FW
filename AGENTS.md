@@ -8,6 +8,7 @@ It is policy, not the universal task entrypoint.
 It is not extended technical documentation.
 
 Use:
+- `docs/project/WORKFLOW.md` for human-agent-repository continuity
 - `STYLE.md` for naming, code structure and new contracts locations. 
 
 ---
@@ -17,11 +18,12 @@ Use:
 For active work, read in this order:
 1. the user request
 2. `AGENTS.md`
-3. `WORKING_CONTEXT.md`, when present and relevant
-4. roadmap and specification files referenced by `WORKING_CONTEXT.md`, when
+3. `docs/project/WORKFLOW.md` when starting or handing off a workstream
+4. `WORKING_CONTEXT.md`, when present and relevant
+5. roadmap and specification files referenced by `WORKING_CONTEXT.md`, when
    applicable
-5. local `README.md` files for the touched folders
-6. `STYLE.md` for naming and code structure questions
+6. local `README.md` files for the touched folders
+7. `STYLE.md` for naming and code structure questions
 
 `WORKING_CONTEXT.md` should stay short and operational.
 Roadmaps hold durable phase strategy, dependencies, decision gates, risks, and
@@ -53,10 +55,14 @@ Prefer maintainable, understandable product design over copying legacy shapes.
 When a decision is architectural or educationally important, make the tradeoff
 visible instead of silently encoding it.
 
-For behavior-preserving FMC work, confirmed requirements in
-`docs/specs/fmc/use_cases.yaml` are the current product behavior authority.
-Legacy documents and firmware are evidence of provenance, not authority over
-that specification.
+For FMC product work, identify the applicable reviewed product requirements for
+the active slice. `docs/specs/fmc/use_cases.yaml` is an evolving inventory and
+design input; its entries are not automatically accepted as a complete or
+universal current-product contract. Legacy documents and firmware are evidence
+of provenance, not authority by default.
+
+`docs/specs/lcd/lcd_true_source.yaml` is the technical authority for LCD glass
+and mapping facts. It does not by itself define product screen behavior.
 
 Before changing observable product behavior:
 - identify the relevant specification sections
@@ -177,8 +183,10 @@ Keep one source of truth per topic.
 
 Use this split:
 - stable policy in `AGENTS.md`
+- human-agent-repository continuity in `docs/project/WORKFLOW.md`
 - active execution state in `WORKING_CONTEXT.md` when required, not lateral prompts
-- current product behavior in `docs/specs/`
+- accepted product behavior in the applicable product documentation or
+  specification
 - durable refactor strategy in `docs/roadmaps/`
 - onboarding and repository maps in `README.md` files
 - naming and code structure in `STYLE.md`

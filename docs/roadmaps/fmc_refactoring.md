@@ -6,8 +6,32 @@ Define the durable refactor roadmap for the FMC-320 firmware. This roadmap
 describes phases, dependencies, decision gates, risks, and exit criteria. It is
 not the active work tracker and does not define module APIs.
 
-Product behavior comes from `docs/specs/fmc/use_cases.yaml`. Public contracts
-for implemented modules belong in their headers.
+Accepted product behavior comes from the reviewed documentation or
+specification applicable to each slice. `docs/specs/fmc/use_cases.yaml` is an
+evolving inventory and design input, not a complete or universal product
+contract. Public contracts for implemented modules belong in their headers.
+
+## Program Sequence From The Current Point
+
+The remaining program follows this dependency order. Phase labels name durable
+work packages; their numeric labels do not override this sequence.
+
+1. Reframe documentation and establish the human-agent-repository workflow.
+2. Build the FMC product-documentation backbone.
+3. Give the principal product functions broad, superficial coverage.
+4. Incorporate useful requirements and use cases incrementally, with explicit
+   review before they become authoritative.
+5. Deepen the next visible programming slice.
+6. Implement Phase 6A: the bounded initial presentation slice.
+7. Add essential acquisition, persistence, and RTC work when Phase 6A or later
+   product dependencies require it.
+8. Implement Phase 6B: operational screens and navigation.
+9. Add configuration workflows and other deferred functions deliberately.
+
+Each step depends on enough reviewed output from the preceding steps to define
+a small implementation or documentation cut. This is not a requirement to
+complete all product documentation before programming: breadth comes first,
+then depth follows the next slice.
 
 ## Phase 1: Model And Pure Calculations
 
@@ -16,8 +40,8 @@ Objective:
   calculations.
 
 Dependencies:
-- confirmed product units, totals, calibration, and rate semantics from
-  `use_cases.yaml`;
+- reviewed product units, totals, calibration, and rate semantics for the
+  selected slice; `use_cases.yaml` may supply candidate requirements;
 - legacy source only as evidence.
 
 Decision gates:
@@ -41,7 +65,7 @@ Objective:
 
 Dependencies:
 - Phase 1 contracts;
-- reset policy and totalization requirements from `use_cases.yaml`.
+- reviewed reset policy and totalization requirements for the selected slice.
 
 Decision gates:
 - whether service state should remain directly inspectable for tests/restores
@@ -85,7 +109,7 @@ Objective:
   consequences.
 
 Dependencies:
-- current-product input requirements in `use_cases.yaml`;
+- reviewed current-product input requirements and implemented input contracts;
 - board key mapping in BSP;
 - runtime event contract.
 
@@ -157,39 +181,56 @@ Exit criteria:
 - ISR path does bounded work only;
 - delivery to runtime is serialized and testable.
 
-## Phase 6: Presentation And UI State Machine
+## Phase 6A: Initial Presentation Slice
 
 Objective:
-- implement user-visible screen behavior from the current product
-  specification.
+- validate the first bounded path from an FMC runtime snapshot to controlled,
+  user-visible LCD output.
 
 Dependencies:
+- the product-documentation backbone and broad functional coverage;
+- reviewed deep documentation for the selected visible slice;
 - stable runtime snapshots;
-- semantic input;
-- ThreadX/timer ownership when screen timing requires it;
-- unresolved presentation requirements curated in `use_cases.yaml`.
+- `docs/specs/lcd/lcd_true_source.yaml` as the technical LCD authority;
+- existing semantic LCD and driver contracts;
+- ThreadX/timer ownership only where the selected startup timing requires it.
+
+Included scope:
+- all-segments startup screen;
+- firmware version screen;
+- steady TTL/RATE screen;
+- projection of an FMC snapshot into semantic LCD elements;
+- a validated presentation-to-driver adapter;
+- pure formatting tests;
+- hardware bring-up with controlled values.
 
 Decision gates:
 - startup sequence ownership;
-- user/config state-machine split;
 - numeric overflow/invalid display;
-- backlight and activity policy;
-- alarm overlay ownership.
+- exact reviewed content and timing for the three selected states;
+- adapter ownership at the product/BSP boundary.
 
 Risks:
-- recreating the deleted presentation design document as a second spec;
+- treating candidate behavior in `use_cases.yaml` as approved requirements;
 - freezing `fmc_presentation` APIs before the slice is active.
 
 Exit criteria:
-- behavior is traceable to `use_cases.yaml`;
+- the three selected states are traceable to reviewed slice documentation;
+- snapshot fields project into semantic LCD elements without exposing LCD
+  mapping details to the FMC product model;
+- the presentation-to-driver adapter is validated;
+- pure tests cover selected formatting decisions;
+- controlled-value hardware bring-up is recorded;
 - public module contracts live in headers;
-- tests cover screen state and formatting decisions selected for the slice.
+- no complete UI state machine, complete navigation, configuration screens, or
+  exact legacy reproduction has been introduced.
 
-## Phase 7: Acquisition, RTC, And Persistence
+## Phase 7: Essential Acquisition, RTC, And Persistence
 
 Objective:
 - connect pulse acquisition, rate windows, date/time, backup retention, and
-  flash-backed configuration to runtime and service state.
+  essential persistence to runtime and service state when dependencies from
+  Phase 6A or the next operational slice require them.
 
 Dependencies:
 - runtime ownership;
@@ -211,17 +252,49 @@ Exit criteria:
 - persistence and RTC behavior preserve confirmed requirements;
 - tests and bring-ups cover selected behavior and recovery paths.
 
-## Phase 8: Alarms, Logging, Bluetooth, Printing, And Optional Features
+## Phase 6B: Operational Screens And Navigation
 
 Objective:
-- implement remaining product workflows deliberately after core runtime and UI
-  ownership are stable.
+- implement the operational user screens and navigation selected after Phase
+  6A, using reviewed behavior and the essential runtime data made available by
+  Phase 7 when required.
 
 Dependencies:
-- UI state machine;
-- persistence;
+- Phase 6A presentation path and lessons;
+- semantic input and owner-loop contracts;
+- reviewed operational-screen and navigation behavior;
+- essential acquisition, persistence, or RTC capabilities required by the
+  selected screens.
+
+Decision gates:
+- operational state-machine boundaries;
+- navigation and return behavior;
+- refresh, activity, and backlight policy;
+- alarm or transient overlays needed by the selected operational flow.
+
+Risks:
+- expanding a selected flow into a complete legacy menu reproduction;
+- coupling navigation directly to LCD mapping or storage details;
+- implementing unresolved candidate use cases as accepted behavior.
+
+Exit criteria:
+- selected operational screens and navigation are traceable to reviewed product
+  documentation;
+- state transitions and formatting have focused tests;
+- hardware bring-up covers the selected operator flow;
+- configuration screens and unrelated deferred functions remain out of scope.
+
+## Phase 8: Configuration And Deferred Functions
+
+Objective:
+- implement configuration workflows and remaining product functions
+  deliberately after core runtime and operational UI ownership are stable.
+
+Dependencies:
+- Phase 6B operational navigation;
+- persistence and RTC where required;
 - communication and power decisions;
-- unresolved optional behavior decisions in `use_cases.yaml`.
+- reviewed requirements for each selected deferred function.
 
 Decision gates:
 - alarm reset semantics;
