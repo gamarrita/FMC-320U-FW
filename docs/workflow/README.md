@@ -45,6 +45,7 @@ When a request starts a new track or no longer fits the current one:
 - `docs/product/`: current reviewed product documentation
 - `docs/specs/`: structured technical specifications, inventories, and
   engineering inputs
+- `docs/workflow/fmc_legacy_coverage.md`: mutable FMC legacy review coverage
 - `STYLE.md`: naming and code structure
 - `CONTRIBUTING.md`: repo hygiene
 - `docs/workflow/doc_closure.md`: documentation closure checklist

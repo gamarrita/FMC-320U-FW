@@ -18,7 +18,7 @@ conditions.
 
 Evidence:
 - roadmap;
-- `docs/specs/fmc/use_cases.yaml`;
+- `legacy/derived/fmc/use_cases.extraction-v1.yaml`;
 - legacy startup and runtime inventories.
 
 **Unresolved:** Exact lifecycle states, startup ordering, sleep entry, wake
@@ -32,7 +32,7 @@ should be validated before use.
 
 Evidence:
 - roadmap Phase 7;
-- working inventory boot and persistence sections;
+- frozen legacy extraction boot and persistence sections;
 - legacy `fm_init`, backup, flash, and RTC inventories.
 
 **Unresolved:** First-programming behavior, invalid-retention recovery, startup
@@ -102,7 +102,7 @@ Evidence:
 - current model separation between canonical measurement state and derived
   values;
 - roadmap Phase 7 and Phase 8;
-- working inventory and legacy setup evidence.
+- frozen legacy extraction and legacy setup evidence.
 
 **Unresolved:** Edit buffers, save/cancel behavior, authorization, storage
 ownership, atomicity, corruption recovery, and factory restore are not
@@ -115,7 +115,7 @@ or communication records. Invalid time should not be silently treated as valid.
 
 Evidence:
 - roadmap RTC decision gates;
-- working inventory;
+- frozen legacy extraction;
 - legacy RTC, logging, and printing inventories.
 
 **Unresolved:** Validity threshold, formatting, edit behavior, backup-domain
@@ -129,7 +129,7 @@ path.
 
 Evidence:
 - roadmap risks;
-- working inventory alarms and gaps.
+- frozen legacy extraction alarms and gaps.
 
 **Unresolved:** Alarm taxonomy, priority, persistence, acknowledgement,
 operator override, and degraded operation are not approved.
@@ -142,7 +142,7 @@ behavior.
 
 Evidence:
 - roadmap Phase 8;
-- working inventory;
+- frozen legacy extraction;
 - legacy module inventory.
 
 Their future behavior must reference accepted requirements and must not be

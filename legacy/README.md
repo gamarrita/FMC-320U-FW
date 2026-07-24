@@ -18,6 +18,12 @@ represent the architecture targeted by the current refactor.
 - `source/FLOWMEET/`: original product and runtime-oriented authored files.
 - `source/libs/`: original authored modules grouped as libraries in the legacy
   project.
+- `specs/fmc/use_cases.docx`: primary historical FMC use-case source, reserved
+  for exceptional extraction audits.
+- `derived/fmc/use_cases.extraction-v1.yaml`: frozen structured extraction used
+  as the preferred FMC legacy evidence for later review.
+- `derived/fmc/README.md`: classification and preservation contract for that
+  extraction.
 - `analysis/`: inventories, dependency maps, and migration tracking. Analysis
   may classify responsibilities using the current architecture, but it must not
   rewrite the historical source layout.
@@ -25,6 +31,9 @@ represent the architecture targeted by the current refactor.
 ## Rules
 
 - Treat `legacy/source/` as evidence, not authority.
+- Preserve `legacy/specs/` primary historical documents without modification.
+- Preserve versioned files under `legacy/derived/` without silent correction;
+  record suspected conversion errors in the applicable coverage register.
 - Preserve files in `legacy/source/` without renaming, reformatting, fixing, or
   reorganizing them.
 - Do not include `legacy/source/` in the active build.
@@ -56,3 +65,7 @@ applications. Git history is sufficient to recover those experiments if needed.
 Future migration work should extract behavior and contracts from this snapshot.
 It should not copy complete modules or reproduce the old architecture inside
 `src/`.
+
+FMC legacy review disposition is tracked in
+`docs/workflow/fmc_legacy_coverage.md`. Current reviewed FMC product
+documentation remains under `docs/product/fmc/`.

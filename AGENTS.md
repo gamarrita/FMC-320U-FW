@@ -55,11 +55,13 @@ Prefer maintainable, understandable product design over copying legacy shapes.
 When a decision is architectural or educationally important, make the tradeoff
 visible instead of silently encoding it.
 
-For FMC product work, identify the applicable reviewed product requirements for
-the active slice. `docs/specs/fmc/use_cases.yaml` is an evolving inventory and
-design input; its entries are not automatically accepted as a complete or
-universal current-product contract. Legacy documents and firmware are evidence
-of provenance, not authority by default.
+For FMC product work, identify the applicable reviewed product requirements
+under `docs/product/fmc/`. The frozen extraction at
+`legacy/derived/fmc/use_cases.extraction-v1.yaml` is derived legacy evidence;
+its entries are not automatically accepted as current-product decisions.
+Legacy documents and firmware are evidence of provenance, not authority by
+default. Review coverage and human-decided disposition belong in
+`docs/workflow/fmc_legacy_coverage.md`.
 
 `docs/specs/lcd/lcd_true_source.yaml` is the technical authority for LCD glass
 and mapping facts. It does not by itself define product screen behavior.

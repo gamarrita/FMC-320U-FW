@@ -144,9 +144,11 @@ behavior from a new screen document until that review has happened.
 ## Agent Workflow
 
 Only when an approved active context selects screens:
-1. read the relevant `use_cases.yaml` working-inventory entries and related
-   shared sections as inputs, not automatically accepted requirements;
-2. read the available legacy Word evidence when available;
+1. read relevant entries from the frozen
+   `legacy/derived/fmc/use_cases.extraction-v1.yaml` as legacy evidence, not
+   automatically accepted requirements;
+2. consult `legacy/specs/fmc/use_cases.docx` only to audit a concrete
+   discrepancy in the frozen extraction;
 3. extract only behavior needed to understand the selected screen;
 4. classify each extracted fact as confirmed, inferred, unresolved, or legacy
    evidence;

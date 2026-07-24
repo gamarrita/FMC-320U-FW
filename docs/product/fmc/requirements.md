@@ -30,7 +30,7 @@ initial coverage.
   a coherent operating state.
 
 Evidence:
-- `docs/specs/fmc/use_cases.yaml`;
+- `legacy/derived/fmc/use_cases.extraction-v1.yaml`;
 - roadmap power and startup concerns;
 - legacy module inventory.
 
@@ -69,7 +69,7 @@ Evidence:
 
 Evidence:
 - roadmap Phase 7;
-- `docs/specs/fmc/use_cases.yaml`;
+- `legacy/derived/fmc/use_cases.extraction-v1.yaml`;
 - legacy FMC and acquisition-related inventory.
 
 **Unresolved**
@@ -99,7 +99,7 @@ Evidence:
   and configuration contexts.
 
 Evidence:
-- `docs/specs/fmc/use_cases.yaml`;
+- `legacy/derived/fmc/use_cases.extraction-v1.yaml`;
 - legacy user/setup inventory.
 
 **Unresolved**
@@ -121,7 +121,7 @@ Evidence:
 Evidence:
 - current model fields;
 - roadmap Phase 7 and Phase 8 decision gates;
-- `docs/specs/fmc/use_cases.yaml`;
+- `legacy/derived/fmc/use_cases.extraction-v1.yaml`;
 - legacy setup, backup, flash, factory, and RTC inventories.
 
 **Unresolved**
@@ -138,7 +138,7 @@ Evidence:
   and configuration validity states when they affect operator decisions.
 
 Evidence:
-- `docs/specs/fmc/use_cases.yaml`;
+- `legacy/derived/fmc/use_cases.extraction-v1.yaml`;
 - roadmap risks and decision gates.
 
 **Unresolved**
@@ -159,7 +159,7 @@ Evidence:
 
 Evidence:
 - roadmap Phase 8;
-- `docs/specs/fmc/use_cases.yaml`;
+- `legacy/derived/fmc/use_cases.extraction-v1.yaml`;
 - legacy module inventory and migration ledger.
 
 Each function requires a focused product decision before implementation. Its

@@ -1,20 +1,19 @@
-# Working Context: FMC Product Documentation Backbone
+# Working Context: FMC Legacy Source Classification
 
 ## Objective
 
-Create the minimal product-documentation backbone for the complete FMC-320U and
-give its principal functional domains broad, superficial coverage.
+Separate the primary historical FMC source, its frozen structured extraction,
+the mutable coverage register, and current product documentation.
 
-The repository must identify where reviewed product knowledge belongs, separate
-decision state from evidence, and name the next slice that requires depth.
+This context preserves provenance and prepares controlled future review. It
+does not make functional product decisions or deepen Phase 6A.
 
 ## Motivation
 
-The repository has technical specifications, working inventories, implemented
-contracts, and legacy evidence, but it does not yet have a clear owner for
-reviewed FMC product requirements, observable behavior, and user interface
-knowledge. Without that backbone, detailed evidence can be mistaken for
-accepted product direction and important domains can remain invisible.
+The derived FMC use-case extraction was stored under `docs/specs/`, where its
+location and working-inventory wording could make it appear current or mutable.
+The repository needs an explicit chain from historical source to frozen
+extraction, human review record, and reviewed product documentation.
 
 ## Status
 
@@ -22,83 +21,72 @@ Implemented; awaiting human audit and acceptance.
 
 ## Scope
 
-- create the FMC product-documentation entrypoint;
-- establish separate owners for requirements, cross-cutting behavior, and user
-  interface knowledge;
-- map the whole product at superficial depth;
-- apply `Accepted`, `Candidate`, `Unresolved`, and `Deferred` to substantive
-  statements;
-- record evidence separately as provenance, not as a decision state;
-- integrate the new ownership model into repository entrypoints and closure
-  rules;
-- identify Phase 6A as the next planned documentation depth.
+- locate the historical Word source without opening or reprocessing it;
+- move the YAML extraction byte-for-byte into frozen legacy evidence;
+- create a mutable coverage and disposition register;
+- update repository references and authority descriptions affected by the
+  move;
+- preserve current FMC product documentation as the only current product
+  authority.
 
 ## Out Of Scope
 
-- firmware, build, CubeMX, roadmap, or LCD technical-specification changes;
-- implementation of Phase 6A;
-- detailed Word or legacy migration;
-- mass transcription of `docs/specs/fmc/use_cases.yaml`;
-- complete requirements, state machine, navigation, or screen specifications;
-- screen schemas or files per screen;
-- detailed resolution of legacy contradictions;
-- removal of legacy evidence or deferred functions.
+- reading or modifying the historical Word;
+- editing, cleaning, splitting, or summarizing the frozen YAML extraction;
+- accepting, rejecting, replacing, or incorporating legacy content;
+- changing current product requirements, behavior, or UI decisions;
+- implementation, firmware, build, CubeMX, or LCD technical-authority changes;
+- Phase 6A definition or implementation.
 
 ## Sources
 
-Policy and continuity:
-- `AGENTS.md`;
-- `docs/project/WORKFLOW.md`;
-- `docs/workflow/README.md`;
-- `docs/workflow/doc_closure.md`.
+- `legacy/specs/fmc/use_cases.docx`: primary historical source;
+- `legacy/derived/fmc/use_cases.extraction-v1.yaml`: frozen derived extraction;
+- `docs/workflow/fmc_legacy_coverage.md`: mutable coverage register;
+- `docs/product/fmc/`: current reviewed product documentation;
+- `docs/specs/lcd/lcd_true_source.yaml`: technical LCD authority;
+- `legacy/README.md`: legacy ownership and preservation rules;
+- `AGENTS.md`: stable repository policy;
+- `docs/workflow/doc_closure.md`: documentation closure rules.
 
-Product strategy, contracts, inputs, and evidence:
-- `docs/roadmaps/fmc_refactoring.md`;
-- `src/product/fmc/` public headers and local README;
-- `src/apps/product/main/README.md`;
-- `docs/specs/README.md`;
-- `docs/specs/fmc/use_cases.yaml`;
-- `docs/specs/lcd/lcd_true_source.yaml`;
-- `legacy/README.md`;
-- `legacy/analysis/module_inventory.md`;
-- `legacy/analysis/migration_ledger.md`.
+## Authorities And Roles
 
-## Authorities
-
-- `docs/product/fmc/` owns current reviewed FMC product documentation.
-- `docs/product/fmc/requirements.md` owns product obligations.
-- `docs/product/fmc/behavior.md` owns cross-cutting observable behavior.
-- `docs/product/fmc/user_interface.md` owns the visible and operable
+- `legacy/specs/fmc/use_cases.docx` is the primary historical source and is
+  consulted only to audit extraction ambiguity, omission, or suspected error.
+- `legacy/derived/fmc/use_cases.extraction-v1.yaml` is frozen derived legacy
+  evidence and the preferred legacy source for routine future consultation.
+- `docs/workflow/fmc_legacy_coverage.md` is the mutable record of review
+  coverage and human-decided disposition; it is not a functional authority.
+- `docs/product/fmc/requirements.md` owns current product obligations.
+- `docs/product/fmc/behavior.md` owns current cross-cutting observable behavior.
+- `docs/product/fmc/user_interface.md` owns the current visible and operable
   experience.
-- `docs/specs/` owns structured technical specifications, normalized
-  inventories, and engineering inputs.
-- `docs/specs/fmc/use_cases.yaml` remains an evolving working inventory; its
-  `confirmed` status does not mean `Accepted`.
 - `docs/specs/lcd/lcd_true_source.yaml` remains the technical authority for LCD
   glass and physical mapping.
-- public headers own implemented module contracts.
-- legacy sources remain evidence, not authority.
 
 ## Deliverables
 
-- `docs/product/fmc/README.md`;
-- `docs/product/fmc/requirements.md`;
-- `docs/product/fmc/behavior.md`;
-- `docs/product/fmc/user_interface.md`;
-- updated repository, specification, workflow, and closure entrypoints.
+- frozen extraction at
+  `legacy/derived/fmc/use_cases.extraction-v1.yaml`, with content preserved;
+- mutable coverage register at
+  `docs/workflow/fmc_legacy_coverage.md`;
+- updated references with no second extraction copy under `docs/specs/fmc/`.
+
+## Next Context Candidate
+
+`FMC Phase 6A Presentation Definition`
+
+This is a candidate only. It is not active or started by this context.
 
 ## Verifiable Closure Criteria
 
-- all four FMC product documents exist and link to each other correctly;
-- principal product domains have superficial coverage;
-- decision states are visible on substantive content and evidence is separate;
-- document ownership is unambiguous and normative content is not duplicated;
-- no working inventory or legacy evidence is promoted automatically;
-- LCD physical mapping is referenced without duplication;
-- Phase 6A is identified as the next planned depth, not active implementation;
-- authority statements for `docs/product/`, `docs/specs/`, working inventories,
-  LCD facts, contracts, and legacy evidence are consistent;
-- no files outside the approved documentation scope changed;
-- documentation closure and Git verification pass;
-- the human audits and accepts this implemented backbone or requests a focused
-  correction.
+- the repository path of the historical Word is recorded without opening it;
+- the extraction SHA-256 matches its pre-move value;
+- no extraction copy remains under `docs/specs/fmc/`;
+- every top-level YAML locator starts as `Not evaluated`;
+- no functional disposition is inferred;
+- all references use the new path and frozen-evidence role;
+- current product documentation retains its existing ownership and content;
+- the LCD technical authority is unchanged;
+- no firmware, build, CubeMX, Word, or YAML content changed;
+- documentation closure and Git verification pass.

@@ -18,5 +18,6 @@ Rules:
 
 FMC entrypoints:
 - current product documentation: `docs/product/fmc/README.md`
-- product behavior working inventory: `docs/specs/fmc/use_cases.yaml`
+- frozen FMC legacy extraction:
+  `legacy/derived/fmc/use_cases.extraction-v1.yaml`
 - technical LCD authority: `docs/specs/lcd/lcd_true_source.yaml`

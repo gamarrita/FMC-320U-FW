@@ -6,10 +6,11 @@ Define the durable refactor roadmap for the FMC-320 firmware. This roadmap
 describes phases, dependencies, decision gates, risks, and exit criteria. It is
 not the active work tracker and does not define module APIs.
 
-Accepted product behavior comes from the reviewed documentation or
-specification applicable to each slice. `docs/specs/fmc/use_cases.yaml` is an
-evolving inventory and design input, not a complete or universal product
-contract. Public contracts for implemented modules belong in their headers.
+Accepted product behavior comes from the reviewed documentation under
+`docs/product/fmc/`. The frozen extraction at
+`legacy/derived/fmc/use_cases.extraction-v1.yaml` is derived legacy evidence,
+not a current product contract. Public contracts for implemented modules belong
+in their headers.
 
 ## Program Sequence From The Current Point
 
@@ -41,7 +42,7 @@ Objective:
 
 Dependencies:
 - reviewed product units, totals, calibration, and rate semantics for the
-  selected slice; `use_cases.yaml` may supply candidate requirements;
+  selected slice; the frozen legacy extraction may supply evidence;
 - legacy source only as evidence.
 
 Decision gates:
@@ -211,7 +212,7 @@ Decision gates:
 - adapter ownership at the product/BSP boundary.
 
 Risks:
-- treating candidate behavior in `use_cases.yaml` as approved requirements;
+- treating behavior in the frozen legacy extraction as approved requirements;
 - freezing `fmc_presentation` APIs before the slice is active.
 
 Exit criteria:

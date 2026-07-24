@@ -40,8 +40,10 @@ Related repository roles:
 
 - `docs/specs/` contains structured technical specifications, normalized
   inventories, and engineering inputs.
-- `docs/specs/fmc/use_cases.yaml` is an evolving working inventory, not a
-  universal product contract.
+- `legacy/derived/fmc/use_cases.extraction-v1.yaml` is frozen derived legacy
+  evidence, not a current product contract.
+- `docs/workflow/fmc_legacy_coverage.md` tracks human review coverage and
+  disposition without defining product behavior.
 - `docs/specs/lcd/lcd_true_source.yaml` is the technical authority for LCD
   glass elements and physical mapping.
 - public headers own implemented module contracts.
@@ -64,7 +66,7 @@ with configuration, persistence, RTC, alarms, logging, printing,
 communications, and optional sensing functions.
 
 Evidence:
-- `docs/specs/fmc/use_cases.yaml`;
+- `legacy/derived/fmc/use_cases.extraction-v1.yaml`;
 - `legacy/analysis/module_inventory.md`;
 - `legacy/analysis/migration_ledger.md`.
 
@@ -74,22 +76,22 @@ This map reports documentation coverage, not firmware implementation status.
 
 | Domain | Product aspect | Owner | Depth | Decision state | Evidence | Deepen when |
 |---|---|---|---|---|---|---|
-| Power, startup, and recovery | Power-on, initialization, restore, low-power concerns | [Behavior](behavior.md) | Surface | Candidate | Roadmap; working inventory; legacy `fm_init`/`fmx_lp` inventory | Startup or power slice |
+| Power, startup, and recovery | Power-on, initialization, restore, low-power concerns | [Behavior](behavior.md) | Surface | Candidate | Roadmap; frozen legacy extraction; legacy `fm_init`/`fmx_lp` inventory | Startup or power slice |
 | Pulse and signal acquisition | Turning physical observations into pulse deltas | [Requirements](requirements.md) | Surface | Candidate | Runtime contract; roadmap; legacy inventory | Phase 7 dependency |
 | Flow-rate calculation | Deriving active-unit rate from pulse and time windows | [Requirements](requirements.md) | Focused core | Accepted | `fmc_rate.h`; `fmc_units.h` | Acquisition or display slice |
 | Totalization | ACM/TTL accumulation, visible totals, and resets | [Requirements](requirements.md) | Focused core | Accepted | `fmc_model.h`; `fmc_volume.h`; `fmc_service.h` | Operational reset flow |
 | Presentation | Projection of product state into visible output | [User interface](user_interface.md) | Surface | Candidate | Roadmap Phase 6A; LCD contracts | Phase 6A |
 | Operator input | Semantic keys and actions after hardware translation | [User interface](user_interface.md) | Focused vocabulary | Accepted | `fmc_input.h`; product app README | Selected input slice |
-| Navigation | Context-dependent visible consequences of operator input | [User interface](user_interface.md) | Surface | Candidate | Working inventory; legacy user/setup inventory | Phase 6B |
-| Configuration and calibration | Editable measurement and product settings | [Requirements](requirements.md) | Surface | Candidate | Model contract; working inventory; legacy inventory | Configuration slice |
-| Persistence and defaults | Retention, restore, validation, and factory data | [Requirements](requirements.md) | Surface | Candidate | Roadmap; working inventory; legacy inventory | Phase 7 |
-| RTC and time | Current time, editing, validity, and timestamp use | [Behavior](behavior.md) | Surface | Candidate | Roadmap; working inventory; legacy `fm_rtc` inventory | RTC-dependent slice |
-| Alarms, status, and recovery | Operator-visible abnormal conditions and recovery | [Behavior](behavior.md) | Surface | Candidate | Working inventory; roadmap | Selected operational flow |
-| Information logging | Event selection, timestamping, retention, and retrieval | [Requirements](requirements.md) | Surface | Deferred | Working inventory; legacy log inventory | Logging slice |
+| Navigation | Context-dependent visible consequences of operator input | [User interface](user_interface.md) | Surface | Candidate | Frozen legacy extraction; legacy user/setup inventory | Phase 6B |
+| Configuration and calibration | Editable measurement and product settings | [Requirements](requirements.md) | Surface | Candidate | Model contract; frozen legacy extraction; legacy inventory | Configuration slice |
+| Persistence and defaults | Retention, restore, validation, and factory data | [Requirements](requirements.md) | Surface | Candidate | Roadmap; frozen legacy extraction; legacy inventory | Phase 7 |
+| RTC and time | Current time, editing, validity, and timestamp use | [Behavior](behavior.md) | Surface | Candidate | Roadmap; frozen legacy extraction; legacy `fm_rtc` inventory | RTC-dependent slice |
+| Alarms, status, and recovery | Operator-visible abnormal conditions and recovery | [Behavior](behavior.md) | Surface | Candidate | Frozen legacy extraction; roadmap | Selected operational flow |
+| Information logging | Event selection, timestamping, retention, and retrieval | [Requirements](requirements.md) | Surface | Deferred | Frozen legacy extraction; legacy log inventory | Logging slice |
 | Communications and commands | External protocol and command behavior | [Requirements](requirements.md) | Surface | Deferred | Legacy command/USART inventory | Transport decision |
-| Printing | Ticket content and print workflow | [User interface](user_interface.md) | Surface | Deferred | Working inventory; legacy `fm_ppt` inventory | Reporting slice |
-| Bluetooth | Connection window and communication workflow | [User interface](user_interface.md) | Surface | Deferred | Working inventory; legacy `fm_mxc` inventory | Communications slice |
-| Optional sensing | PT100 and other optional product extensions | [Requirements](requirements.md) | Surface | Deferred | Working inventory; roadmap | Product selection |
+| Printing | Ticket content and print workflow | [User interface](user_interface.md) | Surface | Deferred | Frozen legacy extraction; legacy `fm_ppt` inventory | Reporting slice |
+| Bluetooth | Connection window and communication workflow | [User interface](user_interface.md) | Surface | Deferred | Frozen legacy extraction; legacy `fm_mxc` inventory | Communications slice |
+| Optional sensing | PT100 and other optional product extensions | [Requirements](requirements.md) | Surface | Deferred | Frozen legacy extraction; roadmap | Product selection |
 | Diagnostics, service, and validation | Product-facing diagnostic or service behavior | [Requirements](requirements.md) | Surface | Unresolved | Current bring-ups; command/debug legacy inventory | Service requirement |
 
 ## Technical Authority Boundary

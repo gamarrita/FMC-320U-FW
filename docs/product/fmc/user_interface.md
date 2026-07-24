@@ -51,7 +51,7 @@ physical routing.
 identity, TTL/RATE, ACM/RATE, time, status, and selected optional workflows.
 
 Evidence:
-- `docs/specs/fmc/use_cases.yaml`;
+- `legacy/derived/fmc/use_cases.extraction-v1.yaml`;
 - legacy user-flow inventory.
 
 **Unresolved:** Screen order, automatic transitions, return behavior, refresh
@@ -65,7 +65,7 @@ rate time base, date/time, alarm thresholds, and selected optional settings.
 
 Evidence:
 - current model configuration fields;
-- working inventory;
+- frozen legacy extraction;
 - legacy setup inventory.
 
 **Unresolved:** Entry authorization, edit cursor behavior, validation feedback,
@@ -86,7 +86,7 @@ Evidence:
 accepted semantic event.
 
 **Unresolved:** No complete key-to-transition table is accepted. Existing
-working-inventory and legacy transitions remain evidence or candidates until a
+frozen-extraction and legacy transitions remain evidence or candidates until a
 focused UI slice reviews them.
 
 ## Superficial Interface Map
@@ -143,4 +143,4 @@ alarm behavior, and exact legacy UI reproduction.
 
 Evidence:
 - roadmap Phase 6B and Phase 8;
-- working inventory and legacy evidence.
+- frozen legacy extraction and other legacy evidence.

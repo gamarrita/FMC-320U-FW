@@ -47,6 +47,8 @@ Required:
 - Folder ownership: local `README.md` files
 - Current product documentation: `docs/product/`
 - Structured technical specifications and normalized inventories: `docs/specs/`
+- Legacy review coverage and disposition: applicable registers under
+  `docs/workflow/`
 - Implemented module contracts: public headers
 - Historical legacy evidence: `legacy/`
 
