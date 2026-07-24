@@ -5,13 +5,14 @@
 This file records meaningful firmware-level changes, milestones, and notable decisions.
 
 It is a historical record.
-It is not a source of truth for current style, naming, or workflow rules.
+It is not a source of truth for current style, naming, workflow rules, or
+active work.
 
-For stable rules, see:
+For current repository guidance, see:
 
+- `AGENTS.md`
 - `WORKING_CONTEXT.md`
 - `STYLE.md`
-- `AGENTS.md`
 - `docs/workflow/README.md`
 
 ---
@@ -35,6 +36,13 @@ Recommended format:
 ---
 
 ## Entries
+
+## 2026-07-24
+- Established the human-agent-repository continuity workflow and separated
+  current FMC product documentation, frozen legacy evidence, and mutable legacy
+  review coverage.
+- Completed and hardware-accepted the bounded Phase 6A startup presentation
+  path through steady TTL/RATE with controlled values.
 
 ## 2026-05-10
 - Added the first pure FMC model/unit-policy validation app.
