@@ -131,7 +131,7 @@ Evidence:
 
 Evidence:
 - current model fields;
-- roadmap Phase 7 and Phase 8 decision gates;
+- roadmap Phases 9 through 12 decision gates;
 - `legacy/derived/fmc/use_cases.extraction-v1.yaml`;
 - legacy setup, backup, flash, factory, and RTC inventories.
 
@@ -169,7 +169,7 @@ Evidence:
 - Product-facing diagnostics and service procedures.
 
 Evidence:
-- roadmap Phase 8;
+- roadmap Phases 13 through 15;
 - `legacy/derived/fmc/use_cases.extraction-v1.yaml`;
 - legacy module inventory and migration ledger.
 

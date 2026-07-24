@@ -82,16 +82,16 @@ This map reports documentation coverage, not firmware implementation status.
 | Totalization | ACM/TTL accumulation, visible totals, and resets | [Requirements](requirements.md) | Focused core | Accepted | `fmc_model.h`; `fmc_volume.h`; `fmc_service.h` | Operational reset flow |
 | Presentation | Startup sequence and TTL/RATE projection into visible output | [User interface](user_interface.md) | Focused Phase 6A | Accepted | Reviewed Phase 6A decisions; presentation and LCD contracts | Phase 7 live data integration |
 | Operator input | Semantic keys and actions after hardware translation | [User interface](user_interface.md) | Focused vocabulary | Accepted | `fmc_input.h`; product app README | Selected input slice |
-| Navigation | Context-dependent visible consequences of operator input | [User interface](user_interface.md) | Surface | Candidate | Frozen legacy extraction; legacy user/setup inventory | Phase 6B |
-| Configuration and calibration | Editable measurement and product settings | [Requirements](requirements.md) | Surface | Candidate | Model contract; frozen legacy extraction; legacy inventory | Configuration slice |
-| Persistence and defaults | Retention, restore, validation, and factory data | [Requirements](requirements.md) | Surface | Candidate | Roadmap; frozen legacy extraction; legacy inventory | Phase 7 |
-| RTC and time | Current time, editing, validity, and timestamp use | [Behavior](behavior.md) | Surface | Candidate | Roadmap; frozen legacy extraction; legacy `fm_rtc` inventory | RTC-dependent slice |
+| Navigation | Context-dependent visible consequences of operator input | [User interface](user_interface.md) | Surface | Candidate | Frozen legacy extraction; legacy user/setup inventory | Phases 8 through 10 |
+| Configuration and calibration | Editable measurement and product settings | [Requirements](requirements.md) | Surface | Candidate | Model contract; frozen legacy extraction; legacy inventory | Phase 10 |
+| Persistence and defaults | Retention, restore, validation, and factory data | [Requirements](requirements.md) | Surface | Candidate | Roadmap; frozen legacy extraction; legacy inventory | Phases 11 and 12 |
+| RTC and time | Current time, editing, validity, and timestamp use | [Behavior](behavior.md) | Surface | Candidate | Roadmap; frozen legacy extraction; legacy `fm_rtc` inventory | Phase 9 |
 | Alarms, status, and recovery | Operator-visible abnormal conditions and recovery | [Behavior](behavior.md) | Surface | Candidate | Frozen legacy extraction; roadmap | Selected operational flow |
 | Information logging | Event selection, timestamping, retention, and retrieval | [Requirements](requirements.md) | Surface | Deferred | Frozen legacy extraction; legacy log inventory | Logging slice |
 | Communications and commands | External protocol and command behavior | [Requirements](requirements.md) | Surface | Deferred | Legacy command/USART inventory | Transport decision |
-| Printing | Ticket content and print workflow | [User interface](user_interface.md) | Surface | Deferred | Frozen legacy extraction; legacy `fm_ppt` inventory | Reporting slice |
-| Bluetooth | Connection window and communication workflow | [User interface](user_interface.md) | Surface | Deferred | Frozen legacy extraction; legacy `fm_mxc` inventory | Communications slice |
-| Optional sensing | PT100 and other optional product extensions | [Requirements](requirements.md) | Surface | Deferred | Frozen legacy extraction; roadmap | Product selection |
+| Printing | Ticket content and print workflow | [User interface](user_interface.md) | Surface | Deferred | Frozen legacy extraction; legacy `fm_ppt` inventory | Phase 15 |
+| Bluetooth | Connection window and communication workflow | [User interface](user_interface.md) | Surface | Deferred | Frozen legacy extraction; legacy `fm_mxc` inventory | Phase 14 |
+| Optional sensing | PT100 and other optional product extensions | [Requirements](requirements.md) | Surface | Deferred | Frozen legacy extraction; roadmap | Phase 13 product selection |
 | Diagnostics, service, and validation | Product-facing diagnostic or service behavior | [Requirements](requirements.md) | Surface | Unresolved | Current bring-ups; command/debug legacy inventory | Service requirement |
 
 ## Technical Authority Boundary

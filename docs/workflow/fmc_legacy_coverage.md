@@ -105,7 +105,7 @@ only the exact legacy statements reviewed for Phase 6A.
 | `screens.SCREEN_FIRMWARE_VERSION.key_actions.KEY_ESC` | Accepted and incorporated | `docs/product/fmc/behavior.md` | SHORT ESC has the same effect as timeout |
 | `screens.SCREEN_TTL_RATE.display.upper_row.field` | Accepted and incorporated | `docs/product/fmc/user_interface.md` | TTL uses the upper row |
 | `screens.SCREEN_TTL_RATE.display.upper_row.unit_display` | Replaced | `docs/product/fmc/user_interface.md` | Shared alpha `Lt` applies to TTL and RATE |
-| `screens.SCREEN_TTL_RATE.display.upper_row.persistence` | Deferred | - | TTL persistence belongs to Phase 7 |
+| `screens.SCREEN_TTL_RATE.display.upper_row.persistence` | Deferred | - | TTL retention and persistence belong to Phases 11 and 12 |
 | `screens.SCREEN_TTL_RATE.display.upper_row.digit_count` | Accepted and incorporated | `docs/product/fmc/user_interface.md` | Upper row uses its eight physical positions |
 | `screens.SCREEN_TTL_RATE.display.upper_row.decimal_position_options` | Deferred | `docs/product/fmc/user_interface.md` | Phase 6A fixes one decimal; configurable resolution remains later work |
 | `screens.SCREEN_TTL_RATE.display.lower_row.field` | Accepted and incorporated | `docs/product/fmc/user_interface.md` | RATE uses the lower row |

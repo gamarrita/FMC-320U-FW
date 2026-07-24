@@ -127,7 +127,7 @@ to an approved save policy.
 Evidence:
 - current model separation between canonical measurement state and derived
   values;
-- roadmap Phase 7 and Phase 8;
+- roadmap Phases 10 through 12;
 - frozen legacy extraction and legacy setup evidence.
 
 **Unresolved:** Edit buffers, save/cancel behavior, authorization, storage
@@ -167,7 +167,7 @@ optional sensors remain recognized product domains without accepted detailed
 behavior.
 
 Evidence:
-- roadmap Phase 8;
+- roadmap Phases 13 through 15;
 - frozen legacy extraction;
 - legacy module inventory.
 

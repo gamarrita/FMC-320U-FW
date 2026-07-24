@@ -14,8 +14,7 @@ in their headers.
 
 ## Program Sequence From The Current Point
 
-The remaining program follows this dependency order. Phase labels name durable
-work packages; their numeric labels do not override this sequence.
+The remaining program follows this dependency order:
 
 1. Reframe documentation and establish the human-agent-repository workflow.
 2. Build the FMC product-documentation backbone.
@@ -24,20 +23,38 @@ work packages; their numeric labels do not override this sequence.
    review before they become authoritative.
 5. Deepen the next visible programming slice.
 6. Implement Phase 6A: the bounded initial presentation slice.
-7. Add essential acquisition, persistence, and RTC work when Phase 6A or later
-   product dependencies require it.
-8. Implement Phase 6B: operational screens and navigation.
-9. Add configuration workflows and other deferred functions deliberately.
+7. Add essential acquisition through the dedicated incremental acquisition
+   route.
+8. Add the minimum measurement user screens and their navigation.
+9. Add RTC/calendar behavior with its required user and configuration screens
+   and navigation.
+10. Add the minimum measurement configuration screens and their navigation.
+11. Retain the approved high-change state in Backup SRAM.
+12. Persist the approved low-change configuration in Flash.
+13. Add temperature measurement as one vertical capability, including only the
+    UI and configuration it requires.
+14. Add Bluetooth as one vertical capability, including only the UI and
+    configuration it requires.
+15. Add ticket printing as one vertical capability after its Bluetooth
+    and RTC dependencies.
+16. Perform integral product, power, and release validation.
 
-Each step depends on enough reviewed output from the preceding steps to define
-a small implementation or documentation cut. This is not a requirement to
-complete all product documentation before programming: breadth comes first,
-then depth follows the next slice.
+Each phase depends only on the dependencies stated in its section. The numeric
+order is the current delivery route, not permission to infer product behavior.
+Independent vertical capabilities may be deferred without collapsing their UI
+into another phase; ticket printing retains its explicit Bluetooth dependency.
 
-Steps 1 through 6 are complete. The next dependency-driven work is step 7,
-starting with the smallest acquisition slice needed to replace the provisional
-Phase 6A TTL/RATE values. RTC and persistence join that cut only when a selected
-runtime dependency requires them.
+This is not a requirement to complete all product documentation before
+programming: breadth comes first, then depth follows the next slice.
+
+Steps 1 through 6 are complete. Phase 7-0, acquisition evidence and route
+foundation, is also complete. The durable route continues with Phase 7A.
+
+Phases 8 and 10 are separate because operational navigation and measurement
+configuration navigation have different behavior, authorization, validation,
+and test boundaries. Phase 9 is a complete RTC/calendar vertical cut, including
+its own user and configuration screens. Phases 13 through 15 likewise do not
+defer their necessary UI to a later generic screen phase.
 
 ## Phase 1: Model And Pure Calculations
 
@@ -239,95 +256,363 @@ Completion:
   product-main LCD adapter, focused regression coverage, canonical builds, and
   controlled-value target validation.
 
-## Phase 7: Essential Acquisition, RTC, And Persistence
+## Phase 7: Essential Acquisition
 
 Objective:
-- connect pulse acquisition, rate windows, date/time, backup retention, and
-  essential persistence to runtime and service state when dependencies from
-  Phase 6A or the next operational slice require them.
+- replace provisional Phase 6A TTL/RATE inputs through short, independently
+  reviewable acquisition cuts;
+- connect accepted pulse deltas and validated RATE observations through runtime
+  ownership without coupling acquisition to product totals or presentation.
+
+Responsibility boundaries:
+- physical pulse accumulation;
+- counter observation and pulse-delta formation;
+- ACM/TTL totalization;
+- physical frequency observation;
+- pulse/time observation quality;
+- pure RATE mathematics;
+- runtime and presentation integration.
 
 Dependencies:
-- runtime ownership;
-- low-power and ISR delivery decisions;
-- current product requirements for pulse loss, RTC, and persistence.
+- completed Phase 6A runtime/presentation path;
+- current `fmc_runtime`, `fmc_service`, and pure `fmc_rate` ownership;
+- reviewed product decisions for the bounded slice;
+- human-approved hardware and CubeMX changes before each hardware bring-up;
+- target equipment capable of generating and independently counting pulses and
+  measuring current where low-power acceptance is in scope.
 
 Decision gates:
-- pulse capture ownership;
-- rate window representation;
-- backup/flash data model and validation;
-- RTC validity and recovery policy.
+- supported sensor signal, frequency, pulse-width, and low-power envelope;
+- pulse-delta acceptance, wrap extension, loss detection, and recovery policy;
+- counter hardware, pin, clock, filtering, autonomous-mode, and CubeMX path;
+- frequency observation semantics, accuracy, latency, and quality states;
+- capture, DMA, interrupt, polling, or other frequency technique;
+- acceptance or rejection of any legacy workaround after target evidence.
 
 Risks:
+- designing around an unconfirmed silicon defect;
+- coupling totalization correctness to frequency availability;
 - losing pulses across sleep or context transitions;
-- duplicating canonical state between RAM, flash, backup, and presentation.
+- hiding counter wrap, stale data, or invalid observations as zero flow;
+- expanding one bring-up into the complete acquisition subsystem.
+
+Correct-first baseline:
+- legacy firmware and field reports remain evidence, not implementation
+  authority;
+- documented correct STM32U5 use is exercised without assuming the reported
+  historical LPTIM behavior is a silicon defect;
+- pulse accumulation is completed before frequency observation can endanger
+  totalization;
+- physical observation remains separate from RATE mathematics;
+- DMA, interrupts, polling, autonomous peripherals, and other candidates are
+  evaluated from required behavior and measured energy;
+- a workaround is considered only after a minimal correct technique fails or
+  cannot meet an approved constraint on target.
+
+### Incremental Acquisition Route
+
+`7-0A -> 7-0B -> 7A -> 7B1 -> 7B2 -> 7B3 -> 7C -> 7D -> 7E1 -> 7E2 -> [7E3] -> 7F -> 7G`
+
+`7E3` is conditional. It opens only when accepted target evidence from 7E1 or
+7E2 demonstrates an unmet approved constraint or a reproducible failure.
+
+| Slice | Bounded result | Entry or decision gate | Exit evidence |
+|---|---|---|---|
+| 7-0A: Evidence and hypothesis formulation | Reconstruct legacy acquisition and classify the reported STM32U575 behavior | Legacy sources and identifiable public technical evidence are available | `legacy/analysis/fmc_acquisition.md` records provenance, uncertainties, hypotheses, and the correct-first baseline without selecting hardware |
+| 7-0B: Foundation and route | Establish document ownership, incremental route, approval gates, and the next cut | 7-0A evidence is reviewable | Repository documents agree on the route and one active cut; no product or hardware decision is inferred |
+| 7A: Pulse-accumulation contract | Define the bounded physical observation accepted as a pulse delta | Human decisions on signal envelope, selected low-power states, observation latency, and loss policy | Product owners contain approved outcomes and `docs/specs/fmc/acquisition.md` defines delta, wrap, error, numeric, ownership, and acceptance semantics |
+| 7B1: Pulse-counter bring-up in Run | Exercise the minimum documented counter technique without Stop2 or RATE | Human-approved peripheral, pin, clock, filter, CubeMX change, and Run signal matrix | Target evidence demonstrates exact raw counting and stable observation at approved Run limits |
+| 7B2: Pulse-counter bring-up across Stop2 and wrap | Exercise the same counter path through low power and rollover | 7B1 accepted; Stop2 matrix and current-measurement method approved | Instrumented results demonstrate counting across Stop2 and wrap; separate silent runs establish current |
+| 7B3: Counter-observation and pulse-delta module | Convert validated counter observations into bounded pulse deltas and status | 7B1 and 7B2 hardware behavior accepted | Host vectors cover first sample, normal delta, wrap, ambiguity, invalid observation, and recovery without RATE or totals |
+| 7C: Totalization/runtime integration | Deliver accepted deltas to ACM and TTL exactly once through runtime/service | 7B3 accepted; acquisition-to-runtime boundary reviewed | Regression and target evidence show no loss, duplication, or acquisition ownership of product totals |
+| 7D: Frequency-observation contract | Define a pulse/time observation with explicit quality | Accumulation is stable enough that frequency work cannot endanger totals | Specification defines time-window ownership, range, accuracy, latency, zero, absent, stale, invalid, and RATE handoff |
+| 7E1: Frequency bring-up in Run | Characterize the minimum documented frequency technique in Run | Human-approved technique, CubeMX path, signal matrix, and accuracy target | Target results cover the approved frequency range, elapsed time, wrap, and quality reporting |
+| 7E2: Frequency bring-up across Stop2 | Exercise the accepted Run technique through low-power intervals | 7E1 accepted; Stop2 matrix and current-measurement method approved | Instrumented results cover Stop2 and wake behavior; separate silent runs establish current |
+| 7E3: Conditional technique comparison | Compare a demonstrated failure with another documented technique or workaround | 7E1 or 7E2 records a minimal failure and the human approves comparison | Evidence selects, rejects, or defers alternatives without changing pulse-total correctness |
+| 7F: RATE integration | Feed validated pulse/time observations into pure RATE calculation with explicit quality | 7D and required 7E evidence accepted; 7E3 closed if entered | Math vectors, boundaries, and runtime tests agree on units, elapsed time, invalid input, and zero/stale distinctions |
+| 7G: Combined live integration | Combine accepted counter and frequency paths and replace provisional TTL/RATE inputs | 7C and 7F accepted; visible invalid/zero behavior approved | Combined bring-up, canonical builds, regression, target pulse accuracy, presentation, and current validation pass |
+
+Phase 7-0 is complete. Phase 7A is the next documentation-only contract slice.
+Phase 7B1 is the first possible acquisition implementation and cannot start
+before approval of its hardware and CubeMX gates.
+
+### Human-Agent Bring-Up Protocol
+
+Bring-ups use the existing debug UART as a transmit-only observation channel:
+
+- the human flashes the board, controls the signal generator, and performs
+  physical current measurement;
+- the agent may monitor UART output, analyze evidence, and direct the next
+  approved signal case;
+- UART RX is not introduced;
+- no UART transmission occurs while the MCU is in Stop2;
+- bounded observations collected during Stop2 are emitted after return to Run.
+
+Correctness and power are separate runs. Instrumented UART runs support
+functional diagnosis; silent runs provide accepted current-consumption
+evidence.
+
+Human approval is required before:
+
+- promoting acquisition behavior into product requirements;
+- selecting a signal envelope, observation latency, low-power guarantee,
+  pulse-loss policy, quality state, or visible failure behavior;
+- selecting a pin, peripheral, clock, filter, counter/capture mode, interrupt,
+  DMA path, autonomous mode, or CubeMX change;
+- using the suspected STM32U575 behavior as a current design constraint;
+- comparing or adopting the legacy wake-up workaround;
+- beginning an implementation slice.
 
 Exit criteria:
-- acquisition updates service state through runtime;
-- persistence and RTC behavior preserve confirmed requirements;
-- tests and bring-ups cover selected behavior and recovery paths.
+- the required acquisition slices close with their specified evidence, or are
+  explicitly deferred while provisional inputs remain identified;
+- acquisition updates service state only through the reviewed runtime boundary;
+- pulse totals do not depend on frequency-observation availability;
+- RATE receives validated pulse/time observations with explicit quality;
+- selected low-power behavior and current consumption are accepted on target;
+- any adopted workaround is traceable to a reproduced failure and explicit
+  human decision;
+- tests and bring-ups cover selected normal, boundary, low-power, and recovery
+  paths.
 
-## Phase 6B: Operational Screens And Navigation
+## Phase 8: Minimum Measurement User Screens And Navigation
 
 Objective:
-- implement the operational user screens and navigation selected after Phase
-  6A, using reviewed behavior and the essential runtime data made available by
-  Phase 7 when required.
+- complete the minimum operator path for live flow measurement;
+- integrate TTL/RATE and ACM/RATE into one bounded navigation model.
 
 Dependencies:
-- Phase 6A presentation path and lessons;
-- semantic input and owner-loop contracts;
-- reviewed operational-screen and navigation behavior;
-- essential acquisition, persistence, or RTC capabilities required by the
-  selected screens.
+- Phase 7 live TTL/RATE acquisition;
+- completed Phase 6A presentation path;
+- semantic input and runtime-owner contracts.
 
 Decision gates:
-- operational state-machine boundaries;
-- navigation and return behavior;
-- refresh, activity, and backlight policy;
-- alarm or transient overlays needed by the selected operational flow.
+- exact two-screen navigation and return behavior;
+- ACM reset authorization, confirmation, and feedback;
+- visible zero, absent, stale, invalid, and overflow behavior;
+- refresh, activity, backlight, and pulse-indicator policy.
 
-Risks:
-- expanding a selected flow into a complete legacy menu reproduction;
-- coupling navigation directly to LCD mapping or storage details;
-- implementing unresolved candidate use cases as accepted behavior.
+Legacy evidence:
+- the implemented legacy user path placed TTL/RATE before ACM/RATE;
+- broader legacy menus also included date/time, printing, Bluetooth, and
+  optional temperature, but those are not measurement-minimum dependencies.
 
 Exit criteria:
-- selected operational screens and navigation are traceable to reviewed product
-  documentation;
-- state transitions and formatting have focused tests;
-- hardware bring-up covers the selected operator flow;
-- configuration screens and unrelated deferred functions remain out of scope.
+- TTL/RATE and ACM/RATE navigation is traceable to approved UI behavior;
+- transitions, formatting, live updates, and approved reset behavior have
+  focused tests and target validation;
+- configuration screens and advanced capabilities remain out of scope.
 
-## Phase 8: Configuration And Deferred Functions
+## Phase 9: RTC, Calendar, And Associated Screens
 
 Objective:
-- implement configuration workflows and remaining product functions
-  deliberately after core runtime and operational UI ownership are stable.
+- add RTC/calendar as one complete vertical capability;
+- include its user screen, configuration screen, and navigation in the same
+  phase.
 
 Dependencies:
-- Phase 6B operational navigation;
-- persistence and RTC where required;
-- communication and power decisions;
-- reviewed requirements for each selected deferred function.
+- Phase 8 user navigation;
+- approved time display and editing use cases;
+- available CubeMX RTC configuration as the hardware authority.
 
 Decision gates:
-- alarm reset semantics;
-- logging wear/energy policy;
-- Bluetooth window/date-time overlap;
-- printer workflow and transport ownership;
-- optional PT100 behavior.
+- RTC validity, initialization, format, edit, and recovery behavior;
+- user-screen placement and return behavior;
+- configuration authorization, save/cancel, and invalid-time feedback;
+- backup-supply behavior before general Backup SRAM retention is introduced;
+- which later reporting, logging, or communication functions may consume time.
 
-Risks:
-- broad workflow coupling;
-- excessive power draw from optional features;
-- implementing not-yet-confirmed behavior as mandatory.
+Legacy evidence:
+- legacy provides both a user date/time screen and date/time configuration;
+- the legacy ticket formatter later consumes RTC date and time.
 
 Exit criteria:
-- each workflow has a small product contract, implementation, and validation
-  path;
-- optional behavior remains isolated when not selected.
+- valid and invalid time are distinguishable;
+- approved date/time can be displayed and edited through reviewed navigation;
+- formatting, calendar boundaries, save/cancel, reset, and recovery behavior
+  have focused tests and target validation;
+- RTC UI and configuration are complete inside this phase;
+- general Backup SRAM and Flash ownership remain in Phases 11 and 12.
 
-## Phase 9: Integral Validation, Power, And Product Behavior
+## Phase 10: Minimum Measurement Configuration Screens And Navigation
+
+Objective:
+- add the minimum authorized configuration path required by acquisition and
+  measurement;
+- validate and apply edits to active state before persistence is introduced.
+
+Dependencies:
+- Phase 8 operational navigation;
+- Phase 9 configuration-navigation lessons;
+- approved editable measurement fields and ranges;
+- current model separation between canonical configuration and derived values.
+
+Minimum candidate scope:
+- configuration entry or authorization screen;
+- calibration factor K;
+- ACM/TTL volume unit and resolution;
+- RATE time base and resolution;
+- navigation, edit buffer, validation, apply, and exit behavior.
+
+Decision gates:
+- exact minimum field set and authorization;
+- save/cancel and invalid-edit behavior;
+- whether any resolution shortcut remains on an operational screen;
+- whether applied configuration remains volatile until Phases 11 and 12.
+
+Legacy evidence:
+- the implemented legacy setup contains password, factor, volume-unit, and
+  time-unit screens;
+- linearization, alarms, and unfinished settings do not enter the minimum slice
+  automatically.
+
+Exit criteria:
+- the approved measurement settings can be edited and applied through focused
+  configuration navigation;
+- unit and factor changes update derived TTL, ACM, and RATE consistently;
+- tests cover navigation, validation, cancel/apply, and boundary values;
+- Backup SRAM, Flash, alarms, and advanced capability settings remain out of
+  scope.
+
+## Phase 11: Backup SRAM Retention
+
+Objective:
+- retain a human-approved minimal set of frequently changing runtime state,
+  initially expected to fit within 1 KiB, while the backup supply remains
+  valid.
+
+Dependencies:
+- stable canonical state from acquisition, user, RTC, and measurement
+  configuration phases;
+- approved reset classes and retention guarantees.
+
+Decision gates:
+- exact retained variables;
+- integrity, version, initialization, and recovery;
+- synchronization between live state and the backup domain;
+- interaction with RTC backup-supply state without merging their ownership.
+
+Risks:
+- copying the legacy memory layout instead of retaining current canonical
+  state;
+- treating backup-powered retention as survival after loss of all supplies.
+
+Exit criteria:
+- retained state survives approved reset and supply cases;
+- invalid retained data recovers according to approved policy;
+- RTC and general retained state have explicit, non-overlapping ownership;
+- Flash persistence remains separate.
+
+## Phase 12: Flash Persistence
+
+Objective:
+- persist the approved low-change configuration that must survive loss of the
+  backup supply.
+
+Dependencies:
+- Phase 10 measurement-configuration ownership;
+- Phase 11 retained-state boundaries;
+- approved factory/default and recovery behavior.
+
+Decision gates:
+- exact persisted variables and format versioning;
+- write timing, atomicity, integrity, wear, and recovery;
+- migration or factory reset behavior.
+
+Risks:
+- persisting derived values instead of canonical configuration;
+- unnecessary writes or ambiguous recovery after interrupted updates.
+
+Exit criteria:
+- approved configuration survives full power removal;
+- corruption and interrupted-write cases recover deterministically;
+- Flash and Backup SRAM ownership does not overlap ambiguously.
+
+## Phase 13: Temperature Measurement
+
+Objective:
+- add temperature as one complete vertical capability, from physical
+  observation through product state and any required user/configuration
+  screens and navigation.
+
+Dependencies:
+- stable runtime, UI, and persistence boundaries;
+- human selection of the temperature capability and supported sensor.
+
+Decision gates:
+- sensor and electrical interface, range, resolution, accuracy, cadence, and
+  energy budget;
+- invalid/stale behavior and any compensation semantics;
+- required operator view and editable parameters.
+
+Legacy evidence:
+- the extraction calls the optional sensor PT100 and sketches temperature and
+  expansion-coefficient screens;
+- preserved legacy firmware does not establish those sketches as a completed
+  product implementation.
+
+Exit criteria:
+- temperature acquisition and quality are validated independently;
+- approved temperature behavior is integrated with focused tests and target
+  evidence;
+- necessary temperature screens, configuration, navigation, and persistence
+  are included in this phase rather than deferred to a generic UI phase.
+
+## Phase 14: Bluetooth
+
+Objective:
+- add Bluetooth as one complete vertical communication capability, including
+  only its required operator and configuration flows.
+
+Dependencies:
+- stable runtime, power, UI, and persistence boundaries;
+- approved communication purpose, security boundary, and energy budget.
+
+Decision gates:
+- module and transport contract;
+- connection roles, activation window, timeout, errors, and authorization;
+- required screen, configuration, and diagnostic behavior.
+
+Legacy evidence:
+- legacy firmware provides a bounded Bluetooth connection window and uses the
+  module as the transport for the printer;
+- those control flows remain evidence, not current protocol authority.
+
+Exit criteria:
+- connection, transfer, timeout, recovery, and power behavior meet approved
+  requirements;
+- required Bluetooth UI/configuration/navigation is complete;
+- printing is not implemented in this phase.
+
+## Phase 15: Ticket Printing
+
+Objective:
+- add ticket printing as one complete vertical capability, including ticket
+  content, Bluetooth transport integration, operator flow, configuration, and
+  navigation.
+
+Dependencies:
+- Phase 9 RTC/calendar for approved ticket date/time;
+- Phase 14 Bluetooth transport;
+- stable ACM/TTL snapshot and persistence ownership.
+
+Decision gates:
+- ticket content, numbering, formatting, and privacy;
+- print trigger, progress, timeout, retry, cancellation, and error behavior;
+- whether RTC date/time is mandatory;
+- printer compatibility and energy budget.
+
+Legacy evidence:
+- the preserved ticket contains ticket number, TTL, date, time, and ACM;
+- the legacy user flow powers Bluetooth, connects to the printer, and sends the
+  ticket in staged steps.
+
+Exit criteria:
+- approved ticket data is formed from coherent product state;
+- Bluetooth transport and all operator-visible print states are validated;
+- necessary print settings and navigation are complete inside this phase.
+
+## Phase 16: Integral Validation, Power, And Product Behavior
 
 Objective:
 - validate the refactored firmware against confirmed product behavior and

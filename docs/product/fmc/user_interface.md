@@ -209,5 +209,5 @@ views, printer flow, Bluetooth flow, optional PT100 presentation, complete
 alarm behavior, and exact legacy UI reproduction.
 
 Evidence:
-- roadmap Phase 6B and Phase 8;
+- roadmap Phases 8 through 10 and Phases 13 through 15;
 - frozen legacy extraction and other legacy evidence.
