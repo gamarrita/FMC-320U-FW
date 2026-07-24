@@ -822,6 +822,22 @@ fm_lcd_map_status_t FM_LCD_MAP_Clear(uint8_t *p_ram, uint8_t p_ram_size)
     return FM_LCD_MAP_OK;
 }
 
+fm_lcd_map_status_t FM_LCD_MAP_SetAll(uint8_t *p_ram, uint8_t p_ram_size)
+{
+    fm_lcd_map_status_t status;
+
+    status = fm_lcd_map_validate_buffer_(p_ram, p_ram_size);
+
+    if (status != FM_LCD_MAP_OK)
+    {
+        return status;
+    }
+
+    (void) memset(p_ram, 0xFF, FM_LCD_MAP_RAM_SIZE);
+
+    return FM_LCD_MAP_OK;
+}
+
 fm_lcd_map_status_t FM_LCD_MAP_ClearRow(uint8_t *p_ram,
                                         uint8_t p_ram_size,
                                         fm_lcd_layout_row_t p_row)

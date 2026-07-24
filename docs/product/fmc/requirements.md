@@ -20,8 +20,15 @@ acceptance. No formal requirement identifiers are introduced in this cut.
 
 This document applies to the FMC-320U product line.
 
-**Accepted:** No detailed lifecycle obligation has been accepted in this
-initial coverage.
+**Accepted**
+
+- After each boot or reset, a successfully initialized LCD shall present one
+  startup sequence before normal operation.
+- The startup sequence shall not repeat solely because the product wakes or
+  the display is reactivated.
+- A failed LCD initialization shall prevent the visible startup sequence from
+  beginning.
+- Phase 6A shall not read, write, or otherwise impose backlight state.
 
 **Candidate**
 
@@ -36,8 +43,8 @@ Evidence:
 
 **Unresolved**
 
-- Required startup ordering, failure indications, reset classes, wake behavior,
-  and acceptable power limits are not yet approved.
+- Reset classes, broader startup dependency ordering, wake behavior outside
+  presentation, and acceptable power limits are not yet approved.
 
 ## Measurement, Rate, And Totalization
 
@@ -52,6 +59,10 @@ Evidence:
   using the active volume unit and active time base.
 - The active measurement model shall keep calibration, volume unit, and rate
   time base explicit.
+- Presentation shall receive accepted TTL and RATE values; it shall not own
+  totalization, acquisition, filtering, or the RATE observation window.
+- When the active visible volume unit is liters, presentation shall render its
+  shared alphanumeric legend as `Lt`.
 
 Evidence:
 - `src/product/fmc/fmc_model.h`;
@@ -74,9 +85,9 @@ Evidence:
 
 **Unresolved**
 
-- Pulse-loss policy, acquisition window ownership, numeric display limits,
-  invalid measurement presentation, calibration-unit expansion, and exact
-  reset authorization flows remain undecided.
+- Pulse-loss policy, acquisition window ownership, absent or invalid
+  measurement presentation, calibration-unit expansion, and exact reset
+  authorization flows remain undecided.
 
 ## Operator Interaction
 

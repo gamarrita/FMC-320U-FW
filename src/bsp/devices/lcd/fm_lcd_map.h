@@ -68,6 +68,23 @@ typedef enum
 fm_lcd_map_status_t FM_LCD_MAP_Clear(uint8_t *p_ram, uint8_t p_ram_size);
 
 /**
+ * @brief Set every controller RAM bit in the provided LCD image.
+ *
+ * The LCD technical authority defines the 20-byte RAM image as the complete
+ * set of software-controllable physical segments. This operation performs no
+ * hardware I/O.
+ *
+ * @param[in,out] p_ram Target RAM buffer.
+ * @param[in]     p_ram_size Size in bytes of `p_ram`.
+ *
+ * @return FM_LCD_MAP_OK on success.
+ * @return FM_LCD_MAP_EINVAL when `p_ram` is NULL.
+ * @return FM_LCD_MAP_ERANGE when `p_ram_size` is too small.
+ */
+fm_lcd_map_status_t FM_LCD_MAP_SetAll(uint8_t *p_ram,
+                                      uint8_t p_ram_size);
+
+/**
  * @brief Clear one numeric row and its decimal points in the provided buffer.
  *
  * This function operates in visible semantic row order.

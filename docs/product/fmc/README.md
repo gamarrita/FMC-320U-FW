@@ -80,7 +80,7 @@ This map reports documentation coverage, not firmware implementation status.
 | Pulse and signal acquisition | Turning physical observations into pulse deltas | [Requirements](requirements.md) | Surface | Candidate | Runtime contract; roadmap; legacy inventory | Phase 7 dependency |
 | Flow-rate calculation | Deriving active-unit rate from pulse and time windows | [Requirements](requirements.md) | Focused core | Accepted | `fmc_rate.h`; `fmc_units.h` | Acquisition or display slice |
 | Totalization | ACM/TTL accumulation, visible totals, and resets | [Requirements](requirements.md) | Focused core | Accepted | `fmc_model.h`; `fmc_volume.h`; `fmc_service.h` | Operational reset flow |
-| Presentation | Projection of product state into visible output | [User interface](user_interface.md) | Surface | Candidate | Roadmap Phase 6A; LCD contracts | Phase 6A |
+| Presentation | Startup sequence and TTL/RATE projection into visible output | [User interface](user_interface.md) | Focused Phase 6A | Accepted | Reviewed Phase 6A decisions; presentation and LCD contracts | Phase 7 live data integration |
 | Operator input | Semantic keys and actions after hardware translation | [User interface](user_interface.md) | Focused vocabulary | Accepted | `fmc_input.h`; product app README | Selected input slice |
 | Navigation | Context-dependent visible consequences of operator input | [User interface](user_interface.md) | Surface | Candidate | Frozen legacy extraction; legacy user/setup inventory | Phase 6B |
 | Configuration and calibration | Editable measurement and product settings | [Requirements](requirements.md) | Surface | Candidate | Model contract; frozen legacy extraction; legacy inventory | Configuration slice |
@@ -105,15 +105,15 @@ Evidence:
 - `AGENTS.md`;
 - `docs/specs/lcd/lcd_true_source.yaml`.
 
-## Next Planned Depth
+## Current Focused Depth
 
-**Accepted:** Phase 6A is the next planned slice to deepen after this
-documentation backbone is audited and accepted. It is not active
-implementation.
+**Accepted:** Phase 6A completed the bounded initial presentation slice.
 
 Evidence:
 - `docs/roadmaps/fmc_refactoring.md`.
 
-Its planned visible scope is limited to startup all-segments, firmware version,
-and steady TTL/RATE presentation. Exact content, timing, transitions, and
-formatting remain decisions for the focused Phase 6A documentation cut.
+Its visible scope is limited to startup all-segments, provisional firmware
+version, and steady TTL/RATE. Exact content, timing, transitions, formatting,
+and deferred boundaries are owned by
+[User interface](user_interface.md). Firmware release and tag policy is owned
+by [Firmware Versioning](../../project/firmware_versioning.md).

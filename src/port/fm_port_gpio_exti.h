@@ -30,10 +30,12 @@ typedef void (*fm_port_gpio_exti_callback_t)(
     fm_port_gpio_exti_edge_t edge);
 
 /**
- * @brief Initialize the CubeMX-configured GPIO EXTI path.
+ * @brief Initialize the keyboard GPIO EXTI path.
  *
- * @details Calls the generated GPIO initializer so EXTI pins, NVIC enables, and
- *          generated pin configuration remain sourced from CubeMX.
+ * @details Mirrors the CubeMX configuration for the four keyboard pins and
+ *          their NVIC channels without re-running the global generated GPIO
+ *          initializer. Unrelated board outputs therefore retain their current
+ *          state.
  */
 void FM_PORT_GPIO_EXTI_Init(void);
 

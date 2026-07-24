@@ -356,6 +356,42 @@ fm_lcd_status_t FM_LCD_Clear(void)
     return FM_LCD_OK;
 }
 
+fm_lcd_status_t FM_LCD_SetAllSegments(void)
+{
+    fm_lcd_map_status_t map_status;
+    fm_lcd_status_t status;
+
+    if (!g_fm_lcd_context.initialized)
+    {
+        return FM_LCD_ESTATE;
+    }
+
+    map_status = FM_LCD_MAP_SetAll(
+        g_fm_lcd_context.desired_ram,
+        (uint8_t) sizeof(g_fm_lcd_context.desired_ram));
+    if (map_status != FM_LCD_MAP_OK)
+    {
+        return fm_lcd_from_map_status_(map_status);
+    }
+
+    g_fm_lcd_context.blink_enabled = false;
+    g_fm_lcd_context.blink_phase = FM_LCD_BLINK_PHASE_ON;
+    g_fm_lcd_context.blink_range_count = 0U;
+    (void) memset(g_fm_lcd_context.blink_ranges,
+                  0,
+                  sizeof(g_fm_lcd_context.blink_ranges));
+
+    status = fm_lcd_compose_visible_ram_();
+    if (status != FM_LCD_OK)
+    {
+        return status;
+    }
+
+    fm_lcd_refresh_dirty_flag_();
+
+    return FM_LCD_OK;
+}
+
 fm_lcd_status_t FM_LCD_ClearRow(fm_lcd_layout_row_t p_row)
 {
     fm_lcd_map_status_t map_status;

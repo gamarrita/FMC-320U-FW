@@ -53,8 +53,22 @@ ThreadX periodic timer, 1 second
 -> bounded timer callback publishes FM_MAIN_EVENT_PERIODIC_REFRESH
 -> same product/main app-level queue
 -> FM_MAIN_Main() receives the event in the existing FM_APP ThreadX thread
--> no-op placeholder reserved for future refresh work
+-> refreshes the current Phase 6A TTL/RATE snapshot
 ```
+
+Current presentation flow:
+
+```text
+successful LCD initialization
+-> all software-controllable LCD segments for a nominal 3 seconds
+-> provisional firmware version for a nominal 3 seconds
+-> stable TTL/RATE immediately and on each 1 second periodic refresh
+```
+
+The one-shot presentation timer publishes its timeout through the owner queue.
+A SHORT ESC uses the same semantic transition while a temporary startup view
+is active. Timer ownership remains in this app composition layer; semantic
+frame composition belongs to `fmc_presentation`.
 
 ## Boundaries
 
@@ -72,9 +86,8 @@ existing `FM_APP` ThreadX thread and is the only owner of the live
 
 The 1 second periodic refresh event is also serialized through the owner queue
 so ThreadX always has a temporal wake deadline for tickless/low-power support.
-Later slices may consume this source for measurement and presentation updates.
-The current handler is intentionally a no-op placeholder and is not part of the
-FMC product contract.
+Phase 6A consumes it for presentation updates. Acquisition remains deferred, so
+the current product app supplies the documented provisional TTL/RATE snapshot.
 
 Do not add another product thread unless there is a concrete concurrent
 responsibility, such as presentation, acquisition, communication, or timer work

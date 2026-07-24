@@ -21,22 +21,38 @@ Evidence:
 - `legacy/derived/fmc/use_cases.extraction-v1.yaml`;
 - legacy startup and runtime inventories.
 
-**Unresolved:** Exact lifecycle states, startup ordering, sleep entry, wake
-sources, and failure paths are not approved.
+**Unresolved:** Exact lifecycle states outside the accepted Phase 6A
+presentation, sleep entry, wake sources, and non-LCD failure paths are not
+approved.
 
 ## Power-On And Startup
 
-**Candidate:** Startup should establish valid runtime state before presenting
-normal measurement information. Retained configuration, totals, and RTC data
-should be validated before use.
+**Accepted**
+
+- After successful LCD initialization, presentation shows all segments,
+  firmware version, and TTL/RATE in that order.
+- All-segments and firmware-version views each remain for a nominal 3 seconds.
+  Timing begins only after the corresponding view is presented successfully.
+- A SHORT ESC has the same transition effect as the active startup timeout.
+- TTL/RATE is presented immediately after the version transition and refreshed
+  once per second.
+- The sequence runs once after boot or reset and does not repeat merely because
+  of wake or display reactivation.
+- A failed view presentation is not confirmed, its nominal period does not
+  begin, and automatic transition does not continue. Physical LCD content after
+  a failed or partial write is indeterminate.
+- A failed LCD initialization prevents the sequence from starting and is
+  propagated through the existing product-app failure mechanism.
 
 Evidence:
-- roadmap Phase 7;
-- frozen legacy extraction boot and persistence sections;
-- legacy `fm_init`, backup, flash, and RTC inventories.
+- reviewed Phase 6A product decision;
+- `src/product/fmc/fmc_presentation.h`;
+- `src/apps/product/main/fm_main.c`;
+- frozen legacy startup evidence.
 
-**Unresolved:** First-programming behavior, invalid-retention recovery, startup
-screen timing, skip behavior, and error presentation require focused review.
+**Deferred:** Backlight behavior, retry and recovery policy, first-programming
+behavior, invalid-retention recovery, and alternate diagnostics remain outside
+Phase 6A.
 
 ## Acquisition, Calculation, And Updates
 
@@ -50,16 +66,26 @@ Evidence:
 - `src/product/fmc/fmc_volume.h`;
 - `src/product/fmc/fmc_rate.h`.
 
-**Candidate:** Fresh measurement data should eventually invalidate or refresh
-the operator presentation without coupling acquisition to LCD details.
+**Accepted:** Phase 6A presentation consumes a coherent input containing TTL,
+RATE, volume unit, RATE time base, and visible resolutions. Presentation
+projects those values but does not calculate TTL, RATE, or the RATE observation
+window.
 
 Evidence:
 - `src/product/fmc/fmc_runtime.h`;
 - roadmap Phase 6A and Phase 7.
 
+**Accepted:** The current stable presentation cadence is one second. The first
+TTL/RATE values are shown on entry rather than waiting for the first periodic
+refresh.
+
 **Unresolved:** Acquisition cadence, zero-flow recognition, smoothing,
-presentation refresh timing, pulse-loss handling, and behavior across
-low-power transitions remain undecided.
+pulse-loss handling, and behavior across low-power transitions remain
+undecided.
+
+**Deferred:** A future presentation cadence may become less frequent during
+inactivity and return to one second after pulses, value changes, or operator
+interaction. This is not current product behavior.
 
 ## Totalization And Resets
 

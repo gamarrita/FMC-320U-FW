@@ -11,12 +11,10 @@ code, public contracts, naming, comments, and module boundaries.
 
 ## Scope
 
-When an approved future context calls for product-screen behavior documents,
-apply this style to files under:
-
-```text
-docs/specs/fmc/screens/
-```
+When an approved future context calls for separate product-screen behavior
+documents, apply this style in the location approved by the owning product
+documentation. Phase 6A remains owned by
+`docs/product/fmc/user_interface.md` and does not require one file per screen.
 
 The previously proposed initial slice was limited to:
 - startup all segments;
@@ -122,8 +120,9 @@ Legacy test IDs, smoke procedures, acceptance notes, or measurement scripts are
 not part of the screen behavior contract. If they are useful, keep them only as
 legacy evidence or traceability notes inside the relevant screen document.
 
-Validation for a future Phase 6A slice will be designed by that implementation
-slice after the human accepts its screen behavior documents.
+Phase 6A validation is owned by its implemented contracts and regression
+coverage. Validation for future screen slices is designed only after the human
+accepts their behavior documentation.
 
 ## Legacy Evidence
 
@@ -138,7 +137,7 @@ for human review.
 
 New screen documents are draft behavior until the human accepts them.
 
-Do not implement Phase 6 UI state, LCD rendering, navigation, timers, or product
+Do not implement UI state, LCD rendering, navigation, timers, or product
 behavior from a new screen document until that review has happened.
 
 ## Agent Workflow

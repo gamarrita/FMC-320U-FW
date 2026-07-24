@@ -7,6 +7,8 @@ Contain FMC flow-computer product logic.
 The initial split is:
 - `fmc_model.*`: copyable FMC canonical state and structural helpers,
 - `fmc_input.h`: semantic product input event contract,
+- `fmc_presentation.*`: Phase 6A semantic frames and startup sequence,
+- `fmc_version.h`: bounded provisional firmware version metadata,
 - `fmc_units.*`: unit and conversion policy for this product,
 - `fmc_rate.*`: pure instantaneous-rate calculation from pulse/time windows,
 - `fmc_volume.*`: pure visible-volume calculation from ACM/TTL pulse counters,
@@ -19,6 +21,9 @@ The initial split is:
 The current implemented slices are:
 - `fmc_model.*`: canonical model state and structural helpers,
 - `fmc_input.h`: product key/action identity after hardware translation,
+- `fmc_presentation.*`: RTOS-neutral all-segments, version, and TTL/RATE
+  presentation state,
+- `fmc_version.h`: compile-time checked provisional version components,
 - `fmc_units.*`: product unit policy and operative factor helpers,
 - `fmc_rate.*`: active-unit rate derived from captured pulse/time windows,
 - `fmc_runtime.*`: minimal product event dispatch, service ownership, and

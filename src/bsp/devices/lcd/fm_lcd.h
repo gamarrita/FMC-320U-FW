@@ -101,6 +101,21 @@ fm_lcd_status_t FM_LCD_Init(void);
 fm_lcd_status_t FM_LCD_Clear(void);
 
 /**
+ * @brief Activate every software-controllable physical LCD segment.
+ *
+ * This sets the complete LCD RAM image, including numeric segments, decimal
+ * points, alphanumeric segments, legends, and indicators. It also disables
+ * logical blink so the composed visible image remains fully active.
+ *
+ * This function updates desired state only. Call `FM_LCD_Flush()` to present
+ * the result.
+ *
+ * @return FM_LCD_OK on success.
+ * @return FM_LCD_ESTATE when the module is not initialized.
+ */
+fm_lcd_status_t FM_LCD_SetAllSegments(void);
+
+/**
  * @brief Clear one numeric row in desired state.
  *
  * Decimal points associated with the selected row are also cleared.

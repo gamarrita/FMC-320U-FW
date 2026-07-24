@@ -21,6 +21,7 @@ typedef enum
     FM_MAIN_EVENT_KEYBOARD = 0,
     FM_MAIN_EVENT_PERIODIC_REFRESH,
     FM_MAIN_EVENT_KEY_HOLD_TIMEOUT,
+    FM_MAIN_EVENT_PRESENTATION_TIMEOUT,
     FM_MAIN_EVENT_COUNT
 } fm_main_event_kind_t;
 
@@ -46,9 +47,9 @@ void FM_MAIN_EVENT_MakeKeyboard(fm_main_event_t *p_event,
 /**
  * @brief Populate an app-level periodic refresh event.
  *
- * This event is currently consumed by `product/main` as a no-op placeholder.
- * Later slices may use the same source to update measurements or presentation
- * without changing the product-domain runtime contract.
+ * Phase 6A consumes this event to refresh stable TTL/RATE presentation.
+ * Later slices may also update measurements without changing the
+ * product-domain runtime contract.
  *
  * @param p_event Caller-owned event destination.
  */
@@ -63,6 +64,16 @@ void FM_MAIN_EVENT_MakePeriodicRefresh(fm_main_event_t *p_event);
  * @param p_event Caller-owned event destination.
  */
 void FM_MAIN_EVENT_MakeKeyHoldTimeout(fm_main_event_t *p_event);
+
+/**
+ * @brief Populate an app-level presentation timeout event.
+ *
+ * This event is produced by the Phase 6A one-shot presentation timer and
+ * consumed only by the product owner loop.
+ *
+ * @param p_event Caller-owned event destination.
+ */
+void FM_MAIN_EVENT_MakePresentationTimeout(fm_main_event_t *p_event);
 
 /**
  * @brief Publish one app-level event to a ThreadX queue without waiting.

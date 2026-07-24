@@ -47,16 +47,18 @@ physical routing.
 
 ## Operational Interface
 
-**Candidate:** The operational interface includes startup feedback, firmware
-identity, TTL/RATE, ACM/RATE, time, status, and selected optional workflows.
+**Accepted:** The implemented Phase 6A operational interface includes startup
+feedback, provisional firmware identity, and a steady TTL/RATE view.
+
+**Candidate:** Later operational depth may include ACM/RATE, time, status, and
+selected optional workflows.
 
 Evidence:
 - `legacy/derived/fmc/use_cases.extraction-v1.yaml`;
 - legacy user-flow inventory.
 
-**Unresolved:** Screen order, automatic transitions, return behavior, refresh
-timing, decimal and overflow presentation, alarm overlays, backlight policy, and
-complete key consequences are not approved.
+**Unresolved:** Later screen order, return behavior, alarm overlays, backlight
+policy, and complete key consequences are not approved.
 
 ## Configuration Interface
 
@@ -93,8 +95,8 @@ focused UI slice reviews them.
 
 | Area | Visible purpose | Decision state | Current depth |
 |---|---|---|---|
-| Startup | Confirm display availability and identify firmware before normal operation | Candidate | Phase 6A target |
-| Primary operation | Show TTL and rate | Candidate | Phase 6A target |
+| Startup | Confirm display availability and identify firmware before normal operation | Accepted | Phase 6A implemented |
+| Primary operation | Show TTL and rate | Accepted | Phase 6A implemented |
 | Secondary operation | Show ACM and rate | Candidate | Surface |
 | Time | Show date/time when valid | Candidate | Surface |
 | Status and alarms | Indicate conditions requiring operator attention | Candidate | Surface |
@@ -105,35 +107,100 @@ focused UI slice reviews them.
 
 This map describes documentation coverage, not implemented firmware.
 
-## Phase 6A Planned Depth
+## Phase 6A Presentation
 
-**Accepted:** The roadmap selects these visible states for the next focused
-presentation slice:
+**Accepted:** After each boot or reset, successful LCD initialization starts
+this sequence:
 
-- startup all-segments;
-- firmware version;
-- steady TTL/RATE.
+1. all-segments check;
+2. provisional firmware version;
+3. steady TTL/RATE.
 
 Evidence:
-- `docs/roadmaps/fmc_refactoring.md`.
+- reviewed Phase 6A decision;
+- `docs/roadmaps/fmc_refactoring.md`;
+- frozen legacy startup evidence.
 
-Phase 6A is not active implementation in this context. The prior
-`screen_spec_style.md` does not authorize creating individual screen files.
+The sequence is owned by product presentation. It does not belong to the LCD
+driver. It runs once after boot or reset, not after wake or display
+reactivation.
 
-## Decisions Required Before Phase 6A
+### All-Segments Check
 
-**Unresolved**
+**Accepted**
 
-- Exact startup order, duration, ownership, and skip behavior.
-- Firmware version source and rendered form.
-- TTL/RATE labels, units, decimal policy, overflow, invalid values, and update
-  cadence.
-- Snapshot-to-semantic-LCD projection and adapter ownership.
-- Which indicators are intentionally on, off, or preserved in each state.
-- Controlled bring-up values and human acceptance observations.
+- Activate every LCD segment controllable by software at the same time.
+- Coverage includes numeric digits, decimal points, both alphanumeric
+  characters, legends, and indicators.
+- Writing numeric eights alone does not satisfy this state.
+- Backlight is excluded and remains untouched.
+- The state serves both as a visual check and an unambiguous startup signal.
+- Its nominal duration is 3 seconds, beginning after successful presentation.
+- SHORT ESC advances to firmware version exactly as timeout does.
 
-These decisions should be deepened in the next approved documentation cut
-without defining complete navigation or configuration behavior.
+Physical element identity and mapping remain owned by
+`docs/specs/lcd/lcd_true_source.yaml`.
+
+### Firmware Version
+
+**Accepted**
+
+- The top numeric row is empty.
+- The bottom numeric row shows `00.01.00`.
+- The alphanumeric field shows `B0`.
+- Every standalone indicator is off.
+- The value is an unpublished Phase 6A dummy, not a released firmware version.
+- Its nominal duration is 3 seconds, beginning after successful presentation.
+- SHORT ESC advances to TTL/RATE exactly as timeout does.
+
+Released version meaning, LCD encoding limits, and tag traceability belong to
+[Firmware Versioning](../../project/firmware_versioning.md).
+
+### TTL/RATE
+
+**Accepted**
+
+- The top row shows TTL and the bottom row shows RATE.
+- Both values are non-negative, right-aligned, rounded to one decimal, and use
+  blank unused positions.
+- Zero is valid and displays as `0.0`.
+- TTL uses liters and RATE uses liters per minute.
+- The shared alphanumeric field shows `Lt` for both rows.
+- `TTL`, `RATE`, slash, and minute indicators remain active, including during
+  visual overflow. All unrelated indicators remain off.
+- The initial controlled values are `1234.5` TTL and `12.3` RATE. They are valid
+  provisional inputs, not absent or invalid states.
+- Values are shown immediately on entry and presented again once per second.
+
+Presentation receives a coherent snapshot containing accepted TTL and RATE,
+unit, time base, and resolutions. It does not calculate totals, flow, or the
+RATE observation window.
+
+When a rounded value does not fit, the row keeps the least significant digits
+that fit, including one fractional digit, and discards the most significant
+digits visually. It does not display `E`, saturate, or trigger another action.
+
+**Deferred:** Visible representation of absent values, invalid values, and
+internal formatting errors.
+
+### Presentation Failures
+
+**Accepted**
+
+- LCD initialization failure prevents the sequence from starting.
+- A view is considered presented only after its LCD write completes
+  successfully.
+- A failed presentation does not start its nominal duration and does not
+  advance automatically.
+- Physical content after a partial or failed write is indeterminate.
+
+Retry, recovery, logging, and alternate diagnostics remain implementation
+decisions for a later selected cut.
+
+### Backlight
+
+**Deferred:** Phase 6A neither reads nor changes backlight state and does not
+couple it to startup timing.
 
 ## Deferred Interface Functions
 

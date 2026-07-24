@@ -12,7 +12,9 @@
 #include "fm_main_event.h"
 #include "fm_main_input_adapter.h"
 #include "fm_main_input_recognizer.h"
+#include "fm_main_presentation_lcd.h"
 #include "fm_port_rtc.h"
+#include "fmc_presentation.h"
 #include "fmc_runtime.h"
 #include "fm_status.h"
 #include "tx_api.h"
@@ -20,17 +22,21 @@
 #define FM_MAIN_EVENT_QUEUE_DEPTH              (8U)
 #define FM_MAIN_PERIODIC_REFRESH_TICKS         ((ULONG) TX_TIMER_TICKS_PER_SECOND)
 #define FM_MAIN_KEY_HOLD_TICKS                 ((ULONG) (3UL * TX_TIMER_TICKS_PER_SECOND))
+#define FM_MAIN_PRESENTATION_TICKS             ((ULONG) (3UL * TX_TIMER_TICKS_PER_SECOND))
 
 typedef struct
 {
     fmc_runtime_t runtime;
+    fmc_presentation_t presentation;
     fm_main_input_recognizer_t input_recognizer;
     ULONG key_hold_start_ticks;
+    ULONG presentation_start_ticks;
 } fm_main_owner_state_t;
 
 static TX_QUEUE fm_main_event_queue;
 static TX_TIMER fm_main_periodic_refresh_timer;
 static TX_TIMER fm_main_key_hold_timer;
+static TX_TIMER fm_main_presentation_timer;
 static ULONG fm_main_event_queue_storage[
     FM_MAIN_EVENT_QUEUE_DEPTH * FM_MAIN_EVENT_QUEUE_MESSAGE_WORDS];
 static volatile ULONG fm_main_event_queue_overflow_count;
@@ -77,8 +83,9 @@ static void fm_main_counter_increment_(volatile ULONG *p_counter);
  * @brief Dispatch one app-level event received by the owner loop.
  *
  * Keyboard and key-hold timeout events are processed by the owner-loop input
- * recognizer before dispatching semantic input to `fmc_runtime`. Periodic
- * refresh events remain in the composition layer as a future refresh hook.
+ * recognizer before dispatching semantic input to presentation or
+ * `fmc_runtime`. Presentation timeout and periodic refresh events also remain
+ * serialized in this owner.
  *
  * @param p_owner Owner-loop state.
  * @param p_event Event received from the owner queue.
@@ -173,6 +180,56 @@ static bool fm_main_key_hold_timeout_is_current_(
     const fm_main_owner_state_t *p_owner);
 
 /**
+ * @brief ThreadX callback for the one-shot Phase 6A presentation timer.
+ *
+ * @param input ThreadX timer input value. Unused.
+ */
+static void fm_main_presentation_timer_callback_(ULONG input);
+
+/**
+ * @brief Advance a temporary startup view after its current timeout.
+ *
+ * @param p_owner Owner-loop state.
+ */
+static void fm_main_presentation_timeout_handle_(
+    fm_main_owner_state_t *p_owner);
+
+/**
+ * @brief Start a fresh nominal period for the current temporary view.
+ *
+ * @param p_owner Owner-loop state that records the period start tick.
+ */
+static void fm_main_presentation_timer_start_(
+    fm_main_owner_state_t *p_owner);
+
+/**
+ * @brief Stop the presentation timer when entering stable TTL/RATE.
+ */
+static void fm_main_presentation_timer_cancel_(void);
+
+/**
+ * @brief Apply timer ownership after a successful presentation transition.
+ *
+ * @param p_owner Owner-loop state.
+ */
+static void fm_main_presentation_timer_sync_(
+    fm_main_owner_state_t *p_owner);
+
+/**
+ * @brief Emit one human-audit trace after successful LCD presentation.
+ *
+ * Traces are gated by the existing debug-message jumper and never participate
+ * in presentation state or timing decisions.
+ *
+ * @param state Successfully presented state.
+ * @param p_cause Constant transition cause such as `START`, `TIMEOUT`,
+ *        `ESC_SHORT`, or `REFRESH`.
+ */
+static void fm_main_presentation_trace_(
+    fmc_presentation_state_t state,
+    const char *p_cause);
+
+/**
  * @brief ThreadX periodic timer callback for the product main refresh source.
  *
  * Publishes `FM_MAIN_EVENT_PERIODIC_REFRESH` with no wait. It deliberately
@@ -185,10 +242,11 @@ static void fm_main_periodic_refresh_timer_callback_(ULONG input);
 /**
  * @brief Handle one periodic refresh event in the owner loop.
  *
- * The refresh source is reserved for later measurement and presentation
- * updates. It currently has no product-visible effect.
+ * Re-presents the current provisional Phase 6A TTL/RATE snapshot once per
+ * second. It has no effect while a temporary startup view is active.
  */
-static void fm_main_periodic_refresh_handle_(void);
+static void fm_main_periodic_refresh_handle_(
+    fm_main_owner_state_t *p_owner);
 
 /**
  * @brief Require a successful ThreadX status or stop in a debug panic.
@@ -287,11 +345,15 @@ static void fm_main_event_handle_(fm_main_owner_state_t *p_owner,
         break;
 
     case FM_MAIN_EVENT_PERIODIC_REFRESH:
-        fm_main_periodic_refresh_handle_();
+        fm_main_periodic_refresh_handle_(p_owner);
         break;
 
     case FM_MAIN_EVENT_KEY_HOLD_TIMEOUT:
         fm_main_key_hold_timeout_handle_(p_owner);
+        break;
+
+    case FM_MAIN_EVENT_PRESENTATION_TIMEOUT:
+        fm_main_presentation_timeout_handle_(p_owner);
         break;
 
     case FM_MAIN_EVENT_COUNT:
@@ -386,6 +448,26 @@ static void fm_main_input_recognizer_output_apply_(
 
     if (p_output->runtime_event_valid)
     {
+        fmc_presentation_state_t previous_state;
+        fmc_presentation_state_t current_state;
+        fm_status_t status;
+
+        previous_state = FMC_PRESENTATION_GetState(
+            &p_owner->presentation);
+        status = FMC_PRESENTATION_HandleInput(
+            &p_owner->presentation,
+            &p_output->runtime_event.data.input);
+        fm_main_require_status_ok_(status, "FM_MAIN:PRESENTATION_INPUT");
+        current_state = FMC_PRESENTATION_GetState(
+            &p_owner->presentation);
+
+        if (current_state != previous_state)
+        {
+            fm_main_presentation_timer_sync_(p_owner);
+            fm_main_presentation_trace_(current_state, "ESC_SHORT");
+            return;
+        }
+
         fm_main_runtime_dispatch_input_(&p_owner->runtime,
                                         &p_output->runtime_event);
     }
@@ -477,6 +559,145 @@ static bool fm_main_key_hold_timeout_is_current_(
     return elapsed_ticks >= FM_MAIN_KEY_HOLD_TICKS;
 }
 
+static void fm_main_presentation_timer_callback_(ULONG input)
+{
+    fm_main_event_t event;
+
+    (void) input;
+
+    FM_MAIN_EVENT_MakePresentationTimeout(&event);
+    fm_main_event_publish_(&event);
+}
+
+static void fm_main_presentation_timeout_handle_(
+    fm_main_owner_state_t *p_owner)
+{
+    fmc_presentation_state_t state;
+    ULONG elapsed_ticks;
+    fm_status_t status;
+
+    if (p_owner == NULL)
+    {
+        return;
+    }
+
+    state = FMC_PRESENTATION_GetState(&p_owner->presentation);
+    if ((state != FMC_PRESENTATION_STATE_ALL_SEGMENTS) &&
+        (state != FMC_PRESENTATION_STATE_FIRMWARE_VERSION))
+    {
+        return;
+    }
+
+    elapsed_ticks = tx_time_get() - p_owner->presentation_start_ticks;
+    if (elapsed_ticks < FM_MAIN_PRESENTATION_TICKS)
+    {
+        return;
+    }
+
+    status = FMC_PRESENTATION_Advance(&p_owner->presentation);
+    fm_main_require_status_ok_(status, "FM_MAIN:PRESENTATION_TIMEOUT");
+    fm_main_presentation_timer_sync_(p_owner);
+    fm_main_presentation_trace_(
+        FMC_PRESENTATION_GetState(&p_owner->presentation),
+        "TIMEOUT");
+}
+
+static void fm_main_presentation_timer_start_(
+    fm_main_owner_state_t *p_owner)
+{
+    UINT status;
+
+    if (p_owner == NULL)
+    {
+        return;
+    }
+
+    status = tx_timer_deactivate(&fm_main_presentation_timer);
+    fm_main_require_tx_success_(status,
+                                "FM_MAIN:PRESENTATION_TIMER_STOP");
+
+    status = tx_timer_change(&fm_main_presentation_timer,
+                             FM_MAIN_PRESENTATION_TICKS,
+                             0U);
+    fm_main_require_tx_success_(status,
+                                "FM_MAIN:PRESENTATION_TIMER_CHANGE");
+
+    p_owner->presentation_start_ticks = tx_time_get();
+
+    status = tx_timer_activate(&fm_main_presentation_timer);
+    fm_main_require_tx_success_(status,
+                                "FM_MAIN:PRESENTATION_TIMER_START");
+}
+
+static void fm_main_presentation_timer_cancel_(void)
+{
+    UINT status;
+
+    status = tx_timer_deactivate(&fm_main_presentation_timer);
+    fm_main_require_tx_success_(status,
+                                "FM_MAIN:PRESENTATION_TIMER_CANCEL");
+}
+
+static void fm_main_presentation_timer_sync_(
+    fm_main_owner_state_t *p_owner)
+{
+    fmc_presentation_state_t state;
+
+    if (p_owner == NULL)
+    {
+        return;
+    }
+
+    state = FMC_PRESENTATION_GetState(&p_owner->presentation);
+    if ((state == FMC_PRESENTATION_STATE_ALL_SEGMENTS) ||
+        (state == FMC_PRESENTATION_STATE_FIRMWARE_VERSION))
+    {
+        fm_main_presentation_timer_start_(p_owner);
+        return;
+    }
+
+    fm_main_presentation_timer_cancel_();
+}
+
+static void fm_main_presentation_trace_(
+    fmc_presentation_state_t state,
+    const char *p_cause)
+{
+    const char *p_state;
+
+    if (!FM_DEBUG_MsgIsEnabled() || (p_cause == NULL))
+    {
+        return;
+    }
+
+    switch (state)
+    {
+    case FMC_PRESENTATION_STATE_ALL_SEGMENTS:
+        p_state = "ALL_SEGMENTS";
+        break;
+
+    case FMC_PRESENTATION_STATE_FIRMWARE_VERSION:
+        p_state = "FIRMWARE_VERSION BOTTOM=00.01.00 ALPHA=B0";
+        break;
+
+    case FMC_PRESENTATION_STATE_TTL_RATE:
+        p_state = "TTL_RATE TOP=1234.5 BOTTOM=12.3 UNIT="
+                  FMC_PRESENTATION_LITERS_LEGEND "/MIN";
+        break;
+
+    case FMC_PRESENTATION_STATE_NOT_STARTED:
+    default:
+        p_state = "NOT_STARTED";
+        break;
+    }
+
+    (void) FM_DEBUG_UartStr("FM_MAIN:PRESENTATION=");
+    (void) FM_DEBUG_UartStr(p_state);
+    (void) FM_DEBUG_UartStr(" CAUSE=");
+    (void) FM_DEBUG_UartStr(p_cause);
+    (void) FM_DEBUG_UartStr("\n");
+}
+
 static void fm_main_periodic_refresh_timer_callback_(ULONG input)
 {
     fm_main_event_t event;
@@ -487,10 +708,26 @@ static void fm_main_periodic_refresh_timer_callback_(ULONG input)
     fm_main_event_publish_(&event);
 }
 
-static void fm_main_periodic_refresh_handle_(void)
+static void fm_main_periodic_refresh_handle_(
+    fm_main_owner_state_t *p_owner)
 {
-    /* Future refresh work will update measurements and presentation here. */
-    (void) 0;
+    fmc_presentation_snapshot_t snapshot;
+    fm_status_t status;
+
+    if ((p_owner == NULL) ||
+        (FMC_PRESENTATION_GetState(&p_owner->presentation) !=
+         FMC_PRESENTATION_STATE_TTL_RATE))
+    {
+        return;
+    }
+
+    FMC_PRESENTATION_MakeDummySnapshot(&snapshot);
+    status = FMC_PRESENTATION_Refresh(&p_owner->presentation,
+                                      &snapshot);
+    fm_main_require_status_ok_(status, "FM_MAIN:PRESENTATION_REFRESH");
+    fm_main_presentation_trace_(
+        FMC_PRESENTATION_GetState(&p_owner->presentation),
+        "REFRESH");
 }
 
 static void fm_main_require_tx_success_(UINT status, const char *p_msg)
@@ -528,7 +765,8 @@ void FM_MAIN_Init(void)
     fm_main_require_tx_success_(status, "FM_MAIN:EVENT_QUEUE_CREATE");
 
     if ((FM_MAIN_PERIODIC_REFRESH_TICKS == 0U) ||
-        (FM_MAIN_KEY_HOLD_TICKS == 0U))
+        (FM_MAIN_KEY_HOLD_TICKS == 0U) ||
+        (FM_MAIN_PRESENTATION_TICKS == 0U))
     {
         FM_DEBUG_PanicMsg("FM_MAIN:TIMER_TICKS_ZERO");
     }
@@ -550,18 +788,53 @@ void FM_MAIN_Init(void)
                              0U,
                              TX_NO_ACTIVATE);
     fm_main_require_tx_success_(status, "FM_MAIN:KEY_HOLD_TIMER_CREATE");
+
+    status = tx_timer_create(&fm_main_presentation_timer,
+                             (CHAR *) "FM_MAIN_PRESENTATION",
+                             fm_main_presentation_timer_callback_,
+                             0U,
+                             FM_MAIN_PRESENTATION_TICKS,
+                             0U,
+                             TX_NO_ACTIVATE);
+    fm_main_require_tx_success_(
+        status,
+        "FM_MAIN:PRESENTATION_TIMER_CREATE");
 }
 
 void FM_MAIN_Main(void)
 {
     fm_main_owner_state_t owner;
+    fmc_presentation_snapshot_t presentation_snapshot;
     fm_main_event_t event;
+    fm_status_t project_status;
     UINT status;
 
     FM_MAIN_Init();
     FMC_RUNTIME_Init(&owner.runtime);
     FM_MAIN_INPUT_RECOGNIZER_Init(&owner.input_recognizer);
     owner.key_hold_start_ticks = 0U;
+    owner.presentation_start_ticks = 0U;
+
+    project_status = FM_MAIN_PRESENTATION_LCD_Init();
+    fm_main_require_status_ok_(project_status,
+                               "FM_MAIN:LCD_INIT");
+
+    FMC_PRESENTATION_MakeDummySnapshot(&presentation_snapshot);
+    project_status = FMC_PRESENTATION_Init(
+        &owner.presentation,
+        &presentation_snapshot,
+        FM_MAIN_PRESENTATION_LCD_Present,
+        NULL);
+    fm_main_require_status_ok_(project_status,
+                               "FM_MAIN:PRESENTATION_INIT");
+
+    project_status = FMC_PRESENTATION_Start(&owner.presentation);
+    fm_main_require_status_ok_(project_status,
+                               "FM_MAIN:PRESENTATION_START");
+    fm_main_presentation_timer_sync_(&owner);
+    fm_main_presentation_trace_(
+        FMC_PRESENTATION_GetState(&owner.presentation),
+        "START");
 
     FM_BOARD_KeyboardSetCallback(fm_main_keyboard_callback_);
     FM_BOARD_KeyboardInit();

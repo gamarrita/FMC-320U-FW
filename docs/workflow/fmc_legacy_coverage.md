@@ -81,6 +81,47 @@ All entries are initialized without a functional disposition.
 | `measurement_and_test_guidance` | Not evaluated | - | Awaiting human review |
 | `open_questions_and_gaps` | Not evaluated | - | Awaiting human review |
 
+## Phase 6A Granular Review
+
+The top-level entries above remain `Not evaluated`. The following rows cover
+only the exact legacy statements reviewed for Phase 6A.
+
+| Legacy YAML locator | Coverage state | Current product owner | Review note |
+|---|---|---|---|
+| `screen_catalog.startup_sequence.ordered_screens` | Accepted and incorporated | `docs/product/fmc/user_interface.md` | Accepted order: all segments, version, TTL/RATE |
+| `screens.SCREEN_STARTUP_ALL_SEGMENTS.purpose` | Accepted and incorporated | `docs/product/fmc/user_interface.md` | Visual check and startup signal |
+| `screens.SCREEN_STARTUP_ALL_SEGMENTS.display.behavior` | Replaced | `docs/product/fmc/user_interface.md` | Current decision explicitly includes every software-controllable glass element |
+| `screens.SCREEN_STARTUP_ALL_SEGMENTS.display.duration_s` | Accepted and incorporated | `docs/product/fmc/behavior.md` | Nominal 3 seconds after successful presentation |
+| `screens.SCREEN_STARTUP_ALL_SEGMENTS.display.backlight` | Deferred | `docs/product/fmc/user_interface.md` | Phase 6A does not impose backlight state |
+| `screens.SCREEN_STARTUP_ALL_SEGMENTS.automatic_transition.target` | Accepted and incorporated | `docs/product/fmc/behavior.md` | Advances to firmware version |
+| `screens.SCREEN_STARTUP_ALL_SEGMENTS.key_actions.KEY_ESC` | Accepted and incorporated | `docs/product/fmc/behavior.md` | SHORT ESC has the same effect as timeout |
+| `screens.SCREEN_STARTUP_ALL_SEGMENTS.startup_special_behavior` | Deferred | - | Flash validation and restore belong to persistence work |
+| `screens.SCREEN_FIRMWARE_VERSION.purpose` | Accepted and incorporated | `docs/product/fmc/user_interface.md` | Startup includes visible firmware identity |
+| `screens.SCREEN_FIRMWARE_VERSION.display.lower_row` | Accepted and incorporated | `docs/product/fmc/user_interface.md` | Current provisional value is `00.01.00` |
+| `screens.SCREEN_FIRMWARE_VERSION.display.suffix_or_legend` | Replaced | `docs/product/fmc/user_interface.md` | Current alpha field is provisional `B0`, not legacy `VE` |
+| `screens.SCREEN_FIRMWARE_VERSION.display.duration_s` | Accepted and incorporated | `docs/product/fmc/behavior.md` | Nominal 3 seconds after successful presentation |
+| `screens.SCREEN_FIRMWARE_VERSION.display.backlight` | Deferred | `docs/product/fmc/user_interface.md` | Phase 6A does not impose backlight state |
+| `screens.SCREEN_FIRMWARE_VERSION.automatic_transition.target` | Accepted and incorporated | `docs/product/fmc/behavior.md` | Advances to TTL/RATE |
+| `screens.SCREEN_FIRMWARE_VERSION.key_actions.KEY_ESC` | Accepted and incorporated | `docs/product/fmc/behavior.md` | SHORT ESC has the same effect as timeout |
+| `screens.SCREEN_TTL_RATE.display.upper_row.field` | Accepted and incorporated | `docs/product/fmc/user_interface.md` | TTL uses the upper row |
+| `screens.SCREEN_TTL_RATE.display.upper_row.unit_display` | Replaced | `docs/product/fmc/user_interface.md` | Shared alpha `Lt` applies to TTL and RATE |
+| `screens.SCREEN_TTL_RATE.display.upper_row.persistence` | Deferred | - | TTL persistence belongs to Phase 7 |
+| `screens.SCREEN_TTL_RATE.display.upper_row.digit_count` | Accepted and incorporated | `docs/product/fmc/user_interface.md` | Upper row uses its eight physical positions |
+| `screens.SCREEN_TTL_RATE.display.upper_row.decimal_position_options` | Deferred | `docs/product/fmc/user_interface.md` | Phase 6A fixes one decimal; configurable resolution remains later work |
+| `screens.SCREEN_TTL_RATE.display.lower_row.field` | Accepted and incorporated | `docs/product/fmc/user_interface.md` | RATE uses the lower row |
+| `screens.SCREEN_TTL_RATE.display.lower_row.resolution_editable_from_screen` | Deferred | `docs/product/fmc/user_interface.md` | Configuration and editing remain outside Phase 6A |
+| `screens.SCREEN_TTL_RATE.display.lower_row.units_source` | Deferred | `docs/product/fmc/user_interface.md` | Phase 6A fixes `Lt/min`; configured units remain later work |
+| `screens.SCREEN_TTL_RATE.display.pulse_indicator` | Deferred | `docs/product/fmc/user_interface.md` | Depends on acquisition and pulse behavior |
+| `screens.SCREEN_TTL_RATE.calculations.source` | Deferred | `docs/product/fmc/requirements.md` | Live acquisition and RATE-window ownership remain Phase 7 dependencies |
+| `measurement_and_test_guidance.startup_tests[id=0x2FB396C8]` | Legacy only | - | Historical test identity retained; current tests are independently specified |
+| `measurement_and_test_guidance.startup_tests[id=0x2FB39787]` | Legacy only | - | Historical test identity retained; current tests are independently specified |
+| `measurement_and_test_guidance.SCREEN_TTL_RATE_tests[id=0x2FB398FC].requirements[0]` | Deferred | - | Current-consumption validation requires target hardware |
+| `measurement_and_test_guidance.SCREEN_TTL_RATE_tests[id=0x2FB398FC].requirements[1]` | Deferred | - | Pulse indication depends on acquisition |
+| `measurement_and_test_guidance.SCREEN_TTL_RATE_tests[id=0x2FB398FC].requirements[2]` | Deferred | - | Generator and flow behavior require acquisition |
+| `measurement_and_test_guidance.SCREEN_TTL_RATE_tests[id=0x2FB398FC].requirements[3]` | Deferred | - | Generator and flow behavior require acquisition |
+| `open_questions_and_gaps.items[id=OQ_001]` | Legacy only | - | Records a limitation of the legacy source; physical mapping is owned separately by the LCD technical authority |
+| `open_questions_and_gaps.items[id=OQ_007]` | Under review | `docs/product/fmc/user_interface.md` | Phase 6A resolves visual overflow; absent and invalid values remain deferred |
+
 ## Extraction Discrepancies
 
 No content discrepancy has been evaluated or recorded in this context.

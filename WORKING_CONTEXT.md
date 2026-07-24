@@ -1,92 +1,75 @@
-# Working Context: FMC Legacy Source Classification
+# Working Context: FMC Phase 6A Closure
 
-## Objective
+## Objective And Status
 
-Separate the primary historical FMC source, its frozen structured extraction,
-the mutable coverage register, and current product documentation.
+Phase 6A is completed and human-accepted. It established the first bounded path
+from an FMC presentation snapshot to controlled LCD output without introducing
+complete navigation, configuration, acquisition, persistence, or backlight
+policy.
 
-This context preserves provenance and prepares controlled future review. It
-does not make functional product decisions or deepen Phase 6A.
+## Implemented Behavior
 
-## Motivation
+- After successful LCD initialization, startup presents all software-controlled
+  segments, provisional firmware version `00.01.00 B0`, and steady TTL/RATE in
+  that order.
+- The two temporary views each have a nominal 3 second dwell. TTL/RATE appears
+  immediately on entry and refreshes once per second.
+- The controlled snapshot presents `1234.5 Lt` for TTL and `12.3 Lt/min` for
+  RATE. The two-character alphanumeric field renders `Lt`; dedicated `TTL`,
+  `RATE`, slash, and minute indicators complete the visible units.
+- Values use one decimal, right alignment, and least-significant visual
+  overflow.
+- Presentation state and dwell advance only after successful LCD delivery.
+- A SHORT ESC has the same semantic transition effect as timeout while a
+  temporary startup view is active.
+- LCD initialization and keyboard EXTI setup no longer reset the controller
+  after the first frame. Backlight state is never read or changed.
 
-The derived FMC use-case extraction was stored under `docs/specs/`, where its
-location and working-inventory wording could make it appear current or mutable.
-The repository needs an explicit chain from historical source to frozen
-extraction, human review record, and reviewed product documentation.
+## Active Sources
 
-## Status
+- product obligations: `docs/product/fmc/requirements.md`;
+- cross-cutting behavior: `docs/product/fmc/behavior.md`;
+- visible and operable behavior: `docs/product/fmc/user_interface.md`;
+- durable sequence and next phase: `docs/roadmaps/fmc_refactoring.md`;
+- release version policy: `docs/project/firmware_versioning.md`;
+- physical LCD facts: `docs/specs/lcd/lcd_true_source.yaml`;
+- implemented contracts: public headers under `src/product/fmc/`,
+  `src/apps/product/main/`, `src/bsp/devices/lcd/`, and `src/port/`;
+- legacy evidence: `legacy/derived/fmc/use_cases.extraction-v1.yaml`;
+- reviewed legacy disposition: `docs/workflow/fmc_legacy_coverage.md`.
 
-Implemented; awaiting human audit and acceptance.
+## Verification Baseline
 
-## Scope
+- canonical `product/main` build passes;
+- canonical `tests/regression` build passes;
+- regression coverage includes startup order, all-segments RAM coverage,
+  version and TTL/RATE frames, `Lt` alpha mapping, formatting, rounding,
+  alignment, overflow, refresh input, and LCD-sink failure propagation;
+- the final `product/main` image was programmed and verified through ST-LINK;
+- the complete three-state scene was visually accepted on target hardware;
+- generated code, CubeMX configuration, LCD technical YAML, backlight, and
+  legacy sources remain unchanged.
 
-- locate the historical Word source without opening or reprocessing it;
-- move the YAML extraction byte-for-byte into frozen legacy evidence;
-- create a mutable coverage and disposition register;
-- update repository references and authority descriptions affected by the
-  move;
-- preserve current FMC product documentation as the only current product
-  authority.
+## Deferred And Limitations
 
-## Out Of Scope
+- SHORT ESC semantics are implemented and regression-tested, but target-hardware
+  audit of ESC-driven startup transitions and all later ESC/navigation
+  consequences is deferred.
+- Backlight behavior, wake coupling, and activity policy are deferred.
+- TTL and RATE remain controlled dummy values; live acquisition, RATE windows,
+  zero-flow policy, and pulse-loss behavior are deferred.
+- RTC validity, persistence, retained-state recovery, and first-programming
+  behavior are deferred until required by the next selected slice.
+- Retry and recovery after LCD I/O failure, invalid-value presentation,
+  adaptive refresh, complete navigation, configuration, alarms, and Phase 6B
+  remain outside this cut.
+- The LCD authority confirms both 14-segment character electrode sets and
+  operational character rendering, while exact A-to-N naming remains a recorded
+  technical-source gap.
 
-- reading or modifying the historical Word;
-- editing, cleaning, splitting, or summarizing the frozen YAML extraction;
-- accepting, rejecting, replacing, or incorporating legacy content;
-- changing current product requirements, behavior, or UI decisions;
-- implementation, firmware, build, CubeMX, or LCD technical-authority changes;
-- Phase 6A definition or implementation.
+## Next Recommended Cut
 
-## Sources
-
-- `legacy/specs/fmc/use_cases.docx`: primary historical source;
-- `legacy/derived/fmc/use_cases.extraction-v1.yaml`: frozen derived extraction;
-- `docs/workflow/fmc_legacy_coverage.md`: mutable coverage register;
-- `docs/product/fmc/`: current reviewed product documentation;
-- `docs/specs/lcd/lcd_true_source.yaml`: technical LCD authority;
-- `legacy/README.md`: legacy ownership and preservation rules;
-- `AGENTS.md`: stable repository policy;
-- `docs/workflow/doc_closure.md`: documentation closure rules.
-
-## Authorities And Roles
-
-- `legacy/specs/fmc/use_cases.docx` is the primary historical source and is
-  consulted only to audit extraction ambiguity, omission, or suspected error.
-- `legacy/derived/fmc/use_cases.extraction-v1.yaml` is frozen derived legacy
-  evidence and the preferred legacy source for routine future consultation.
-- `docs/workflow/fmc_legacy_coverage.md` is the mutable record of review
-  coverage and human-decided disposition; it is not a functional authority.
-- `docs/product/fmc/requirements.md` owns current product obligations.
-- `docs/product/fmc/behavior.md` owns current cross-cutting observable behavior.
-- `docs/product/fmc/user_interface.md` owns the current visible and operable
-  experience.
-- `docs/specs/lcd/lcd_true_source.yaml` remains the technical authority for LCD
-  glass and physical mapping.
-
-## Deliverables
-
-- frozen extraction at
-  `legacy/derived/fmc/use_cases.extraction-v1.yaml`, with content preserved;
-- mutable coverage register at
-  `docs/workflow/fmc_legacy_coverage.md`;
-- updated references with no second extraction copy under `docs/specs/fmc/`.
-
-## Next Context Candidate
-
-`FMC Phase 6A Presentation Definition`
-
-This is a candidate only. It is not active or started by this context.
-
-## Verifiable Closure Criteria
-
-- the repository path of the historical Word is recorded without opening it;
-- the extraction SHA-256 matches its pre-move value;
-- no extraction copy remains under `docs/specs/fmc/`;
-- every top-level YAML locator starts as `Not evaluated`;
-- no functional disposition is inferred;
-- all references use the new path and frozen-evidence role;
-- current product documentation retains its existing ownership and content;
-- the LCD technical authority is unchanged;
-- no firmware, build, CubeMX, Word, or YAML content changed;
-- documentation closure and Git verification pass.
+Define the smallest Phase 7 acquisition slice needed to replace the provisional
+TTL/RATE snapshot with runtime-owned live values. Add RTC or persistence only
+when that selected slice has a concrete dependency on them; Phase 6B follows
+after the required runtime data is available.

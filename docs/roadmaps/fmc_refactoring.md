@@ -34,6 +34,11 @@ a small implementation or documentation cut. This is not a requirement to
 complete all product documentation before programming: breadth comes first,
 then depth follows the next slice.
 
+Steps 1 through 6 are complete. The next dependency-driven work is step 7,
+starting with the smallest acquisition slice needed to replace the provisional
+Phase 6A TTL/RATE values. RTC and persistence join that cut only when a selected
+runtime dependency requires them.
+
 ## Phase 1: Model And Pure Calculations
 
 Objective:
@@ -184,6 +189,9 @@ Exit criteria:
 
 ## Phase 6A: Initial Presentation Slice
 
+Status:
+- completed and human-accepted on target hardware.
+
 Objective:
 - validate the first bounded path from an FMC runtime snapshot to controlled,
   user-visible LCD output.
@@ -225,6 +233,11 @@ Exit criteria:
 - public module contracts live in headers;
 - no complete UI state machine, complete navigation, configuration screens, or
   exact legacy reproduction has been introduced.
+
+Completion:
+- all exit criteria above are satisfied by the Phase 6A presentation,
+  product-main LCD adapter, focused regression coverage, canonical builds, and
+  controlled-value target validation.
 
 ## Phase 7: Essential Acquisition, RTC, And Persistence
 

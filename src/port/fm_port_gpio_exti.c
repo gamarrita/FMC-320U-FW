@@ -7,7 +7,6 @@
 
 #include <stddef.h>
 
-#include "gpio.h"
 #include "main.h"
 
 static volatile fm_port_gpio_exti_callback_t g_fm_port_gpio_exti_callback = NULL;
@@ -31,7 +30,29 @@ void FM_PORT_GPIO_EXTI_SetCallback(fm_port_gpio_exti_callback_t p_callback)
 
 void FM_PORT_GPIO_EXTI_Init(void)
 {
-    MX_GPIO_Init();
+    GPIO_InitTypeDef gpio_init = { 0 };
+
+    __HAL_RCC_GPIOE_CLK_ENABLE();
+
+    gpio_init.Pin = KEY_DOWN_Pin |
+                    KEY_UP_Pin |
+                    KEY_ENTER_Pin |
+                    KEY_ESC_Pin;
+    gpio_init.Mode = GPIO_MODE_IT_RISING_FALLING;
+    gpio_init.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(KEY_DOWN_GPIO_Port, &gpio_init);
+
+    HAL_NVIC_SetPriority(KEY_DOWN_EXTI_IRQn, 5U, 0U);
+    HAL_NVIC_EnableIRQ(KEY_DOWN_EXTI_IRQn);
+
+    HAL_NVIC_SetPriority(KEY_UP_EXTI_IRQn, 5U, 0U);
+    HAL_NVIC_EnableIRQ(KEY_UP_EXTI_IRQn);
+
+    HAL_NVIC_SetPriority(KEY_ENTER_EXTI_IRQn, 5U, 0U);
+    HAL_NVIC_EnableIRQ(KEY_ENTER_EXTI_IRQn);
+
+    HAL_NVIC_SetPriority(KEY_ESC_EXTI_IRQn, 5U, 0U);
+    HAL_NVIC_EnableIRQ(KEY_ESC_EXTI_IRQn);
 }
 
 void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin)

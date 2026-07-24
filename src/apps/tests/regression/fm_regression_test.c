@@ -16,9 +16,11 @@
 #include "fm_main_event.h"
 #include "fm_main_input_adapter.h"
 #include "fm_main_input_recognizer.h"
+#include "devices/lcd/fm_lcd_map.h"
 #include "fm_port_time.h"
 #include "fmc_input.h"
 #include "fmc_model.h"
+#include "fmc_presentation.h"
 #include "fmc_rate.h"
 #include "fmc_runtime.h"
 #include "fmc_service.h"
@@ -49,6 +51,11 @@ typedef enum
     FM_REGRESSION_TEST_CASE_VOLUME_ERROR_PATHS,
     FM_REGRESSION_TEST_CASE_DISPLAY_FORMAT_VALUES,
     FM_REGRESSION_TEST_CASE_DISPLAY_FORMAT_ERROR_PATHS,
+    FM_REGRESSION_TEST_CASE_LCD_MAP_ALL_SEGMENTS,
+    FM_REGRESSION_TEST_CASE_LCD_MAP_LITERS_LEGEND,
+    FM_REGRESSION_TEST_CASE_PRESENTATION_SEQUENCE,
+    FM_REGRESSION_TEST_CASE_PRESENTATION_VALUES,
+    FM_REGRESSION_TEST_CASE_PRESENTATION_FAILURE,
     FM_REGRESSION_TEST_CASE_KEYBOARD_MAPPING,
     FM_REGRESSION_TEST_CASE_MAIN_INPUT_ADAPTER,
     FM_REGRESSION_TEST_CASE_MAIN_INPUT_RECOGNIZER,
@@ -74,6 +81,13 @@ typedef struct
     fmc_input_key_t expected_input_key;
 } fm_regression_main_input_adapter_case_t;
 
+typedef struct
+{
+    fmc_presentation_frame_t frame;
+    fm_status_t next_status;
+    uint32_t call_count;
+} fm_regression_presentation_sink_t;
+
 /* Private function declarations */
 static bool fm_regression_test_double_eq_(double p_actual,
                                                double p_expected);
@@ -95,6 +109,11 @@ static bool fm_regression_test_volume_values_(void);
 static bool fm_regression_test_volume_error_paths_(void);
 static bool fm_regression_test_display_format_values_(void);
 static bool fm_regression_test_display_format_error_paths_(void);
+static bool fm_regression_test_lcd_map_all_segments_(void);
+static bool fm_regression_test_lcd_map_liters_legend_(void);
+static bool fm_regression_test_presentation_sequence_(void);
+static bool fm_regression_test_presentation_values_(void);
+static bool fm_regression_test_presentation_failure_(void);
 static bool fm_regression_test_keyboard_mapping_(void);
 static bool fm_regression_test_main_input_adapter_(void);
 static bool fm_regression_test_main_input_recognizer_(void);
@@ -103,7 +122,10 @@ static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case);
 static void fm_regression_test_emit_case_(fm_regression_test_case_t p_case,
                                                bool p_passed);
 static bool fm_regression_test_text_eq_(const char *p_actual,
-                                             const char *p_expected);
+                                              const char *p_expected);
+static fm_status_t fm_regression_test_presentation_sink_(
+    const fmc_presentation_frame_t *p_frame,
+    void *p_context);
 
 /* Public function definitions */
 void FM_RegressionTest_Run(void)
@@ -161,7 +183,7 @@ static bool fm_regression_test_double_eq_(double p_actual,
 }
 
 static bool fm_regression_test_text_eq_(const char *p_actual,
-                                             const char *p_expected)
+                                              const char *p_expected)
 {
     while ((*p_actual != '\0') && (*p_expected != '\0'))
     {
@@ -175,6 +197,24 @@ static bool fm_regression_test_text_eq_(const char *p_actual,
     }
 
     return (*p_actual == '\0') && (*p_expected == '\0');
+}
+
+static fm_status_t fm_regression_test_presentation_sink_(
+    const fmc_presentation_frame_t *p_frame,
+    void *p_context)
+{
+    fm_regression_presentation_sink_t *sink =
+        (fm_regression_presentation_sink_t *) p_context;
+
+    if ((p_frame == NULL) || (sink == NULL))
+    {
+        return FM_STATUS_EINVAL;
+    }
+
+    sink->call_count++;
+    sink->frame = *p_frame;
+
+    return sink->next_status;
 }
 
 /*
@@ -1262,6 +1302,259 @@ static bool fm_regression_test_display_format_error_paths_(void)
 }
 
 /*
+ * Verifies that the all-segments mapping operation covers the complete
+ * controller RAM image and validates its public buffer contract.
+ */
+static bool fm_regression_test_lcd_map_all_segments_(void)
+{
+    uint8_t ram[FM_LCD_MAP_RAM_SIZE + 1U];
+    uint8_t index;
+
+    for (index = 0U; index < (uint8_t) sizeof(ram); index++)
+    {
+        ram[index] = 0U;
+    }
+
+    if ((FM_LCD_MAP_SetAll(NULL, FM_LCD_MAP_RAM_SIZE) !=
+         FM_LCD_MAP_EINVAL) ||
+        (FM_LCD_MAP_SetAll(ram, FM_LCD_MAP_RAM_SIZE - 1U) !=
+         FM_LCD_MAP_ERANGE) ||
+        (FM_LCD_MAP_SetAll(ram, (uint8_t) sizeof(ram)) !=
+         FM_LCD_MAP_OK))
+    {
+        return false;
+    }
+
+    for (index = 0U; index < FM_LCD_MAP_RAM_SIZE; index++)
+    {
+        if (ram[index] != 0xFFU)
+        {
+            return false;
+        }
+    }
+
+    return ram[FM_LCD_MAP_RAM_SIZE] == 0U;
+}
+
+/*
+ * Verifies that the visible liters legend uses both alphanumeric positions:
+ * `L` in the left position and a non-blank `t` in the right position.
+ */
+static bool fm_regression_test_lcd_map_liters_legend_(void)
+{
+    uint8_t liters[FM_LCD_MAP_RAM_SIZE] = {0};
+    uint8_t left_l[FM_LCD_MAP_RAM_SIZE] = {0};
+    uint8_t right_t[FM_LCD_MAP_RAM_SIZE] = {0};
+    bool left_has_segments = false;
+    bool right_has_segments = false;
+    uint8_t index;
+
+    if ((FM_LCD_MAP_WriteAlpha(liters,
+                               FM_LCD_MAP_RAM_SIZE,
+                               "Lt",
+                               FM_LCD_ALIGN_LEFT,
+                               true) != FM_LCD_MAP_OK) ||
+        (FM_LCD_MAP_WriteAlpha(left_l,
+                               FM_LCD_MAP_RAM_SIZE,
+                               "L ",
+                               FM_LCD_ALIGN_LEFT,
+                               true) != FM_LCD_MAP_OK) ||
+        (FM_LCD_MAP_WriteAlpha(right_t,
+                               FM_LCD_MAP_RAM_SIZE,
+                               " t",
+                               FM_LCD_ALIGN_LEFT,
+                               true) != FM_LCD_MAP_OK))
+    {
+        return false;
+    }
+
+    for (index = 0U; index < FM_LCD_MAP_RAM_SIZE; index++)
+    {
+        if (liters[index] != (uint8_t) (left_l[index] | right_t[index]))
+        {
+            return false;
+        }
+
+        left_has_segments = left_has_segments || (left_l[index] != 0U);
+        right_has_segments = right_has_segments || (right_t[index] != 0U);
+    }
+
+    return left_has_segments && right_has_segments;
+}
+
+/*
+ * Verifies the bounded startup order, exact provisional version frame, SHORT
+ * ESC transition, and immediate stable TTL/RATE frame.
+ */
+static bool fm_regression_test_presentation_sequence_(void)
+{
+    fmc_presentation_t presentation;
+    fmc_presentation_snapshot_t snapshot;
+    fm_regression_presentation_sink_t sink = {0};
+    fmc_input_event_t input;
+    uint32_t calls_before_stable_advance;
+
+    sink.next_status = FM_STATUS_OK;
+    FMC_PRESENTATION_MakeDummySnapshot(&snapshot);
+
+    if ((FMC_PRESENTATION_Init(&presentation,
+                               &snapshot,
+                               fm_regression_test_presentation_sink_,
+                               &sink) != FM_STATUS_OK) ||
+        (FMC_PRESENTATION_GetState(&presentation) !=
+         FMC_PRESENTATION_STATE_NOT_STARTED) ||
+        (FMC_PRESENTATION_Start(&presentation) != FM_STATUS_OK) ||
+        (FMC_PRESENTATION_GetState(&presentation) !=
+         FMC_PRESENTATION_STATE_ALL_SEGMENTS) ||
+        !sink.frame.all_segments)
+    {
+        return false;
+    }
+
+    input.key = FMC_INPUT_KEY_ESC;
+    input.action = FMC_INPUT_ACTION_SHORT;
+    if ((FMC_PRESENTATION_HandleInput(&presentation, &input) !=
+         FM_STATUS_OK) ||
+        (FMC_PRESENTATION_GetState(&presentation) !=
+         FMC_PRESENTATION_STATE_FIRMWARE_VERSION) ||
+        sink.frame.all_segments ||
+        !fm_regression_test_text_eq_(sink.frame.top_text, "") ||
+        !fm_regression_test_text_eq_(sink.frame.bottom_text, "00.01.00") ||
+        !fm_regression_test_text_eq_(sink.frame.alpha_text, "B0") ||
+        sink.frame.indicator_ttl ||
+        sink.frame.indicator_rate ||
+        sink.frame.indicator_slash ||
+        sink.frame.indicator_minute)
+    {
+        return false;
+    }
+
+    if ((FMC_PRESENTATION_Advance(&presentation) != FM_STATUS_OK) ||
+        (FMC_PRESENTATION_GetState(&presentation) !=
+         FMC_PRESENTATION_STATE_TTL_RATE) ||
+        !fm_regression_test_text_eq_(sink.frame.top_text, "   1234.5") ||
+        !fm_regression_test_text_eq_(sink.frame.bottom_text, "    12.3") ||
+        !fm_regression_test_text_eq_(sink.frame.alpha_text, "Lt") ||
+        !sink.frame.indicator_ttl ||
+        !sink.frame.indicator_rate ||
+        !sink.frame.indicator_slash ||
+        !sink.frame.indicator_minute)
+    {
+        return false;
+    }
+
+    calls_before_stable_advance = sink.call_count;
+
+    return (FMC_PRESENTATION_Advance(&presentation) == FM_STATUS_OK) &&
+           (sink.call_count == calls_before_stable_advance);
+}
+
+/*
+ * Verifies one-decimal rounding, right alignment, zero, periodic refresh input,
+ * and visual overflow retaining the least significant row digits.
+ */
+static bool fm_regression_test_presentation_values_(void)
+{
+    fmc_presentation_t presentation;
+    fmc_presentation_snapshot_t snapshot;
+    fm_regression_presentation_sink_t sink = {0};
+
+    sink.next_status = FM_STATUS_OK;
+    FMC_PRESENTATION_MakeDummySnapshot(&snapshot);
+
+    if ((FMC_PRESENTATION_Init(&presentation,
+                               &snapshot,
+                               fm_regression_test_presentation_sink_,
+                               &sink) != FM_STATUS_OK) ||
+        (FMC_PRESENTATION_Start(&presentation) != FM_STATUS_OK) ||
+        (FMC_PRESENTATION_Advance(&presentation) != FM_STATUS_OK) ||
+        (FMC_PRESENTATION_Advance(&presentation) != FM_STATUS_OK))
+    {
+        return false;
+    }
+
+    snapshot.ttl = 1.26;
+    snapshot.rate = 0.0;
+    if ((FMC_PRESENTATION_Refresh(&presentation, &snapshot) !=
+         FM_STATUS_OK) ||
+        !fm_regression_test_text_eq_(sink.frame.top_text, "      1.3") ||
+        !fm_regression_test_text_eq_(sink.frame.bottom_text, "     0.0") ||
+        sink.frame.ttl_overflow ||
+        sink.frame.rate_overflow)
+    {
+        return false;
+    }
+
+    snapshot.ttl = 123456789.14;
+    snapshot.rate = 9876543.26;
+    if ((FMC_PRESENTATION_Refresh(&presentation, &snapshot) !=
+         FM_STATUS_OK) ||
+        !fm_regression_test_text_eq_(sink.frame.top_text, "3456789.1") ||
+        !fm_regression_test_text_eq_(sink.frame.bottom_text, "876543.3") ||
+        !sink.frame.ttl_overflow ||
+        !sink.frame.rate_overflow ||
+        !sink.frame.indicator_ttl ||
+        !sink.frame.indicator_rate ||
+        !sink.frame.indicator_slash ||
+        !sink.frame.indicator_minute)
+    {
+        return false;
+    }
+
+    snapshot.ttl = -0.1;
+
+    return FMC_PRESENTATION_Refresh(&presentation, &snapshot) ==
+           FM_STATUS_EINVAL;
+}
+
+/*
+ * Verifies that a failed sink call propagates and does not confirm a new
+ * presentation state or snapshot.
+ */
+static bool fm_regression_test_presentation_failure_(void)
+{
+    fmc_presentation_t presentation;
+    fmc_presentation_snapshot_t snapshot;
+    fm_regression_presentation_sink_t sink = {0};
+
+    sink.next_status = FM_STATUS_ESTATE;
+    FMC_PRESENTATION_MakeDummySnapshot(&snapshot);
+
+    if ((FMC_PRESENTATION_Init(&presentation,
+                               &snapshot,
+                               fm_regression_test_presentation_sink_,
+                               &sink) != FM_STATUS_OK) ||
+        (FMC_PRESENTATION_Start(&presentation) != FM_STATUS_ESTATE) ||
+        (FMC_PRESENTATION_GetState(&presentation) !=
+         FMC_PRESENTATION_STATE_NOT_STARTED))
+    {
+        return false;
+    }
+
+    sink.next_status = FM_STATUS_OK;
+    if ((FMC_PRESENTATION_Start(&presentation) != FM_STATUS_OK) ||
+        (FMC_PRESENTATION_GetState(&presentation) !=
+         FMC_PRESENTATION_STATE_ALL_SEGMENTS))
+    {
+        return false;
+    }
+
+    sink.next_status = FM_STATUS_ESTATE;
+    if ((FMC_PRESENTATION_Advance(&presentation) != FM_STATUS_ESTATE) ||
+        (FMC_PRESENTATION_GetState(&presentation) !=
+         FMC_PRESENTATION_STATE_ALL_SEGMENTS))
+    {
+        return false;
+    }
+
+    sink.next_status = FM_STATUS_OK;
+
+    return (FMC_PRESENTATION_Advance(&presentation) == FM_STATUS_OK) &&
+           (FMC_PRESENTATION_GetState(&presentation) ==
+            FMC_PRESENTATION_STATE_FIRMWARE_VERSION);
+}
+
+/*
  * Verifies the board keyboard GPIO symbols generated by CubeMX map to the
  * semantic keys consumed by higher layers and bring-ups.
  */
@@ -1606,6 +1899,15 @@ static bool fm_regression_test_main_event_queue_(void)
         goto done;
     }
 
+    FM_MAIN_EVENT_MakePresentationTimeout(&event);
+    if ((FM_MAIN_EVENT_Publish(&queue, &event) != FM_STATUS_OK) ||
+        (tx_queue_receive(&queue, &received, TX_NO_WAIT) != TX_SUCCESS) ||
+        ((fm_main_event_kind_t) received.kind !=
+         FM_MAIN_EVENT_PRESENTATION_TIMEOUT))
+    {
+        goto done;
+    }
+
     FM_MAIN_EVENT_MakeKeyboard(&event,
                                FM_BOARD_KEYBOARD_KEY_UP,
                                FM_BOARD_KEYBOARD_EDGE_FALLING);
@@ -1680,6 +1982,21 @@ static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case)
 
     case FM_REGRESSION_TEST_CASE_DISPLAY_FORMAT_ERROR_PATHS:
         return fm_regression_test_display_format_error_paths_();
+
+    case FM_REGRESSION_TEST_CASE_LCD_MAP_ALL_SEGMENTS:
+        return fm_regression_test_lcd_map_all_segments_();
+
+    case FM_REGRESSION_TEST_CASE_LCD_MAP_LITERS_LEGEND:
+        return fm_regression_test_lcd_map_liters_legend_();
+
+    case FM_REGRESSION_TEST_CASE_PRESENTATION_SEQUENCE:
+        return fm_regression_test_presentation_sequence_();
+
+    case FM_REGRESSION_TEST_CASE_PRESENTATION_VALUES:
+        return fm_regression_test_presentation_values_();
+
+    case FM_REGRESSION_TEST_CASE_PRESENTATION_FAILURE:
+        return fm_regression_test_presentation_failure_();
 
     case FM_REGRESSION_TEST_CASE_KEYBOARD_MAPPING:
         return fm_regression_test_keyboard_mapping_();
@@ -1773,6 +2090,26 @@ static void fm_regression_test_emit_case_(fm_regression_test_case_t p_case,
 
     case FM_REGRESSION_TEST_CASE_DISPLAY_FORMAT_ERROR_PATHS:
         (void) FM_DEBUG_UartStr("REGRESSION_TEST:DISPLAY_FORMAT_ERROR_PATHS:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_LCD_MAP_ALL_SEGMENTS:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:LCD_MAP_ALL_SEGMENTS:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_LCD_MAP_LITERS_LEGEND:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:LCD_MAP_LITERS_LEGEND:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_PRESENTATION_SEQUENCE:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:PRESENTATION_SEQUENCE:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_PRESENTATION_VALUES:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:PRESENTATION_VALUES:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_PRESENTATION_FAILURE:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:PRESENTATION_FAILURE:");
         break;
 
     case FM_REGRESSION_TEST_CASE_KEYBOARD_MAPPING:
