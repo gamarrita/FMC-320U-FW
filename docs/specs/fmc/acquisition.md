@@ -17,7 +17,7 @@ The legacy implementation is the primary behavioral guide for this bounded
 contract. Current product documents and public headers remain the authorities
 for accepted product behavior and implemented ownership.
 
-This cut does not define RATE observation, exact per-second measurement
+This slice does not define RATE observation, exact per-second measurement
 windows, presentation, or the MCU configuration that will realize the
 contract.
 
@@ -132,7 +132,7 @@ from a smaller modulo delta and violates the input precondition.
 Phase 7A does not define a maximum-latency monitor or recovery from that system
 failure. Repository-level mechanisms are expected to keep observations near
 the nominal one-second cadence; a failure severe enough to break that
-assumption requires equipment reset and belongs to another cut.
+assumption requires equipment reset and belongs to another slice.
 
 ## Ownership And Handoff
 
@@ -141,7 +141,7 @@ assumption requires equipment reset and belongs to another cut.
   the current count as the next baseline.
 - Phase 7A defines the delta value but does not decide whether zero or nonzero
   deltas cause runtime events. Event publication belongs to the later
-  acquisition/runtime integration cut.
+  acquisition/runtime integration slice.
 - `fmc_runtime` remains the RTOS-neutral product event boundary.
 - `fmc_service` remains the only owner that adds an accepted delta to both ACM
   and TTL.

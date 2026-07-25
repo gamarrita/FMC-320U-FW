@@ -1,107 +1,119 @@
-# Working Context: Phase 7A Pulse-Accumulation Contract
+# Working Context: Phase 7 Essential Acquisition
 
-## Objective And Status
+## Active State
 
-Define the hardware-configuration-independent contract for turning successive
-legacy-shaped LPTIM4 counter observations into bounded pulse deltas before
-configuring or implementing the MCU path.
+- Active workstream: `Phase 7 — Essential Acquisition`.
+- Workstream state: administratively paused pending review of this workflow
+  normalization and explicit human authorization to resume.
+- Active slice: `7A — Pulse-Accumulation Contract`.
+- Slice state: drafted; technical decisions are recorded; closure is not
+  authorized.
+- Next gated slice: `7B1 — Pulse-Counter Bring-Up In Run`.
+- 7B1 authorization state: not approved.
 
-Status:
+## Workstream Objective
 
-- Phase 7-0A legacy evidence is complete in
-  `legacy/analysis/fmc_acquisition.md`;
-- Phase 7-0B route and document ownership are complete;
-- Phase 7A is active, documentation-only, and drafted for closure review;
-- LPTIM4 is the selected pulse counter, following the legacy accumulation
-  shape;
-- no pin, clock, filter, edge, interrupt, DMA path, workaround, or CubeMX
-  change is approved.
+Replace provisional Phase 6A TTL/RATE inputs through the incremental
+acquisition route without coupling pulse-total correctness to frequency
+availability.
+
+Phase 7 keeps these responsibilities separate:
+
+- physical pulse accumulation;
+- counter observation and pulse-delta formation;
+- ACM/TTL totalization;
+- physical frequency observation;
+- pulse/time observation quality;
+- pure RATE mathematics;
+- runtime and presentation integration.
+
+Program order, slice dependencies, decision gates, bring-up protocol, risks,
+and Phase 7 exit evidence belong to `docs/roadmaps/fmc_refactoring.md`.
 
 ## Authorities And Evidence
 
-- program order, complete Phase 7 route, dependencies, gates, risks, bring-up
-  protocol, and exit evidence: `docs/roadmaps/fmc_refactoring.md`;
 - product obligations: `docs/product/fmc/requirements.md`;
 - observable behavior: `docs/product/fmc/behavior.md`;
 - visible behavior, only when affected:
   `docs/product/fmc/user_interface.md`;
-- technical specification folder rules: `docs/specs/README.md`;
+- reviewed pulse-accumulation contract:
+  `docs/specs/fmc/acquisition.md`;
 - implemented ownership boundaries: `src/product/fmc/fmc_runtime.h`,
   `src/product/fmc/fmc_service.h`, and `src/product/fmc/fmc_rate.h`;
 - current hardware configuration: `fmc-320u-v2.ioc`, read only; CubeMX remains
   the hardware-configuration authority;
-- historical evidence and acquisition hypotheses:
+- historical acquisition evidence and hypotheses:
   `legacy/analysis/fmc_acquisition.md`;
 - frozen legacy product evidence:
   `legacy/derived/fmc/use_cases.extraction-v1.yaml`;
 - reviewed legacy disposition: `docs/workflow/fmc_legacy_coverage.md`.
 
-Legacy sources and the reported STM32U575 behavior are evidence, not current
-product or hardware authority.
+Legacy sources and the reported STM32U575 behavior remain evidence, not current
+product, technical, or hardware authority.
 
-## Active Slice Boundary
+## Phase-Wide Boundaries
 
-Phase 7A inherits the durable acquisition boundaries and correct-first baseline
-from the roadmap. This cut defines only the LPTIM4 observation and
-pulse-accumulation contract. It does not configure hardware, form a frequency
-observation, calculate RATE, or integrate live acquisition.
+- Pulse accumulation must be completed before frequency observation can
+  endanger totalization.
+- Physical observation remains separate from RATE mathematics.
+- Acquisition reaches product totals only through the reviewed runtime/service
+  ownership boundary.
+- Hardware configuration and every CubeMX change require explicit human
+  approval.
+- Bring-up begins with the minimum documented correct technique. A legacy
+  workaround is considered only after an approved target failure is reproduced.
+- Each slice retains its own entry gates and exit evidence; advancing between
+  slices updates this context but does not replace the Phase 7 workstream.
 
-## Active Deliverables
+## Recorded Progress
 
-- create `docs/specs/fmc/acquisition.md` as the owner of the reviewed
-  pulse-accumulation contract;
-- define the accepted pulse-delta meaning, numeric bounds, first observation,
-  modulo wrap, reset boundary, and ownership;
-- define hardware-configuration-independent acceptance examples;
-- update product documentation only for outcomes explicitly approved by the
-  human;
-- record exact legacy disposition only if Phase 7A accepts, rejects, replaces,
-  or defers a reviewed legacy statement.
+- 7-0A legacy evidence is complete in
+  `legacy/analysis/fmc_acquisition.md`.
+- 7-0B document ownership, route, gates, and correct-first baseline are
+  complete.
+- Phase 6A provides the current runtime/presentation path and provisional
+  TTL/RATE inputs that Phase 7 will replace.
+- 7A decisions on delta meaning, numeric bounds, startup, Stop2, reset,
+  validity, legacy traceability, and ownership are recorded in their owning
+  documents.
 
-## Reviewed Phase 7A Decisions
+## Active Slice: 7A Pulse-Accumulation Contract
 
-The reviewed delta, numeric, startup, Stop2, reset, validity, legacy
-traceability, and ownership decisions are recorded in
-`docs/specs/fmc/acquisition.md`. Approved product outcomes are recorded in
-`docs/product/fmc/requirements.md` and `docs/product/fmc/behavior.md`.
+7A defines only the hardware-configuration-independent contract that turns
+successive legacy-shaped LPTIM4 counter observations into bounded pulse deltas.
+It does not configure hardware, form a frequency observation, calculate RATE,
+or integrate live acquisition.
 
-For sequencing, LPTIM4 is selected and the Phase 7A decision gates are closed.
-Hardware configuration, target evidence, and implementation remain gated below.
+7A closes only after explicit human authorization and confirmation that:
 
-## Additional Human Approvals Before Phase 7B1
+- approved product outcomes remain in their owning product documents;
+- `docs/specs/fmc/acquisition.md` defines one reviewable contract without
+  defining hardware configuration;
+- normal, first-sample, zero, wrap, Stop2/delayed, precondition-boundary, reset,
+  and recovery examples are explicit;
+- runtime/service ownership remains unchanged and unambiguous;
+- unresolved hardware choices remain gated for 7B1;
+- documentation and the Git diff have been reviewed.
+
+No further 7A closure action is authorized while the workstream pause remains.
+
+## Next Gated Slice: 7B1 Pulse-Counter Bring-Up In Run
+
+7B1 exercises the minimum documented LPTIM4 counter technique in Run without
+introducing Stop2 or RATE. It cannot open until the human approves:
 
 - LPTIM4 pin, clock, filter, edge, and complete counter configuration;
 - intended CubeMX change and regeneration;
 - Run-mode signal matrix and acceptance evidence;
 - authorization to begin the first acquisition implementation.
 
-## Out Of Scope
+## Current Exclusions
 
-- configuring or implementing LPTIM4, its pin, clock, filter, interrupt, DMA,
-  or autonomous-mode path;
+- closing 7A or activating 7B1 while the administrative pause remains;
+- configuring or implementing LPTIM4 or its hardware path;
 - `.ioc` edits, CubeMX regeneration, or generated-code edits;
 - hardware bring-up;
 - frequency observation, RATE integration, or presentation changes;
 - user/configuration screens and navigation;
 - Backup SRAM, Flash, RTC, temperature, Bluetooth, or printing;
 - adopting or testing the legacy workaround.
-
-## Closure Criteria
-
-Phase 7A closes when:
-
-- approved product outcomes are recorded in their owning product documents;
-- `docs/specs/fmc/acquisition.md` defines one reviewable pulse-accumulation
-  contract without defining hardware configuration;
-- normal, first-sample, zero, wrap, Stop2/delayed, precondition-boundary, reset,
-  and recovery examples are explicit;
-- runtime/service ownership remains unchanged and unambiguous;
-- unresolved hardware choices remain gated for Phase 7B1;
-- documentation closure and Git audit pass.
-
-## Next Context Candidate
-
-`Phase 7B1 Pulse-Counter Bring-Up In Run`
-
-It opens only after the additional approvals above and exercises the minimum
-documented counter technique in Run. It will not introduce Stop2 or RATE.

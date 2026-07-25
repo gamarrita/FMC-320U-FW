@@ -1,63 +1,43 @@
 # Doc Closure
 
-Use before commit when documentation or active context changed.
+Use only when the active workstream is formally closed, deferred, or replaced.
+It is not required for an individual task, slice, commit, handoff, or
+conversation.
 
 Prompt:
 
 ```text
-Aplicar doc closure pre-commit.
+Aplicar doc closure del workstream.
 ```
 
-Meaning: apply this file, clean documentation drift, then report added,
-deleted, compressed, and still-questionable docs.
+Meaning: consolidate the completed workstream, remove documentation drift, and
+leave the repository ready to identify the next active workstream.
 
 ## Rules
 
-- Run before commit. Post-commit use is audit only.
 - Do not keep documentation as backup history; Git does that.
-- Documentation must become shorter, clearer, or more directly useful.
-- Delete or compress old plans, option comparisons, slice narration,
-  duplicated validation history, and rationale already visible in code, tests,
-  specs, or Git history.
-- Keep one source of truth per topic: current product documentation in
-  `docs/product/`, structured technical specifications and inventories in
-  `docs/specs/`, active scope in `WORKING_CONTEXT.md`, durable strategy in
-  roadmaps, and implemented module contracts in headers.
-- Do not duplicate product requirements in contexts, roadmaps, READMEs, or
-  module documentation.
+- Move every durable outcome to its owning product document, specification,
+  roadmap, public header, or legacy-disposition register.
+- Delete or compress temporary narration, superseded plans, duplicated
+  rationale, and validation history already visible in code, tests, specs, or
+  Git.
+- Keep `WORKING_CONTEXT.md` only when the workstream is explicitly deferred and
+  its resumption state remains operationally necessary. Otherwise remove or
+  reframe it for the next workstream.
+- Do not change the authority of evidence, proposals, or historical material
+  while consolidating documentation.
 
-## Active Milestone
+## Closure Checks
 
-Required:
-- `WORKING_CONTEXT.md` names exactly one active workstream.
-- `WORKING_CONTEXT.md` names the product behavior authority when product
-  behavior is in scope.
-- No other `.md` claims to define the current milestone or active workstream.
-- A new agent can find the applicable roadmap and specification from
-  `WORKING_CONTEXT.md` when they are relevant.
-- `WORKING_CONTEXT.md` and the roadmap do not describe the same state.
-
-## Ownership
-
-- Stable agent policy: `AGENTS.md`
-- Active milestone, scope, sequencing, and temporary boundaries:
-  `WORKING_CONTEXT.md`
-- Durable refactor strategy, phases, dependencies, decision gates, and exit
-  criteria: `docs/roadmaps/`
-- Folder ownership: local `README.md` files
-- Current product documentation: `docs/product/`
-- Structured technical specifications and normalized inventories: `docs/specs/`
-- Legacy review coverage and disposition: applicable registers under
-  `docs/workflow/`
-- Implemented module contracts: public headers
-- Historical legacy evidence: `legacy/`
-
-Roadmaps should update only when a phase, dependency, decision gate, exit
-criterion, or broad architectural decision changes.
-
-Closed contexts and abandoned design notes are deleted by default. Keep one only
-if it contains concise evidence needed by the current product specification or
-roadmap.
+- The roadmap records the completed or deferred phase outcome and any remaining
+  gates.
+- Accepted product behavior and technical contracts are in their owning
+  documents, not only in `WORKING_CONTEXT.md`.
+- No other `.md` claims to define the closed or replaced active workstream.
+- References to superseded contexts, routes, files, and temporary decisions are
+  removed.
+- A new agent can identify the next active workstream, or determine explicitly
+  that none is active.
 
 ## Final Scrape
 
@@ -65,12 +45,14 @@ Run:
 
 ```powershell
 rg --files -g "*.md"
-rg -n "<old_context>|<deleted_file>|obsolete_route|TODO" -g "*.md"
+rg -n "<closed_workstream>|<replaced_context>|<deleted_file>|obsolete_route|TODO" -g "*.md"
 ```
 
-Adapt the second command to the files and terms touched by the slice.
+Adapt the second command to the workstream being closed.
 
 Report:
-- docs added, deleted, or compressed
-- whether stale references remain
-- whether build verification was skipped because the change was documentation-only
+- documentation added, deleted, or compressed;
+- stale references found or remaining;
+- durable outcomes moved to their owners;
+- whether build verification was skipped because the closure was
+  documentation-only.

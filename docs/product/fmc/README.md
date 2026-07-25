@@ -48,8 +48,8 @@ Related repository roles:
   glass elements and physical mapping.
 - public headers own implemented module contracts.
 - `legacy/` preserves historical evidence, not current authority.
-- `WORKING_CONTEXT.md` owns the single active documentation or implementation
-  cut; the roadmap owns durable sequencing.
+- `WORKING_CONTEXT.md` owns the active workstream and its single active slice;
+  the roadmap owns durable sequencing.
 
 ## Product Overview
 

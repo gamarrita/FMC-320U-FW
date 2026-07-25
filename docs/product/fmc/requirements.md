@@ -14,7 +14,7 @@ APIs belong in code and public headers.
 
 Every substantive entry is marked `Accepted`, `Candidate`, `Unresolved`, or
 `Deferred`. `Evidence` is listed separately as provenance and does not determine
-acceptance. No formal requirement identifiers are introduced in this cut.
+acceptance. No formal requirement identifiers are introduced in this slice.
 
 ## Product And Lifecycle
 

@@ -195,7 +195,7 @@ internal formatting errors.
 - Physical content after a partial or failed write is indeterminate.
 
 Retry, recovery, logging, and alternate diagnostics remain implementation
-decisions for a later selected cut.
+decisions for a later selected slice.
 
 ### Backlight
 

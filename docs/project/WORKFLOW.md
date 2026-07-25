@@ -12,6 +12,20 @@ This document defines the continuity method. Stable agent policy remains in
 accepted product knowledge in the applicable product documentation or
 specification, and implemented public contracts in headers.
 
+## Working Terms
+
+- A **phase** is a durable strategic unit in a roadmap.
+- A **workstream** is the coherent active execution of normally one roadmap
+  phase. An exception must state its boundary and justification.
+- A **slice** is one bounded, verifiable, and gated step within the workstream.
+- A **task** is the concrete user request handled within the active context.
+- `WORKING_CONTEXT.md` records one active workstream and exactly one active
+  slice. It is updated, not replaced, when that workstream advances between
+  slices.
+
+The user request defines the concrete task. If it conflicts materially with the
+active slice or an unresolved gate, report the conflict before modifying.
+
 ## Responsibilities
 
 The human:
@@ -22,7 +36,7 @@ The human:
 The agent:
 - reads repository context before acting;
 - distinguishes accepted decisions from proposals, inferences, and evidence;
-- keeps changes within the active cut and reports conflicts instead of
+- keeps changes within the active slice and reports conflicts instead of
   resolving them silently;
 - writes durable outcomes into their owning repository documents;
 - verifies the result and reports the exact Git state used for the work.
@@ -40,29 +54,35 @@ The repository:
    product documentation, specifications, local READMEs, and technical
    authorities.
 4. Inspect relevant code, tests, and legacy evidence only as required by the
-   active cut.
+   active slice.
 5. State the interpreted objective, intended files, boundaries, authorities,
    unresolved conflicts, and proportional verification plan.
 6. Obtain human approval when the active context or repository policy requires
    it, then make the smallest reviewable change.
-7. Verify behavior or documentation in proportion to risk. Apply
-   `docs/workflow/doc_closure.md` whenever documentation or active context
-   changes.
+7. Verify behavior or documentation in proportion to risk.
 8. Review the diff against the approved scope and confirm that no source has
    silently changed role from evidence or input into authority.
-9. Record durable decisions and the next active cut in their owning repository
-   files. Do not leave required state only in the conversation.
+9. Record durable decisions and the active-slice state in their owning
+   repository files. Do not leave required state only in the conversation.
 10. Report changed files, verification results, unresolved decisions, and final
     branch, HEAD commit, and worktree status.
 11. Commit or push only when the human explicitly requests it. The resulting
     commit or intentionally identified uncommitted diff becomes the auditable
     handoff point.
 
+When a slice closes, update the same `WORKING_CONTEXT.md` with the completed
+slice and the next authorized slice. Do not run documentation closure merely
+because a task, slice, commit, handoff, or conversation ended.
+
+When the active workstream is formally closed, deferred, or replaced, apply
+`docs/workflow/doc_closure.md`, consolidate durable outcomes, and remove or
+reframe `WORKING_CONTEXT.md`.
+
 ## Permanent Decisions
 
 Put each durable fact in one owning location:
 - stable agent rules in `AGENTS.md`;
-- one active cut in `WORKING_CONTEXT.md`;
+- one active workstream and exactly one active slice in `WORKING_CONTEXT.md`;
 - phase order, dependencies, decision gates, risks, and exit criteria in
   `docs/roadmaps/`;
 - accepted product requirements, behavior, and interface decisions in the
@@ -99,36 +119,12 @@ Never describe a conversation alone as the project state.
 Continuity is achieved when a new agent with no conversation history can read
 only the repository and correctly determine:
 - which sources are authoritative for the work at hand;
-- the single active cut, its scope, and its exclusions;
+- the active workstream and single active slice, including their state,
+  boundaries, and exclusions;
 - the durable roadmap sequence and dependencies;
 - what has already been accepted or implemented;
 - which decisions remain open;
-- the next reviewable cut and its verification gate;
+- the next gated slice and its verification gate;
 - the branch or commit against which those facts were audited.
 
 If any of those answers exists only in chat, the workflow is not closed.
-
-## Copyable Base Prompt
-
-```text
-Trabajaremos sobre este repositorio como memoria persistente del proyecto.
-La conversación es descartable: no dependas de conversaciones anteriores.
-
-Antes de proponer o modificar:
-1. identificá rama, commit HEAD y estado del worktree;
-2. leé AGENTS.md y WORKING_CONTEXT.md;
-3. seguí las referencias del contexto activo hacia roadmap, documentación de
-   producto, especificaciones, READMEs locales y autoridades técnicas;
-4. distinguí autoridades vigentes, entradas de trabajo, evidencia legacy,
-   decisiones pendientes e inferencias;
-5. informá objetivo interpretado, archivos previstos, límites, conflictos y
-   verificación.
-
-Trabajá únicamente dentro del corte activo y respetá sus puertas de aprobación.
-No conviertas evidencia o inventarios en requisitos sin aprobación humana.
-Registrá toda decisión durable en el archivo propietario correspondiente.
-Antes de cerrar, revisá el diff, aplicá doc closure si corresponde y reportá
-archivos cambiados, verificaciones, pendientes, próximo corte propuesto, rama,
-commit HEAD y estado final de Git. No hagas commit ni push sin autorización
-explícita.
-```

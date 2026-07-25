@@ -26,21 +26,22 @@ Small tasks may combine stages.
 - `plan`: define the smallest correct change.
 - `implementation`: make the requested change.
 - `validation`: verify the result and report what was or was not checked.
-- `closure`: converge documentation, naming, or small polish after behavior is stable.
-  Apply `docs/workflow/doc_closure.md` when documentation or active
-  context changed.
+- `closure`: finish the bounded work, review its evidence, and hand it off.
+  Apply `docs/workflow/doc_closure.md` only when the active workstream is
+  formally closed, deferred, or replaced.
 
 ## Context Rule
 
-When a request starts a new track or no longer fits the current one:
-- refresh `WORKING_CONTEXT.md`
-- update roadmaps or specifications only when their durable content changes
-- keep `WORKING_CONTEXT.md` operational and roadmaps strategic
+`docs/project/WORKFLOW.md` owns working-context terminology and lifecycle.
+`WORKING_CONTEXT.md` records one active workstream and exactly one active
+slice. Update that same context as the workstream advances between slices;
+reframe it only when the workstream changes.
 
 ## Related Docs
 
 - `AGENTS.md`: stable agent policy
-- `WORKING_CONTEXT.md`: active workstream or milestone
+- `WORKING_CONTEXT.md`: active workstream and active slice
+- `docs/project/WORKFLOW.md`: working-context terminology and lifecycle
 - `docs/roadmaps/`: durable refactor strategy
 - `docs/product/`: current reviewed product documentation
 - `docs/specs/`: structured technical specifications, inventories, and

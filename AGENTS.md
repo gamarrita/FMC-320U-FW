@@ -25,7 +25,9 @@ For active work, read in this order:
 6. local `README.md` files for the touched folders
 7. `STYLE.md` for naming and code structure questions
 
-`WORKING_CONTEXT.md` should stay short and operational.
+`WORKING_CONTEXT.md` should stay short and operational. It names one active
+workstream and exactly one active slice. It normally persists while that
+workstream advances between slices.
 Roadmaps hold durable phase strategy, dependencies, decision gates, risks, and
 exit criteria. They are not active task logs.
 
@@ -91,11 +93,14 @@ If scope, ownership, or interaction with active work is unclear:
 
 ## Context Reframe
 
-Refresh the active working context when:
-- the user asks to start a new `refactor` or `new_feature` track
+Reframe the active working context when:
+- the user asks to start a new workstream
 - the user asks to create or reframe a `WORKING_CONTEXT.md`
 - the request falls outside the active `WORKING_CONTEXT.md` and should become a
   separate workstream
+
+Advancing between slices of the same workstream updates the existing context;
+it does not trigger a reframe.
 
 If a context reframe is triggered:
 - do not force the request into the current workstream
@@ -200,7 +205,7 @@ contracts across multiple files.
 `WORKING_CONTEXT.md` controls current scope, sequencing, and temporary
 boundaries. It does not override confirmed product requirements.
 
-When closing a slice or changing active context, apply
+When formally closing, deferring, or replacing the active workstream, apply
 `docs/workflow/doc_closure.md` before the final response.
 
 ---

@@ -37,6 +37,12 @@ Recommended format:
 
 ## Entries
 
+## 2026-07-25
+- Normalized the active workflow around one phase-aligned workstream and one
+  active slice, with the same `WORKING_CONTEXT.md` persisting between slices.
+- Reserved documentation closure for formally closing, deferring, or replacing
+  a workstream instead of routine tasks, commits, handoffs, or slice changes.
+
 ## 2026-07-24
 - Established the human-agent-repository continuity workflow and separated
   current FMC product documentation, frozen legacy evidence, and mutable legacy

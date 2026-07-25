@@ -49,7 +49,7 @@ programming: breadth comes first, then depth follows the next slice.
 
 Phases 8 and 10 are separate because operational navigation and measurement
 configuration navigation have different behavior, authorization, validation,
-and test boundaries. Phase 9 is a complete RTC/calendar vertical cut, including
+and test boundaries. Phase 9 is a complete RTC/calendar vertical slice, including
 its own user and configuration screens. Phases 13 through 15 likewise do not
 defer their necessary UI to a later generic screen phase.
 
@@ -257,7 +257,7 @@ Completion:
 
 Objective:
 - replace provisional Phase 6A TTL/RATE inputs through short, independently
-  reviewable acquisition cuts;
+  reviewable acquisition slices;
 - connect accepted pulse deltas and validated RATE observations through runtime
   ownership without coupling acquisition to product totals or presentation.
 
@@ -316,7 +316,7 @@ Correct-first baseline:
 | Slice | Bounded result | Entry or decision gate | Exit evidence |
 |---|---|---|---|
 | 7-0A: Evidence and hypothesis formulation | Reconstruct legacy acquisition and classify the reported STM32U575 behavior | Legacy sources and identifiable public technical evidence are available | `legacy/analysis/fmc_acquisition.md` records provenance, uncertainties, hypotheses, and the correct-first baseline without selecting hardware |
-| 7-0B: Foundation and route | Establish document ownership, incremental route, approval gates, and the next cut | 7-0A evidence is reviewable | Repository documents agree on the route and one active cut; no product or hardware decision is inferred |
+| 7-0B: Foundation and route | Establish document ownership, incremental route, approval gates, and the next slice | 7-0A evidence is reviewable | Repository documents agree on the route and one active slice; no product or hardware decision is inferred |
 | 7A: Pulse-accumulation contract | Define the bounded LPTIM4 counter observation accepted as a pulse delta | Human decisions on counter assumptions, selected low-power states, observation cadence, and loss policy | Product owners contain approved outcomes and `docs/specs/fmc/acquisition.md` defines delta, modulo wrap, reset, numeric, ownership, and acceptance semantics |
 | 7B1: Pulse-counter bring-up in Run | Exercise the minimum documented LPTIM4 counter technique without Stop2 or RATE | Human-approved pin, clock, filter, CubeMX change, and Run signal matrix | Target evidence demonstrates exact raw counting and stable observation at approved Run limits |
 | 7B2: Pulse-counter bring-up across Stop2 and wrap | Exercise the same counter path through low power and rollover | 7B1 accepted; Stop2 matrix and current-measurement method approved | Instrumented results demonstrate counting across Stop2 and wrap; separate silent runs establish current |
