@@ -204,6 +204,12 @@ Do not make debug and release builds follow different product error contracts.
 Build configuration may change observability, but not whether a public
 operation returns status, ignores invalid input, degrades, or panics.
 
+Optional diagnostic output must not determine product or app control flow or
+create a new panic condition. Its enabled state is output policy, not operation
+success. Keep best-effort diagnostic APIs internally gated and caller-neutral;
+use a separate explicit transport or service status when delivery is a
+functional requirement.
+
 When a repeated fatal category such as contract violation needs consistent
 diagnostics, extend the `fm_debug` public contract deliberately instead of
 encoding the policy only in ad hoc panic strings.

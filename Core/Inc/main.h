@@ -79,6 +79,8 @@ void Error_Handler(void);
 #define KEY_ESC_EXTI_IRQn EXTI13_IRQn
 #define PCF8553_MISO_Pin GPIO_PIN_14
 #define PCF8553_MISO_GPIO_Port GPIOE
+#define FMC_PRIMARY_PULSE_Pin GPIO_PIN_13
+#define FMC_PRIMARY_PULSE_GPIO_Port GPIOD
 #define DBG_LED_EN_Pin GPIO_PIN_1
 #define DBG_LED_EN_GPIO_Port GPIOD
 #define DBG_MSG_EN_Pin GPIO_PIN_2

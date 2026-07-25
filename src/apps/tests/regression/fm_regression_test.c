@@ -1,7 +1,7 @@
 /**
  * @file    fm_regression_test.c
- * @brief   Repeatable verification app for pure model, unit, rate, volume,
- *          and display-format slices.
+ * @brief   Repeatable verification app for pure model, acquisition, unit,
+ *          rate, volume, and display-format slices.
  */
 #include "fm_regression_test.h"
 
@@ -13,6 +13,7 @@
 #include "fm_board.h"
 #include "fm_board_keyboard.h"
 #include "fm_debug.h"
+#include "fm_main_acquisition.h"
 #include "fm_main_event.h"
 #include "fm_main_input_adapter.h"
 #include "fm_main_input_recognizer.h"
@@ -27,6 +28,7 @@
 #include "fmc_units.h"
 #include "fmc_volume.h"
 #include "main.h"
+#include "pulse_delta.h"
 
 #define FM_REGRESSION_TEST_IDLE_MS   1000U
 #define FM_REGRESSION_TEST_EPSILON   0.000001
@@ -42,6 +44,8 @@ typedef enum
     FM_REGRESSION_TEST_CASE_ERROR_PATHS,
     FM_REGRESSION_TEST_CASE_RATE_WINDOWS,
     FM_REGRESSION_TEST_CASE_RATE_ERROR_PATHS,
+    FM_REGRESSION_TEST_CASE_PULSE_DELTA_VECTORS,
+    FM_REGRESSION_TEST_CASE_MAIN_ACQUISITION,
     FM_REGRESSION_TEST_CASE_RUNTIME_EVENTS,
     FM_REGRESSION_TEST_CASE_RUNTIME_INPUT_EVENTS,
     FM_REGRESSION_TEST_CASE_RUNTIME_ERROR_PATHS,
@@ -68,6 +72,13 @@ typedef struct
     fmc_model_volume_unit_t unit;
     double expected_liters_per_unit;
 } fm_regression_liters_case_t;
+
+typedef struct
+{
+    uint16_t previous_count;
+    uint16_t current_count;
+    uint64_t expected_delta;
+} fm_regression_pulse_delta_case_t;
 
 typedef struct
 {
@@ -100,6 +111,8 @@ static bool fm_regression_test_pulses_per_active_unit_(void);
 static bool fm_regression_test_error_paths_(void);
 static bool fm_regression_test_rate_windows_(void);
 static bool fm_regression_test_rate_error_paths_(void);
+static bool fm_regression_test_pulse_delta_vectors_(void);
+static bool fm_regression_test_main_acquisition_(void);
 static bool fm_regression_test_runtime_events_(void);
 static bool fm_regression_test_runtime_input_events_(void);
 static bool fm_regression_test_runtime_error_paths_(void);
@@ -641,6 +654,164 @@ static bool fm_regression_test_rate_error_paths_(void)
         FMC_MODEL_CALIBRATION_PULSES_PER_UNIT_MIN - 0.1;
 
     return FMC_RATE_Calc(&measurement, 1U, 1.0, &rate) == FM_STATUS_ERANGE;
+}
+
+/*
+ * Verifies the accepted modulo-16-bit delta examples without hardware input.
+ *
+ * Each case initializes the accepted zero baseline, optionally advances to the
+ * requested previous observation, and then checks the resulting raw delta.
+ */
+static bool fm_regression_test_pulse_delta_vectors_(void)
+{
+    static const fm_regression_pulse_delta_case_t cases[] =
+    {
+        {     0U,     0U,     0U },
+        {     0U,    12U,    12U },
+        {  1200U,  1250U,    50U },
+        {  1250U,  1250U,     0U },
+        { 65530U,     9U,    15U },
+        {  1000U,  4500U,  3500U },
+        {   100U,    99U, 65535U }
+    };
+    pulse_delta_observer_t observer;
+    uint64_t delta;
+    uint64_t first_delta;
+    uint64_t second_delta;
+    uint8_t index;
+
+    for (index = 0U;
+         index < (uint8_t) (sizeof(cases) / sizeof(cases[0]));
+         index++)
+    {
+        PULSE_DELTA_Init(&observer);
+
+        if ((cases[index].previous_count != 0U) &&
+            (PULSE_DELTA_Observe(&observer,
+                                 cases[index].previous_count,
+                                 &delta) != FM_STATUS_OK))
+        {
+            return false;
+        }
+
+        if ((PULSE_DELTA_Observe(&observer,
+                                 cases[index].current_count,
+                                 &delta) != FM_STATUS_OK) ||
+            (delta != cases[index].expected_delta))
+        {
+            return false;
+        }
+    }
+
+    PULSE_DELTA_Init(&observer);
+    if ((PULSE_DELTA_Observe(&observer, 65530U, &first_delta) !=
+         FM_STATUS_OK) ||
+        (PULSE_DELTA_Observe(&observer, 9U, &second_delta) != FM_STATUS_OK) ||
+        ((first_delta + second_delta) != 65545U))
+    {
+        return false;
+    }
+
+    PULSE_DELTA_Reset(&observer);
+    if ((PULSE_DELTA_Observe(&observer, 7U, &delta) != FM_STATUS_OK) ||
+        (delta != 7U))
+    {
+        return false;
+    }
+
+    PULSE_DELTA_Init(NULL);
+    PULSE_DELTA_Reset(NULL);
+
+    return (PULSE_DELTA_Observe(NULL, 0U, &delta) == FM_STATUS_EINVAL) &&
+           (PULSE_DELTA_Observe(&observer, 0U, NULL) == FM_STATUS_EINVAL);
+}
+
+/*
+ * Verifies the exactly-once product-main handoff from one trusted counter
+ * observation to both canonical totals.
+ */
+static bool fm_regression_test_main_acquisition_(void)
+{
+    fm_main_acquisition_t acquisition;
+    fmc_runtime_t runtime;
+    fmc_service_snapshot_t snapshot;
+
+    FM_MAIN_ACQUISITION_Init(&acquisition);
+    FMC_RUNTIME_Init(&runtime);
+
+    if ((FM_MAIN_ACQUISITION_ProcessObservation(&acquisition,
+                                                12U,
+                                                &runtime) != FM_STATUS_OK) ||
+        !FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
+        (FMC_RUNTIME_GetSnapshot(&runtime, &snapshot) != FM_STATUS_OK) ||
+        (snapshot.model.acm.pulses != 12U) ||
+        (snapshot.model.ttl.pulses != 12U) ||
+        (FMC_RUNTIME_ClearPresentationUpdatePending(&runtime) !=
+         FM_STATUS_OK))
+    {
+        return false;
+    }
+
+    if ((FM_MAIN_ACQUISITION_ProcessObservation(&acquisition,
+                                                12U,
+                                                &runtime) != FM_STATUS_OK) ||
+        FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
+        (FMC_RUNTIME_GetSnapshot(&runtime, &snapshot) != FM_STATUS_OK) ||
+        (snapshot.model.acm.pulses != 12U) ||
+        (snapshot.model.ttl.pulses != 12U))
+    {
+        return false;
+    }
+
+    if ((FM_MAIN_ACQUISITION_ProcessObservation(&acquisition,
+                                                20U,
+                                                &runtime) != FM_STATUS_OK) ||
+        (FMC_RUNTIME_GetSnapshot(&runtime, &snapshot) != FM_STATUS_OK) ||
+        (snapshot.model.acm.pulses != 20U) ||
+        (snapshot.model.ttl.pulses != 20U))
+    {
+        return false;
+    }
+
+    FM_MAIN_ACQUISITION_Init(&acquisition);
+    FMC_RUNTIME_Init(&runtime);
+    if ((FM_MAIN_ACQUISITION_ProcessObservation(&acquisition,
+                                                65530U,
+                                                &runtime) != FM_STATUS_OK) ||
+        (FM_MAIN_ACQUISITION_ProcessObservation(&acquisition,
+                                                9U,
+                                                &runtime) != FM_STATUS_OK) ||
+        (FMC_RUNTIME_GetSnapshot(&runtime, &snapshot) != FM_STATUS_OK) ||
+        (snapshot.model.acm.pulses != 65545U) ||
+        (snapshot.model.ttl.pulses != 65545U))
+    {
+        return false;
+    }
+
+    if ((FM_MAIN_ACQUISITION_ProcessObservation(NULL,
+                                                0U,
+                                                &runtime) !=
+         FM_STATUS_EINVAL) ||
+        (FM_MAIN_ACQUISITION_ProcessObservation(&acquisition,
+                                                0U,
+                                                NULL) !=
+         FM_STATUS_EINVAL))
+    {
+        return false;
+    }
+
+    FM_MAIN_ACQUISITION_Init(NULL);
+    FM_MAIN_ACQUISITION_Init(&acquisition);
+    FMC_RUNTIME_Init(&runtime);
+    runtime.service.model.acm.pulses = UINT64_MAX;
+
+    return (FM_MAIN_ACQUISITION_ProcessObservation(&acquisition,
+                                                   1U,
+                                                   &runtime) ==
+            FM_STATUS_ERANGE) &&
+           (runtime.service.model.acm.pulses == UINT64_MAX) &&
+           (runtime.service.model.ttl.pulses == 0U) &&
+           !FMC_RUNTIME_PresentationUpdateIsPending(&runtime);
 }
 
 /*
@@ -1956,6 +2127,12 @@ static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case)
     case FM_REGRESSION_TEST_CASE_RATE_ERROR_PATHS:
         return fm_regression_test_rate_error_paths_();
 
+    case FM_REGRESSION_TEST_CASE_PULSE_DELTA_VECTORS:
+        return fm_regression_test_pulse_delta_vectors_();
+
+    case FM_REGRESSION_TEST_CASE_MAIN_ACQUISITION:
+        return fm_regression_test_main_acquisition_();
+
     case FM_REGRESSION_TEST_CASE_RUNTIME_EVENTS:
         return fm_regression_test_runtime_events_();
 
@@ -2054,6 +2231,14 @@ static void fm_regression_test_emit_case_(fm_regression_test_case_t p_case,
 
     case FM_REGRESSION_TEST_CASE_RATE_ERROR_PATHS:
         (void) FM_DEBUG_UartStr("REGRESSION_TEST:RATE_ERROR_PATHS:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_PULSE_DELTA_VECTORS:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:PULSE_DELTA_VECTORS:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_MAIN_ACQUISITION:
+        (void) FM_DEBUG_UartStr("REGRESSION_TEST:MAIN_ACQUISITION:");
         break;
 
     case FM_REGRESSION_TEST_CASE_RUNTIME_EVENTS:

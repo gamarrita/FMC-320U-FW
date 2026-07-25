@@ -139,9 +139,11 @@ assumption requires equipment reset and belongs to another slice.
 - The acquisition observation owner retains `previous_count`, reads the current
   counter, calculates the modulo delta, widens it to `uint64_t`, and then stores
   the current count as the next baseline.
-- Phase 7A defines the delta value but does not decide whether zero or nonzero
-  deltas cause runtime events. Event publication belongs to the later
-  acquisition/runtime integration slice.
+- Every trusted counter observation produces exactly one
+  `FMC_RUNTIME_EVENT_PULSE_DELTA`, including when the formed delta is zero.
+- `fmc_runtime` accepts a zero pulse delta as a successful no-op. It does not
+  call `fmc_service`, alter either total, or mark presentation update pending
+  for that event.
 - `fmc_runtime` remains the RTOS-neutral product event boundary.
 - `fmc_service` remains the only owner that adds an accepted delta to both ACM
   and TTL.

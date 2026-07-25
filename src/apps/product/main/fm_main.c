@@ -9,10 +9,12 @@
 #include "fm_board.h"
 #include "fm_board_keyboard.h"
 #include "fm_debug.h"
+#include "fm_main_acquisition.h"
 #include "fm_main_event.h"
 #include "fm_main_input_adapter.h"
 #include "fm_main_input_recognizer.h"
 #include "fm_main_presentation_lcd.h"
+#include "fm_port_pulse_counter.h"
 #include "fm_port_rtc.h"
 #include "fmc_presentation.h"
 #include "fmc_runtime.h"
@@ -27,6 +29,7 @@
 typedef struct
 {
     fmc_runtime_t runtime;
+    fm_main_acquisition_t acquisition;
     fmc_presentation_t presentation;
     fm_main_input_recognizer_t input_recognizer;
     ULONG key_hold_start_ticks;
@@ -240,13 +243,36 @@ static void fm_main_presentation_trace_(
 static void fm_main_periodic_refresh_timer_callback_(ULONG input);
 
 /**
+ * @brief Activate the initialized periodic owner-loop event source.
+ */
+static void fm_main_periodic_refresh_timer_start_(void);
+
+/**
  * @brief Handle one periodic refresh event in the owner loop.
  *
- * Re-presents the current provisional Phase 6A TTL/RATE snapshot once per
- * second. It has no effect while a temporary startup view is active.
+ * Resamples debug jumpers, observes and dispatches the pulse counter once, and
+ * emits optional totalization evidence. It also re-presents the current
+ * provisional Phase 6A TTL/RATE snapshot while that stable view is active.
  */
 static void fm_main_periodic_refresh_handle_(
     fm_main_owner_state_t *p_owner);
+
+/**
+ * @brief Emit optional ACM/TTL pulse-total evidence for one periodic cycle.
+ *
+ * Snapshot or formatting failures are diagnostic-only and never affect
+ * acquisition or totalization.
+ *
+ * @param p_runtime Runtime whose canonical totals are reported.
+ */
+static void fm_main_totalization_trace_(const fmc_runtime_t *p_runtime);
+
+/**
+ * @brief Emit one `uint64_t` as decimal without formatted-I/O dependencies.
+ *
+ * @param value Value to emit through the gated debug UART.
+ */
+static void fm_main_totalization_uint64_trace_(uint64_t value);
 
 /**
  * @brief Require a successful ThreadX status or stop in a debug panic.
@@ -708,26 +734,90 @@ static void fm_main_periodic_refresh_timer_callback_(ULONG input)
     fm_main_event_publish_(&event);
 }
 
+static void fm_main_periodic_refresh_timer_start_(void)
+{
+    UINT status;
+
+    status = tx_timer_activate(&fm_main_periodic_refresh_timer);
+    fm_main_require_tx_success_(status, "FM_MAIN:REFRESH_TIMER_START");
+}
+
 static void fm_main_periodic_refresh_handle_(
     fm_main_owner_state_t *p_owner)
 {
     fmc_presentation_snapshot_t snapshot;
     fm_status_t status;
+    uint16_t current_count;
 
-    if ((p_owner == NULL) ||
-        (FMC_PRESENTATION_GetState(&p_owner->presentation) !=
-         FMC_PRESENTATION_STATE_TTL_RATE))
+    if (p_owner == NULL)
     {
         return;
     }
 
-    FMC_PRESENTATION_MakeDummySnapshot(&snapshot);
-    status = FMC_PRESENTATION_Refresh(&p_owner->presentation,
-                                      &snapshot);
-    fm_main_require_status_ok_(status, "FM_MAIN:PRESENTATION_REFRESH");
-    fm_main_presentation_trace_(
-        FMC_PRESENTATION_GetState(&p_owner->presentation),
-        "REFRESH");
+    FM_DEBUG_RefreshJumpers();
+    FM_DEBUG_LedRun(FM_DEBUG_LED_ON);
+
+    current_count = FM_PORT_PulseCounterReadStable();
+    status = FM_MAIN_ACQUISITION_ProcessObservation(
+        &p_owner->acquisition,
+        current_count,
+        &p_owner->runtime);
+    fm_main_require_status_ok_(status, "FM_MAIN:ACQUISITION");
+    fm_main_totalization_trace_(&p_owner->runtime);
+
+    if (FMC_PRESENTATION_GetState(&p_owner->presentation) ==
+        FMC_PRESENTATION_STATE_TTL_RATE)
+    {
+        FMC_PRESENTATION_MakeDummySnapshot(&snapshot);
+        status = FMC_PRESENTATION_Refresh(&p_owner->presentation,
+                                          &snapshot);
+        fm_main_require_status_ok_(status,
+                                   "FM_MAIN:PRESENTATION_REFRESH");
+        fm_main_presentation_trace_(
+            FMC_PRESENTATION_GetState(&p_owner->presentation),
+            "REFRESH");
+    }
+
+    FM_DEBUG_LedRun(FM_DEBUG_LED_OFF);
+}
+
+static void fm_main_totalization_trace_(const fmc_runtime_t *p_runtime)
+{
+    fmc_service_snapshot_t snapshot;
+    fm_status_t status;
+
+    if (!FM_DEBUG_MsgIsEnabled() || (p_runtime == NULL))
+    {
+        return;
+    }
+
+    status = FMC_RUNTIME_GetSnapshot(p_runtime, &snapshot);
+    if (status != FM_STATUS_OK)
+    {
+        return;
+    }
+
+    FM_DEBUG_UartStr("FM_MAIN:TOTALIZATION ACM_PULSES=");
+    fm_main_totalization_uint64_trace_(snapshot.model.acm.pulses);
+    FM_DEBUG_UartStr(" TTL_PULSES=");
+    fm_main_totalization_uint64_trace_(snapshot.model.ttl.pulses);
+    FM_DEBUG_UartStr("\n");
+}
+
+static void fm_main_totalization_uint64_trace_(uint64_t value)
+{
+    char digits[20];
+    uint32_t length = 0U;
+
+    do
+    {
+        digits[(sizeof(digits) - 1U) - length] =
+            (char) ('0' + (value % 10U));
+        value /= 10U;
+        length++;
+    } while ((value != 0U) && (length < sizeof(digits)));
+
+    FM_DEBUG_UartMsg(&digits[sizeof(digits) - length], length);
 }
 
 static void fm_main_require_tx_success_(UINT status, const char *p_msg)
@@ -777,7 +867,7 @@ void FM_MAIN_Init(void)
                              0U,
                              FM_MAIN_PERIODIC_REFRESH_TICKS,
                              FM_MAIN_PERIODIC_REFRESH_TICKS,
-                             TX_AUTO_ACTIVATE);
+                             TX_NO_ACTIVATE);
     fm_main_require_tx_success_(status, "FM_MAIN:REFRESH_TIMER_CREATE");
 
     status = tx_timer_create(&fm_main_key_hold_timer,
@@ -811,6 +901,12 @@ void FM_MAIN_Main(void)
 
     FM_MAIN_Init();
     FMC_RUNTIME_Init(&owner.runtime);
+    FM_MAIN_ACQUISITION_Init(&owner.acquisition);
+    if (!FM_PORT_PulseCounterStart())
+    {
+        FM_DEBUG_PanicMsg("FM_MAIN:PULSE_COUNTER_START");
+    }
+
     FM_MAIN_INPUT_RECOGNIZER_Init(&owner.input_recognizer);
     owner.key_hold_start_ticks = 0U;
     owner.presentation_start_ticks = 0U;
@@ -839,6 +935,7 @@ void FM_MAIN_Main(void)
     FM_BOARD_KeyboardSetCallback(fm_main_keyboard_callback_);
     FM_BOARD_KeyboardInit();
 
+    fm_main_periodic_refresh_timer_start_();
     (void) FM_DEBUG_UartStr("FM_MAIN:READY\n");
 
     for (;;)

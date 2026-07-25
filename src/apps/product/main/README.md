@@ -53,8 +53,20 @@ ThreadX periodic timer, 1 second
 -> bounded timer callback publishes FM_MAIN_EVENT_PERIODIC_REFRESH
 -> same product/main app-level queue
 -> FM_MAIN_Main() receives the event in the existing FM_APP ThreadX thread
+-> resamples message and LED debug jumpers
+-> reads one stable LPTIM4 counter observation
+-> fm_main_acquisition forms and dispatches exactly one pulse-delta event
+-> fmc_runtime accepts zero as a no-op or asks fmc_service to update totals
+-> fmc_service adds each accepted nonzero delta once to both ACM and TTL
+-> optional UART evidence reports both canonical pulse totals
 -> refreshes the current Phase 6A TTL/RATE snapshot
 ```
+
+The periodic timer is created inactive and starts only after the runtime,
+zero-baseline observer, pulse counter, presentation, and keyboard path are
+initialized. Acquisition failures, runtime dispatch failures, and canonical
+total overflow are fatal product-contract violations. Diagnostic UART output
+is best-effort and never participates in acquisition control flow.
 
 Current presentation flow:
 
@@ -86,8 +98,10 @@ existing `FM_APP` ThreadX thread and is the only owner of the live
 
 The 1 second periodic refresh event is also serialized through the owner queue
 so ThreadX always has a temporal wake deadline for tickless/low-power support.
-Phase 6A consumes it for presentation updates. Acquisition remains deferred, so
-the current product app supplies the documented provisional TTL/RATE snapshot.
+Phase 7C consumes it for pulse observation and totalization. Phase 6A still
+consumes it for presentation updates, so the app continues to supply the
+documented provisional TTL/RATE snapshot until later Phase 7 slices replace
+those visible inputs.
 
 Do not add another product thread unless there is a concrete concurrent
 responsibility, such as presentation, acquisition, communication, or timer work

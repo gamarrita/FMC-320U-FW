@@ -391,7 +391,10 @@ Este proyecto tiene dos señales de habilitación muestreadas por GPIO:
 
 El código actual:
 - samplea esos jumpers en `FM_DEBUG_Init()`
-- emite un banner inicial por UART con el estado observado
+- cuando los mensajes están habilitados, emite un banner inicial por UART con
+  el estado observado
+- cuando los mensajes están deshabilitados, todas las rutas UART de debug son
+  silenciosas, incluidos el banner inicial y los mensajes de panic
 
 Ejemplo:
 
@@ -400,8 +403,8 @@ DEBUG_INIT:MSG=ENABLED LED=DISABLED
 ```
 
 Eso es intencional:
-- evita esperar mensajes UART que nunca van a aparecer
-- deja evidencia inmediata de si el jumper de mensajes está habilitado
+- deja evidencia inmediata del estado observado cuando UART está habilitada
+- permite mediciones silenciosas sin transmisiones provocadas por debug
 
 ### 4.4 Qué esperar con el bringup de LCD
 

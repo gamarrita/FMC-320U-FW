@@ -41,6 +41,7 @@ set(FM_AVAILABLE_APPS
     bringups/lcd_blink
     bringups/display_format_lcd
     bringups/keyboard_input
+    bringups/pulse_counter
     tests/regression
 )
 
@@ -103,10 +104,12 @@ set(FM_COMMON_SOURCES
     ${FM_SRC_DIR}/product/fmc/fmc_units.c
     ${FM_SRC_DIR}/product/fmc/fmc_volume.c
     ${FM_SRC_DIR}/services/display_format.c
+    ${FM_SRC_DIR}/services/pulse_delta.c
     ${FM_SRC_DIR}/port/fm_port_dwt.c
     ${FM_SRC_DIR}/port/fm_port_gpio.c
     ${FM_SRC_DIR}/port/fm_port_gpio_exti.c
     ${FM_SRC_DIR}/port/fm_port_pcf8553_ctrl.c
+    ${FM_SRC_DIR}/port/fm_port_pulse_counter.c
     ${FM_SRC_DIR}/port/fm_port_rcc.c
     ${FM_SRC_DIR}/port/fm_port_rtc.c
     ${FM_SRC_DIR}/port/fm_port_spi1.c

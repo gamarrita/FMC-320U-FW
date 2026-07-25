@@ -10,9 +10,8 @@
  * - expect one `KEY_INPUT_BRINGUP:KEY=<name> EDGE=FALLING` line per release
  *
  * Error communication:
- * - fatal bring-up failures call `FM_DEBUG_PanicMsg()`
- * - with debug UART enabled, the board prints the panic reason
- * - the red error LED is expected to turn on during panic
+ * - UART output is optional observability controlled by jumper policy
+ * - disabled UART output does not change bring-up control flow
  *
  * Report failures with the UART log tail, pressed key, and red LED state.
  */
@@ -36,16 +35,10 @@ void FM_KeyboardInputBringup_Run(void)
     FM_DEBUG_Init();
     FM_BOARD_KeyboardInit();
 
-    if (!FM_DEBUG_UartStr("KEY_INPUT_BRINGUP:START\n"))
-    {
-        FM_DEBUG_PanicMsg("KEY_INPUT_BRINGUP:START_UART_FAIL\n");
-    }
+    FM_DEBUG_UartStr("KEY_INPUT_BRINGUP:START\n");
 
-    if (!FM_DEBUG_UartStr(
-            "KEY_INPUT_BRINGUP:READY KEYS=DOWN,UP,ENTER,ESC EDGE=FALLING\n"))
-    {
-        FM_DEBUG_PanicMsg("KEY_INPUT_BRINGUP:READY_UART_FAIL\n");
-    }
+    FM_DEBUG_UartStr(
+            "KEY_INPUT_BRINGUP:READY KEYS=DOWN,UP,ENTER,ESC EDGE=FALLING\n");
 
     for (;;)
     {

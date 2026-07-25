@@ -41,6 +41,11 @@ fm_status_t FMC_RUNTIME_Dispatch(fmc_runtime_t *p_runtime,
         return FM_STATUS_OK;
 
     case FMC_RUNTIME_EVENT_PULSE_DELTA:
+        if (p_event->data.pulse_delta == 0U)
+        {
+            return FM_STATUS_OK;
+        }
+
         status = FMC_SERVICE_AddPulseDelta(&p_runtime->service,
                                            p_event->data.pulse_delta);
         if (status == FM_STATUS_OK)

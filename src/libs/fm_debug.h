@@ -74,8 +74,8 @@ typedef struct
  * @brief Initialize the debug subsystem.
  *
  * @note Call once after board peripherals are ready.
- * @note Emits one best-effort UART status banner describing whether message
- *       and LED debug outputs are currently enabled by jumper policy.
+ * @note Emits one best-effort UART status banner when message output is
+ *       enabled by jumper policy.
  */
 void FM_DEBUG_Init(void);
 
@@ -84,7 +84,8 @@ void FM_DEBUG_Init(void);
  *
  * @param p_msg Optional constant context string. May be NULL.
  *
- * @note Attempts a best-effort UART send and continues flushing queued events.
+ * @note Attempts a best-effort UART send when message output is enabled and
+ *       continues flushing queued events.
  */
 void FM_DEBUG_PanicMsg(const char *p_msg);
 
@@ -94,6 +95,7 @@ void FM_DEBUG_PanicMsg(const char *p_msg);
  * @param p_msg Optional constant context string. May be NULL.
  *
  * @note Keeps the fault path conservative by not flushing queued events.
+ *       The optional message is sent only when message output is enabled.
  */
 void FM_DEBUG_PanicFault(const char *p_msg);
 
@@ -298,60 +300,57 @@ void FM_DEBUG_Flush(void);
 /**
  * @brief Send a raw message buffer over the debug UART.
  *
- * Sends at most the internal debug message buffer length. Returns `false`
- * without transmitting when messages are disabled.
+ * Sends at most the internal debug message buffer length. This is a
+ * best-effort diagnostic operation: disabled message output, invalid input,
+ * and backend failure have no caller-visible effect.
  *
  * @param p_msg Buffer to transmit; not retained after return.
  * @param len Number of bytes to transmit.
  *
- * @return `true` when the request was accepted for transmit.
- * @return `false` when `p_msg` is `NULL`, `len` is zero, or messages are
- *         disabled.
- *
  * @warning Foreground only. Not IRQ-safe.
  */
-bool FM_DEBUG_UartMsg(const char *p_msg, uint32_t len);
+void FM_DEBUG_UartMsg(const char *p_msg, uint32_t len);
 
 /**
  * @brief Send a null-terminated string over the debug UART.
  *
  * @param p_msg Null-terminated string; not retained after return.
  *
- * @return `true` when the request was accepted for transmit.
- * @return `false` when `p_msg` is `NULL`, empty, or messages are disabled.
+ * Disabled message output and a `NULL` or empty string are no-ops. Backend
+ * failure has no caller-visible effect.
  *
  * @warning Foreground only. Not IRQ-safe.
  */
-bool FM_DEBUG_UartStr(const char *p_msg);
+void FM_DEBUG_UartStr(const char *p_msg);
 
 /**
  * @brief Send an unsigned 32-bit value over the debug UART.
  *
- * @return `true` when the request was accepted for transmit.
- * @return `false` when messages are disabled.
+ * Disabled message output is a no-op. Backend failure has no caller-visible
+ * effect.
  *
  * @warning Foreground only. Not IRQ-safe.
  */
-bool FM_DEBUG_UartUint32(uint32_t num);
+void FM_DEBUG_UartUint32(uint32_t num);
 
 /**
  * @brief Send a signed 32-bit value over the debug UART.
  *
- * @return `true` when the request was accepted for transmit.
- * @return `false` when messages are disabled.
+ * Disabled message output is a no-op. Backend failure has no caller-visible
+ * effect.
  *
  * @warning Foreground only. Not IRQ-safe.
  */
-bool FM_DEBUG_UartInt32(int32_t num);
+void FM_DEBUG_UartInt32(int32_t num);
 
 /**
  * @brief Send a float over the debug UART with two decimals.
  *
- * @return `true` when the request was accepted for transmit.
- * @return `false` when messages are disabled.
+ * Disabled message output is a no-op. Backend failure has no caller-visible
+ * effect.
  *
  * @warning Foreground only. Not IRQ-safe.
  */
-bool FM_DEBUG_UartFloat(float num);
+void FM_DEBUG_UartFloat(float num);
 
 #endif /* FM_DEBUG_H */

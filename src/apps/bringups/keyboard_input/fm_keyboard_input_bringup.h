@@ -15,9 +15,8 @@
  * Expected human setup: enable debug UART messages, open the ST-LINK VCP at
  * 115200 8N1, and press/release DOWN, UP, ENTER, and ESC. The app reports
  * readiness over UART and then repeatedly flushes deferred key events while
- * blinking the run LED.
- *
- * Fatal UART startup failures enter `FM_DEBUG_PanicMsg()`.
+ * blinking the run LED. When UART messages are disabled, the app continues
+ * without that optional human-visible output.
  *
  * @warning Foreground app entry. Does not return during normal operation.
  */

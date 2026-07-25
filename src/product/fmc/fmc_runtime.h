@@ -45,7 +45,10 @@ typedef enum
 {
     /** No operation; useful when a caller wants an explicit idle dispatch. */
     FMC_RUNTIME_EVENT_NONE = 0,
-    /** Add `pulse_delta` raw sensor pulses to the live totals. */
+    /**
+     * Add `pulse_delta` raw sensor pulses to the live totals.
+     * A zero delta is accepted as a no-op.
+     */
     FMC_RUNTIME_EVENT_PULSE_DELTA,
     /** Reset the ACM total after the caller has authorized the operation. */
     FMC_RUNTIME_EVENT_RESET_ACM,
@@ -109,10 +112,12 @@ void FMC_RUNTIME_Init(fmc_runtime_t *p_runtime);
 /**
  * @brief Apply one product event to the runtime state.
  *
- * Pulse and reset events update the owned service through `fmc_service`. A
- * successful pulse or reset event marks presentation update as pending so a
- * caller can present visible values from a snapshot. A presentation-invalidate
- * event only sets that pending flag.
+ * Nonzero pulse and reset events update the owned service through
+ * `fmc_service`. A successful nonzero pulse or reset event marks presentation
+ * update as pending so a caller can present visible values from a snapshot.
+ * A zero pulse delta is a successful no-op: totals and presentation-pending
+ * state remain unchanged. A presentation-invalidate event only sets that
+ * pending flag.
  *
  * A valid input event preserves key/action identity in `last_input` and marks
  * presentation update as pending. The current slice does not map input to menu

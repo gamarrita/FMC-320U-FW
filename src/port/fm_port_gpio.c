@@ -118,13 +118,13 @@ void FM_PORT_GPIO_Init(void)
     HAL_GPIO_Init(DBG_LED_EN_GPIO_Port, &GPIO_InitStruct);
 }
 
-/* Sample LED enable jumper (true when floating/high). */
+/* Sample LED enable jumper (true when the jumper pulls the input low). */
 bool FM_PORT_GPIO_IsDbgLedEnabled(void)
 {
     return fm_port_gpio_read_jumper_(DBG_LED_EN_GPIO_Port, DBG_LED_EN_Pin);
 }
 
-/* Sample UART message enable jumper (true when floating/high). */
+/* Sample UART message enable jumper (true when the jumper pulls the input low). */
 bool FM_PORT_GPIO_IsDbgMsgEnabled(void)
 {
     return fm_port_gpio_read_jumper_(DBG_MSG_EN_GPIO_Port, DBG_MSG_EN_Pin);

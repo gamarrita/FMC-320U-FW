@@ -78,6 +78,7 @@ static const char *err_str[FM_DEBUG_ERR_COUNT] =
 /* Private Prototypes */
 static uint32_t timestamp_cycles(void);
 static bool enqueue_event(uint16_t code, uint16_t flags, int32_t param0, int32_t param1, const char *p_text);
+static void fm_debug_uart_transmit_(const char *p_msg, uint32_t len);
 static void fm_debug_init_status_banner_(void);
 static void fm_debug_panic_send_(const char *p_msg);
 static void fm_debug_panic_loop_(bool flush_events);
@@ -128,11 +129,29 @@ static bool enqueue_event(uint16_t code, uint16_t flags, int32_t param0, int32_t
     return true;
 }
 
+/* Central message-policy gate for every debug UART transmit path. */
+static void fm_debug_uart_transmit_(const char *p_msg, uint32_t len)
+{
+    if ((!msg_enable) || (p_msg == NULL) || (len == 0U))
+    {
+        return;
+    }
+
+    (void) FM_BOARD_DebugUartTransmit((const uint8_t *) p_msg,
+                                      len,
+                                      UART_TIMEOUT_MS);
+}
+
 static void fm_debug_init_status_banner_(void)
 {
     int len;
     const char *p_msg_state;
     const char *p_led_state;
+
+    if (!msg_enable)
+    {
+        return;
+    }
 
     p_msg_state = msg_enable ? "ENABLED" : "DISABLED";
     p_led_state = leds_enable ? "ENABLED" : "DISABLED";
@@ -154,17 +173,15 @@ static void fm_debug_init_status_banner_(void)
         msg_buffer[len] = '\0';
     }
 
-    (void) FM_BOARD_DebugUartTransmit((const uint8_t *) msg_buffer,
-                                      (uint32_t) len,
-                                      UART_TIMEOUT_MS);
+    fm_debug_uart_transmit_(msg_buffer, (uint32_t) len);
 }
 
-/* Best-effort panic message send. Bypasses normal message gating. */
+/* Best-effort panic message send. Silent policy remains authoritative. */
 static void fm_debug_panic_send_(const char *p_msg)
 {
     uint32_t len;
 
-    if (p_msg == NULL)
+    if ((!msg_enable) || (p_msg == NULL))
     {
         return;
     }
@@ -186,7 +203,7 @@ static void fm_debug_panic_send_(const char *p_msg)
 
     msg_buffer[len] = '\0';
 
-    (void) FM_BOARD_DebugUartTransmit((const uint8_t *) msg_buffer, len, UART_TIMEOUT_MS);
+    fm_debug_uart_transmit_(msg_buffer, len);
 }
 
 /* Non-returning loop for panic paths. */
@@ -344,11 +361,11 @@ void FM_DEBUG_LedSignal(fm_debug_led_state_t state)
     }
 }
 
-bool FM_DEBUG_UartMsg(const char *p_msg, uint32_t len)
+void FM_DEBUG_UartMsg(const char *p_msg, uint32_t len)
 {
-    if ((p_msg == NULL) || (len == 0U) || (!msg_enable))
+    if ((!msg_enable) || (p_msg == NULL) || (len == 0U))
     {
-        return false;
+        return;
     }
 
     if (len >= MSG_BUFFER_LENGTH)
@@ -356,42 +373,43 @@ bool FM_DEBUG_UartMsg(const char *p_msg, uint32_t len)
         len = MSG_BUFFER_LENGTH;
     }
 
-    (void) FM_BOARD_DebugUartTransmit((const uint8_t*) p_msg, len, UART_TIMEOUT_MS);
-
-    return true;
+    fm_debug_uart_transmit_(p_msg, len);
 }
 
-bool FM_DEBUG_UartStr(const char *p_msg)
+void FM_DEBUG_UartStr(const char *p_msg)
 {
     uint32_t len;
 
-    if (p_msg == NULL)
+    if ((!msg_enable) || (p_msg == NULL))
     {
-        return false;
+        return;
     }
 
     len = (uint32_t) strlen(p_msg);
 
     if (len == 0U)
     {
-        return false;
+        return;
     }
 
-    return FM_DEBUG_UartMsg(p_msg, len);
+    FM_DEBUG_UartMsg(p_msg, len);
 }
 
-bool FM_DEBUG_UartUint32(uint32_t num)
+void FM_DEBUG_UartUint32(uint32_t num)
 {
     int len;
 
     if (!msg_enable)
     {
-        return false;
+        return;
     }
 
     len = snprintf(msg_buffer, MSG_BUFFER_LENGTH, "%lu\n", (unsigned long) num);
 
-    return FM_DEBUG_UartMsg(msg_buffer, (uint32_t) len);
+    if (len > 0)
+    {
+        FM_DEBUG_UartMsg(msg_buffer, (uint32_t) len);
+    }
 }
 
 void FM_DEBUG_ReportErrorWithParam(fm_debug_error_t err, int32_t param)
@@ -430,32 +448,38 @@ const char *FM_DEBUG_ErrorString(fm_debug_error_t err)
     return err_str[err];
 }
 
-bool FM_DEBUG_UartInt32(int32_t num)
+void FM_DEBUG_UartInt32(int32_t num)
 {
     int len;
 
     if (!msg_enable)
     {
-        return false;
+        return;
     }
 
     len = snprintf(msg_buffer, MSG_BUFFER_LENGTH, "%ld\n", (long) num);
 
-    return FM_DEBUG_UartMsg(msg_buffer, (uint32_t) len);
+    if (len > 0)
+    {
+        FM_DEBUG_UartMsg(msg_buffer, (uint32_t) len);
+    }
 }
 
-bool FM_DEBUG_UartFloat(float num)
+void FM_DEBUG_UartFloat(float num)
 {
     int len;
 
     if (!msg_enable)
     {
-        return false;
+        return;
     }
 
     len = snprintf(msg_buffer, MSG_BUFFER_LENGTH, "%0.2f\n", (double) num);
 
-    return FM_DEBUG_UartMsg(msg_buffer, (uint32_t) len);
+    if (len > 0)
+    {
+        FM_DEBUG_UartMsg(msg_buffer, (uint32_t) len);
+    }
 }
 
 uint32_t FM_DEBUG_TimestampCycles(void)
@@ -525,9 +549,7 @@ void FM_DEBUG_Flush(void)
                     len = (int) FM_DEBUG_FLUSH_TEXT_MAX;
                 }
 
-                (void) FM_BOARD_DebugUartTransmit((const uint8_t *) flush_buffer,
-                        (uint32_t) len,
-                        UART_TIMEOUT_MS);
+                fm_debug_uart_transmit_(flush_buffer, (uint32_t) len);
             }
             continue;
         }
@@ -559,9 +581,7 @@ void FM_DEBUG_Flush(void)
                 len = (int) FM_DEBUG_FLUSH_TEXT_MAX;
             }
 
-            (void) FM_BOARD_DebugUartTransmit((const uint8_t *) flush_buffer,
-                    (uint32_t) len,
-                    UART_TIMEOUT_MS);
+            fm_debug_uart_transmit_(flush_buffer, (uint32_t) len);
         }
     }
 }

@@ -13,3 +13,5 @@ Current bringups:
 - `lcd_blink`: LCD logical blink behavior.
 - `display_format_lcd`: formatted numeric text rendered on the LCD.
 - `keyboard_input`: keyboard GPIO EXTI short-press events.
+- `pulse_counter`: LPTIM4 primary-pulse counting and stable raw observations
+  across Run and the configured ThreadX idle Stop2 path.

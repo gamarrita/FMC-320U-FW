@@ -97,6 +97,7 @@ int main(void)
   MX_ICACHE_Init();
   MX_SPI1_Init();
   MX_LPTIM1_Init();
+  MX_LPTIM4_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
