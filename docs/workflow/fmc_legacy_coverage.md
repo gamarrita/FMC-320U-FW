@@ -122,6 +122,15 @@ only the exact legacy statements reviewed for Phase 6A.
 | `open_questions_and_gaps.items[id=OQ_001]` | Legacy only | - | Records a limitation of the legacy source; physical mapping is owned separately by the LCD technical authority |
 | `open_questions_and_gaps.items[id=OQ_007]` | Under review | `docs/product/fmc/user_interface.md` | Phase 6A resolves visual overflow; absent and invalid values remain deferred |
 
+## Phase 7A Granular Review
+
+The following disposition covers only the legacy pulse-conservation statement
+reviewed for the bounded pulse-accumulation contract.
+
+| Legacy YAML locator | Coverage state | Current product owner | Review note |
+|---|---|---|---|
+| `screens.SCREEN_TTL_RATE.calculations.invariants[0]` | Accepted and incorporated | `docs/product/fmc/requirements.md` | Accepted in bounded form: no counted pulse may be lost or duplicated after the primary counter is armed, including through Stop2; pulses before rearm after MCU reset are excluded |
+
 ## Extraction Discrepancies
 
 No content discrepancy has been evaluated or recorded in this context.

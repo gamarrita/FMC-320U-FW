@@ -280,8 +280,8 @@ Dependencies:
 
 Decision gates:
 - supported sensor signal, frequency, pulse-width, and low-power envelope;
-- pulse-delta acceptance, wrap extension, loss detection, and recovery policy;
-- counter hardware, pin, clock, filtering, autonomous-mode, and CubeMX path;
+- pulse-delta acceptance, modulo-wrap precondition, and reset boundary;
+- LPTIM4 pin, clock, filtering, autonomous-mode, and CubeMX path;
 - frequency observation semantics, accuracy, latency, and quality states;
 - capture, DMA, interrupt, polling, or other frequency technique;
 - acceptance or rejection of any legacy workaround after target evidence.
@@ -317,10 +317,10 @@ Correct-first baseline:
 |---|---|---|---|
 | 7-0A: Evidence and hypothesis formulation | Reconstruct legacy acquisition and classify the reported STM32U575 behavior | Legacy sources and identifiable public technical evidence are available | `legacy/analysis/fmc_acquisition.md` records provenance, uncertainties, hypotheses, and the correct-first baseline without selecting hardware |
 | 7-0B: Foundation and route | Establish document ownership, incremental route, approval gates, and the next cut | 7-0A evidence is reviewable | Repository documents agree on the route and one active cut; no product or hardware decision is inferred |
-| 7A: Pulse-accumulation contract | Define the bounded physical observation accepted as a pulse delta | Human decisions on signal envelope, selected low-power states, observation latency, and loss policy | Product owners contain approved outcomes and `docs/specs/fmc/acquisition.md` defines delta, wrap, error, numeric, ownership, and acceptance semantics |
-| 7B1: Pulse-counter bring-up in Run | Exercise the minimum documented counter technique without Stop2 or RATE | Human-approved peripheral, pin, clock, filter, CubeMX change, and Run signal matrix | Target evidence demonstrates exact raw counting and stable observation at approved Run limits |
+| 7A: Pulse-accumulation contract | Define the bounded LPTIM4 counter observation accepted as a pulse delta | Human decisions on counter assumptions, selected low-power states, observation cadence, and loss policy | Product owners contain approved outcomes and `docs/specs/fmc/acquisition.md` defines delta, modulo wrap, reset, numeric, ownership, and acceptance semantics |
+| 7B1: Pulse-counter bring-up in Run | Exercise the minimum documented LPTIM4 counter technique without Stop2 or RATE | Human-approved pin, clock, filter, CubeMX change, and Run signal matrix | Target evidence demonstrates exact raw counting and stable observation at approved Run limits |
 | 7B2: Pulse-counter bring-up across Stop2 and wrap | Exercise the same counter path through low power and rollover | 7B1 accepted; Stop2 matrix and current-measurement method approved | Instrumented results demonstrate counting across Stop2 and wrap; separate silent runs establish current |
-| 7B3: Counter-observation and pulse-delta module | Convert validated counter observations into bounded pulse deltas and status | 7B1 and 7B2 hardware behavior accepted | Host vectors cover first sample, normal delta, wrap, ambiguity, invalid observation, and recovery without RATE or totals |
+| 7B3: Counter-observation and pulse-delta module | Convert trusted counter observations into bounded pulse deltas | 7B1 and 7B2 hardware behavior accepted | Host vectors cover first sample, zero, normal delta, modulo wrap, delayed observation, and reset without RATE or totals |
 | 7C: Totalization/runtime integration | Deliver accepted deltas to ACM and TTL exactly once through runtime/service | 7B3 accepted; acquisition-to-runtime boundary reviewed | Regression and target evidence show no loss, duplication, or acquisition ownership of product totals |
 | 7D: Frequency-observation contract | Define a pulse/time observation with explicit quality | Accumulation is stable enough that frequency work cannot endanger totals | Specification defines time-window ownership, range, accuracy, latency, zero, absent, stale, invalid, and RATE handoff |
 | 7E1: Frequency bring-up in Run | Characterize the minimum documented frequency technique in Run | Human-approved technique, CubeMX path, signal matrix, and accuracy target | Target results cover the approved frequency range, elapsed time, wrap, and quality reporting |
@@ -329,7 +329,8 @@ Correct-first baseline:
 | 7F: RATE integration | Feed validated pulse/time observations into pure RATE calculation with explicit quality | 7D and required 7E evidence accepted; 7E3 closed if entered | Math vectors, boundaries, and runtime tests agree on units, elapsed time, invalid input, and zero/stale distinctions |
 | 7G: Combined live integration | Combine accepted counter and frequency paths and replace provisional TTL/RATE inputs | 7C and 7F accepted; visible invalid/zero behavior approved | Combined bring-up, canonical builds, regression, target pulse accuracy, presentation, and current validation pass |
 
-Phase 7A is a documentation-only contract slice. Phase 7B1 is the first
+Phase 7A is a documentation-only, hardware-configuration-independent contract
+slice. Phase 7B1 is the first
 possible acquisition implementation and cannot start before approval of its
 hardware and CubeMX gates.
 
@@ -354,8 +355,8 @@ Human approval is required before:
 - promoting acquisition behavior into product requirements;
 - selecting a signal envelope, observation latency, low-power guarantee,
   pulse-loss policy, quality state, or visible failure behavior;
-- selecting a pin, peripheral, clock, filter, counter/capture mode, interrupt,
-  DMA path, autonomous mode, or CubeMX change;
+- selecting an LPTIM4 pin, clock, filter, detailed counter mode, interrupt, DMA
+  path, autonomous mode, or CubeMX change;
 - using the suspected STM32U575 behavior as a current design constraint;
 - comparing or adopting the legacy wake-up workaround;
 - beginning an implementation slice.

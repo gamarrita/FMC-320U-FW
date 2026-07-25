@@ -66,6 +66,26 @@ Evidence:
 - `src/product/fmc/fmc_volume.h`;
 - `src/product/fmc/fmc_rate.h`.
 
+**Accepted:** The primary pulse counter begins from a known zero baseline.
+Successive 16-bit observations form one modulo delta that is widened to the
+current `uint64_t` runtime/service boundary. The first observation includes any
+pulses counted since the counter was armed.
+
+**Accepted:** Pulse accumulation is continuous through Run, Stop2, and their
+transitions. Observations occur nominally about once per second, but individual
+deltas do not need to represent exact one-second windows. Pulses may appear in
+a later observation as long as cumulative delivery neither loses nor duplicates
+any.
+
+**Accepted:** An MCU reset ends the current accumulation interval. Pulses
+arriving before the counter is rearmed may be discarded; rearming at zero begins
+a new guaranteed interval.
+
+Evidence:
+- reviewed Phase 7A product decisions;
+- `docs/specs/fmc/acquisition.md`;
+- legacy `fmx.c::PulseUpdate()` and `fm_fmc.c::FM_FMC_PulseAdd()`.
+
 **Accepted:** Phase 6A presentation consumes a coherent input containing TTL,
 RATE, volume unit, RATE time base, and visible resolutions. Presentation
 projects those values but does not calculate TTL, RATE, or the RATE observation
@@ -79,9 +99,8 @@ Evidence:
 TTL/RATE values are shown on entry rather than waiting for the first periodic
 refresh.
 
-**Unresolved:** Acquisition cadence, zero-flow recognition, smoothing,
-pulse-loss handling, and behavior across low-power transitions remain
-undecided.
+**Unresolved:** RATE-observation cadence, zero-flow recognition, smoothing, and
+frequency-observation behavior across low-power transitions remain undecided.
 
 **Deferred:** A future presentation cadence may become less frequent during
 inactivity and return to one second after pulses, value changes, or operator

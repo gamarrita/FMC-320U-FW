@@ -77,7 +77,7 @@ This map reports documentation coverage, not firmware implementation status.
 | Domain | Product aspect | Owner | Depth | Decision state | Evidence | Deepen when |
 |---|---|---|---|---|---|---|
 | Power, startup, and recovery | Power-on, initialization, restore, low-power concerns | [Behavior](behavior.md) | Surface | Candidate | Roadmap; frozen legacy extraction; legacy `fm_init`/`fmx_lp` inventory | Startup or power slice |
-| Pulse and signal acquisition | Turning physical observations into pulse deltas | [Requirements](requirements.md) | Surface | Candidate | Runtime contract; roadmap; legacy inventory | Phase 7 dependency |
+| Pulse and signal acquisition | Conserving counter-backed pulses through bounded deltas | [Requirements](requirements.md) and `docs/specs/fmc/acquisition.md` | Focused Phase 7A | Accepted | Reviewed Phase 7A decisions; runtime/service contracts; legacy acquisition | Phase 7B1 bring-up |
 | Flow-rate calculation | Deriving active-unit rate from pulse and time windows | [Requirements](requirements.md) | Focused core | Accepted | `fmc_rate.h`; `fmc_units.h` | Acquisition or display slice |
 | Totalization | ACM/TTL accumulation, visible totals, and resets | [Requirements](requirements.md) | Focused core | Accepted | `fmc_model.h`; `fmc_volume.h`; `fmc_service.h` | Operational reset flow |
 | Presentation | Startup sequence and TTL/RATE projection into visible output | [User interface](user_interface.md) | Focused Phase 6A | Accepted | Reviewed Phase 6A decisions; presentation and LCD contracts | Phase 7 live data integration |

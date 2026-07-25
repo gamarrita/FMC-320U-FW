@@ -52,6 +52,14 @@ Evidence:
 
 - The product shall distinguish accumulated (`ACM`) and total (`TTL`) roles.
 - Both total roles shall accumulate the same accepted pulse deltas.
+- Once the primary pulse counter is armed, every pulse it counts shall
+  eventually be included exactly once in the pulse deltas applied to ACM and
+  TTL, including pulses counted in Stop2 and across Run/Stop2 transitions.
+- Pulse deltas need not correspond to exact one-second windows; delayed
+  observation shall not by itself discard or duplicate accumulated pulses.
+- After an MCU reset, pulses arriving before the pulse counter is rearmed may be
+  discarded. Rearming the counter at zero begins a new guaranteed accumulation
+  interval.
 - ACM reset is user-allowed; TTL reset requires a privileged caller or flow.
 - Visible ACM and TTL volume shall be derived from pulse-backed totals and the
   active measurement configuration.
@@ -65,6 +73,8 @@ Evidence:
   shared alphanumeric legend as `Lt`.
 
 Evidence:
+- `docs/specs/fmc/acquisition.md`;
+- legacy `fmx.c::PulseUpdate()` and `fm_fmc.c::FM_FMC_PulseAdd()`;
 - `src/product/fmc/fmc_model.h`;
 - `src/product/fmc/fmc_service.h`;
 - `src/product/fmc/fmc_volume.h`;
@@ -73,8 +83,6 @@ Evidence:
 
 **Candidate**
 
-- Physical pulse acquisition should supply bounded pulse deltas without losing
-  accepted observations across normal operation or selected low-power states.
 - Calibration and supported unit choices should be operator-configurable
   through an authorized flow.
 
@@ -85,9 +93,9 @@ Evidence:
 
 **Unresolved**
 
-- Pulse-loss policy, acquisition window ownership, absent or invalid
-  measurement presentation, calibration-unit expansion, and exact reset
-  authorization flows remain undecided.
+- RATE-observation window ownership, absent or invalid measurement
+  presentation, calibration-unit expansion, and exact reset authorization
+  flows remain undecided.
 
 ## Operator Interaction
 

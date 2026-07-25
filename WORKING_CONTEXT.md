@@ -2,18 +2,20 @@
 
 ## Objective And Status
 
-Define the hardware-independent contract for turning physical primary-sensor
-observations into bounded pulse deltas before selecting or implementing an MCU
-technique.
+Define the hardware-configuration-independent contract for turning successive
+legacy-shaped LPTIM4 counter observations into bounded pulse deltas before
+configuring or implementing the MCU path.
 
 Status:
 
 - Phase 7-0A legacy evidence is complete in
   `legacy/analysis/fmc_acquisition.md`;
 - Phase 7-0B route and document ownership are complete;
-- Phase 7A is active and documentation-only;
-- no peripheral, pin, clock, interrupt, DMA path, workaround, or CubeMX change
-  is approved.
+- Phase 7A is active, documentation-only, and drafted for closure review;
+- LPTIM4 is the selected pulse counter, following the legacy accumulation
+  shape;
+- no pin, clock, filter, edge, interrupt, DMA path, workaround, or CubeMX
+  change is approved.
 
 ## Authorities And Evidence
 
@@ -40,8 +42,8 @@ product or hardware authority.
 ## Active Slice Boundary
 
 Phase 7A inherits the durable acquisition boundaries and correct-first baseline
-from the roadmap. This cut defines only the hardware-independent
-pulse-accumulation contract. It does not select hardware, form a frequency
+from the roadmap. This cut defines only the LPTIM4 observation and
+pulse-accumulation contract. It does not configure hardware, form a frequency
 observation, calculate RATE, or integrate live acquisition.
 
 ## Active Deliverables
@@ -49,36 +51,34 @@ observation, calculate RATE, or integrate live acquisition.
 - create `docs/specs/fmc/acquisition.md` as the owner of the reviewed
   pulse-accumulation contract;
 - define the accepted pulse-delta meaning, numeric bounds, first observation,
-  wrap, ambiguity, invalid observation, resynchronization, and ownership;
-- define hardware-independent acceptance examples;
+  modulo wrap, reset boundary, and ownership;
+- define hardware-configuration-independent acceptance examples;
 - update product documentation only for outcomes explicitly approved by the
   human;
 - record exact legacy disposition only if Phase 7A accepts, rejects, replaces,
   or defers a reviewed legacy statement.
 
-## Decisions To Resolve During Phase 7A
+## Reviewed Phase 7A Decisions
 
-- supported sensor electrical and timing envelope;
-- operating and low-power states in which accepted pulses must accumulate;
-- maximum observation latency and counter-wrap assumptions;
-- pulse-loss guarantee and behavior when exact delta recovery is impossible;
-- startup, reset, and resynchronization semantics;
-- error/status information delivered with a pulse delta.
+The reviewed delta, numeric, startup, Stop2, reset, validity, legacy
+traceability, and ownership decisions are recorded in
+`docs/specs/fmc/acquisition.md`. Approved product outcomes are recorded in
+`docs/product/fmc/requirements.md` and `docs/product/fmc/behavior.md`.
 
-The legacy claim that repeatable loss of one pulse is unacceptable is a
-candidate for review, not an accepted bound.
+For sequencing, LPTIM4 is selected and the Phase 7A decision gates are closed.
+Hardware configuration, target evidence, and implementation remain gated below.
 
 ## Additional Human Approvals Before Phase 7B1
 
-- peripheral, pin, clock, filter, and counter mode;
+- LPTIM4 pin, clock, filter, edge, and complete counter configuration;
 - intended CubeMX change and regeneration;
 - Run-mode signal matrix and acceptance evidence;
 - authorization to begin the first acquisition implementation.
 
 ## Out Of Scope
 
-- selecting or implementing a counter, pin, clock, filter, interrupt, DMA, or
-  autonomous-mode path;
+- configuring or implementing LPTIM4, its pin, clock, filter, interrupt, DMA,
+  or autonomous-mode path;
 - `.ioc` edits, CubeMX regeneration, or generated-code edits;
 - hardware bring-up;
 - frequency observation, RATE integration, or presentation changes;
@@ -92,9 +92,9 @@ Phase 7A closes when:
 
 - approved product outcomes are recorded in their owning product documents;
 - `docs/specs/fmc/acquisition.md` defines one reviewable pulse-accumulation
-  contract without selecting hardware;
-- normal, first-sample, wrap, ambiguous, invalid, and recovery examples are
-  explicit;
+  contract without defining hardware configuration;
+- normal, first-sample, zero, wrap, Stop2/delayed, precondition-boundary, reset,
+  and recovery examples are explicit;
 - runtime/service ownership remains unchanged and unambiguous;
 - unresolved hardware choices remain gated for Phase 7B1;
 - documentation closure and Git audit pass.

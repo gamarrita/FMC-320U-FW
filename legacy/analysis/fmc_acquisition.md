@@ -266,8 +266,8 @@ and measured current.
 ## Review Closure And Future Use
 
 The Phase 7-0 legacy review is complete enough to begin the
-hardware-independent pulse-accumulation contract. No additional broad legacy
-excavation is required before Phase 7A.
+hardware-configuration-independent pulse-accumulation contract. No additional
+broad legacy excavation is required before Phase 7A.
 
 Later acquisition slices should return to this evidence only for a bounded
 question:

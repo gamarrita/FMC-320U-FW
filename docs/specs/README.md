@@ -18,6 +18,8 @@ Rules:
 
 FMC entrypoints:
 - current product documentation: `docs/product/fmc/README.md`
+- reviewed FMC pulse-accumulation contract:
+  `docs/specs/fmc/acquisition.md`
 - frozen FMC legacy extraction:
   `legacy/derived/fmc/use_cases.extraction-v1.yaml`
 - technical LCD authority: `docs/specs/lcd/lcd_true_source.yaml`
