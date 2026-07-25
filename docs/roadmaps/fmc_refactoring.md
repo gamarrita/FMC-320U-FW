@@ -47,9 +47,6 @@ into another phase; ticket printing retains its explicit Bluetooth dependency.
 This is not a requirement to complete all product documentation before
 programming: breadth comes first, then depth follows the next slice.
 
-Steps 1 through 6 are complete. Phase 7-0, acquisition evidence and route
-foundation, is also complete. The durable route continues with Phase 7A.
-
 Phases 8 and 10 are separate because operational navigation and measurement
 configuration navigation have different behavior, authorization, validation,
 and test boundaries. Phase 9 is a complete RTC/calendar vertical cut, including
@@ -332,9 +329,9 @@ Correct-first baseline:
 | 7F: RATE integration | Feed validated pulse/time observations into pure RATE calculation with explicit quality | 7D and required 7E evidence accepted; 7E3 closed if entered | Math vectors, boundaries, and runtime tests agree on units, elapsed time, invalid input, and zero/stale distinctions |
 | 7G: Combined live integration | Combine accepted counter and frequency paths and replace provisional TTL/RATE inputs | 7C and 7F accepted; visible invalid/zero behavior approved | Combined bring-up, canonical builds, regression, target pulse accuracy, presentation, and current validation pass |
 
-Phase 7-0 is complete. Phase 7A is the next documentation-only contract slice.
-Phase 7B1 is the first possible acquisition implementation and cannot start
-before approval of its hardware and CubeMX gates.
+Phase 7A is a documentation-only contract slice. Phase 7B1 is the first
+possible acquisition implementation and cannot start before approval of its
+hardware and CubeMX gates.
 
 ### Human-Agent Bring-Up Protocol
 
@@ -443,9 +440,12 @@ Objective:
 
 Dependencies:
 - Phase 8 operational navigation;
-- Phase 9 configuration-navigation lessons;
 - approved editable measurement fields and ranges;
 - current model separation between canonical configuration and derived values.
+
+Reuse boundary:
+- if Phase 9 is already implemented, reuse its reviewed
+  configuration-navigation pattern without making RTC a prerequisite.
 
 Minimum candidate scope:
 - configuration entry or authorization screen;
@@ -482,8 +482,8 @@ Objective:
   valid.
 
 Dependencies:
-- stable canonical state from acquisition, user, RTC, and measurement
-  configuration phases;
+- stable canonical state from implemented release-scope capabilities, including
+  RTC only when selected;
 - approved reset classes and retention guarantees.
 
 Decision gates:

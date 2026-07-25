@@ -56,7 +56,7 @@ observation, calculate RATE, or integrate live acquisition.
 - record exact legacy disposition only if Phase 7A accepts, rejects, replaces,
   or defers a reviewed legacy statement.
 
-## Decisions Required Before Phase 7B1
+## Decisions To Resolve During Phase 7A
 
 - supported sensor electrical and timing envelope;
 - operating and low-power states in which accepted pulses must accumulate;
@@ -67,6 +67,13 @@ observation, calculate RATE, or integrate live acquisition.
 
 The legacy claim that repeatable loss of one pulse is unacceptable is a
 candidate for review, not an accepted bound.
+
+## Additional Human Approvals Before Phase 7B1
+
+- peripheral, pin, clock, filter, and counter mode;
+- intended CubeMX change and regeneration;
+- Run-mode signal matrix and acceptance evidence;
+- authorization to begin the first acquisition implementation.
 
 ## Out Of Scope
 
@@ -96,6 +103,5 @@ Phase 7A closes when:
 
 `Phase 7B1 Pulse-Counter Bring-Up In Run`
 
-It will select the minimum documented counter technique only after human
-approval of the peripheral, pin, clock, filter, CubeMX change, signal matrix,
-and acceptance evidence. It will not introduce Stop2 or RATE.
+It opens only after the additional approvals above and exercises the minimum
+documented counter technique in Run. It will not introduce Stop2 or RATE.
