@@ -7,7 +7,7 @@ Contain FMC flow-computer product logic.
 The initial split is:
 - `fmc_model.*`: copyable FMC canonical state and structural helpers,
 - `fmc_input.h`: semantic product input event contract,
-- `fmc_presentation.*`: Phase 6A semantic frames and startup sequence,
+- `fmc_presentation.*`: startup and live TTL/RATE semantic frames,
 - `fmc_version.h`: bounded provisional firmware version metadata,
 - `fmc_units.*`: unit and conversion policy for this product,
 - `fmc_rate.*`: pure instantaneous-rate calculation from pulse/time windows,

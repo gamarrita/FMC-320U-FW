@@ -164,13 +164,21 @@ Released version meaning, LCD encoding limits, and tag traceability belong to
 - Both values are non-negative, right-aligned, rounded to one decimal, and use
   blank unused positions.
 - Zero is valid and displays as `0.0`.
-- TTL uses liters and RATE uses liters per minute.
+- TTL uses liters and RATE initially uses liters per second.
+- The bounded presentation contract supports second and minute RATE time
+  bases and selects the corresponding `S` or `M` indicator. Second is the
+  initial live state; minute is retained as a technical capability and is not
+  yet operator-selectable.
 - The shared alphanumeric field shows `Lt` for both rows.
-- `TTL`, `RATE`, slash, and minute indicators remain active, including during
+- `TTL`, `RATE`, slash, and second indicators remain active, including during
   visual overflow. All unrelated indicators remain off.
 - The initial controlled values are `1234.5` TTL and `12.3` RATE. They are valid
   provisional inputs, not absent or invalid states.
 - Values are shown immediately on entry and presented again once per second.
+- Phase 7 live integration replaces those controlled inputs atomically on the
+  first TTL/RATE presentation. Timeout and SHORT ESC transitions both use the
+  latest coherent live snapshot and do not briefly show an older snapshot
+  before refreshing it.
 
 Presentation receives a coherent snapshot containing accepted TTL and RATE,
 unit, time base, and resolutions. It does not calculate totals, flow, or the
@@ -180,8 +188,14 @@ When a rounded value does not fit, the row keeps the least significant digits
 that fit, including one fractional digit, and discards the most significant
 digits visually. It does not display `E`, saturate, or trigger another action.
 
-**Deferred:** Visible representation of absent values, invalid values, and
-internal formatting errors.
+**Accepted:** `UNAVAILABLE`, `STALE`, and `INVALID` use one common nonnumeric
+RATE representation. Their distinct quality remains available to runtime and
+diagnostics, but the TTL/RATE screen does not distinguish them and does not
+show a retained non-valid RATE value as current. The seven numeric positions
+of the RATE row show `-------`. The normal `TTL`, `RATE`, `Lt`, slash, and
+second indicators remain active.
+
+Visible representation of internal formatting errors is deferred.
 
 ### Presentation Failures
 

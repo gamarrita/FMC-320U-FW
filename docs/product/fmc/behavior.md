@@ -42,7 +42,9 @@ sources, and non-LCD failure paths are not approved.
   Timing begins only after the corresponding view is presented successfully.
 - A SHORT ESC has the same transition effect as the active startup timeout.
 - TTL/RATE is presented immediately after the version transition and refreshed
-  once per second.
+  once per second. Entry caused by timeout or SHORT ESC uses the latest
+  coherent live snapshot in one accepted presentation, without an intermediate
+  provisional TTL/RATE frame.
 - The sequence runs once after boot or reset and does not repeat merely because
   of wake or display reactivation.
 - A failed view presentation is not confirmed, its nominal period does not

@@ -80,6 +80,20 @@ Evidence:
 - Runtime shall retain RATE value and explicit observation quality together.
   RATE mathematics shall execute only for a valid pulse/time window, and
   frequency-result events shall remain independent from ACM/TTL updates.
+- The TTL/RATE screen shall use one common nonnumeric RATE representation for
+  `UNAVAILABLE`, `STALE`, and `INVALID`. Their distinct quality remains
+  available in runtime and diagnostics, and a retained non-valid RATE value
+  shall not be presented as current. The common RATE-row pattern is
+  `-------`; the normal TTL, RATE, `Lt`, slash, and second indicators remain
+  active.
+- The initial live TTL/RATE screen shall use liters per second, following the
+  current active measurement time base without a product-main override.
+- Presentation shall support the bounded `SECOND` and `MINUTE` RATE time bases
+  and their corresponding LCD indicators. `SECOND` is the initial live state;
+  retaining `MINUTE` support does not make it operator-selectable.
+- Entry into TTL/RATE, whether caused by timeout or SHORT ESC, shall present
+  the latest coherent live snapshot in one accepted transition. A provisional
+  or older snapshot shall not be shown and then corrected by a second write.
 - The active measurement model shall keep calibration, volume unit, and rate
   time base explicit.
 - Presentation shall receive accepted TTL and RATE values; it shall not own
@@ -109,8 +123,8 @@ Evidence:
 
 **Unresolved**
 
-- Absent or invalid RATE measurement presentation, calibration-unit expansion,
-  and exact reset authorization flows remain undecided.
+- Calibration-unit expansion and exact reset authorization flows remain
+  undecided.
 
 ## Operator Interaction
 

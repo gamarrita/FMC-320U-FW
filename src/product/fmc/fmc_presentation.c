@@ -1,6 +1,6 @@
 /**
  * @file    fmc_presentation.c
- * @brief   FMC Phase 6A presentation implementation.
+ * @brief   FMC startup and live TTL/RATE presentation implementation.
  */
 
 #include "fmc_presentation.h"
@@ -14,10 +14,11 @@
 
 #define FMC_PRESENTATION_TOP_COLUMNS       8U
 #define FMC_PRESENTATION_BOTTOM_COLUMNS    7U
-#define FMC_PRESENTATION_FRACTIONAL_DIGITS 1U
 
 static bool fmc_presentation_snapshot_is_valid_(
     const fmc_presentation_snapshot_t *p_snapshot);
+static bool fmc_presentation_rate_state_is_valid_(
+    const fmc_runtime_rate_state_t *p_rate);
 static fm_status_t fmc_presentation_present_state_(
     fmc_presentation_t *p_presentation,
     fmc_presentation_state_t p_state,
@@ -45,24 +46,6 @@ static fm_status_t fmc_presentation_format_least_significant_(
     char *p_text,
     size_t p_text_size);
 static uint64_t fmc_presentation_pow10_u64_(uint8_t p_digits);
-
-void FMC_PRESENTATION_MakeDummySnapshot(
-    fmc_presentation_snapshot_t *p_snapshot)
-{
-    if (p_snapshot == NULL)
-    {
-        return;
-    }
-
-    p_snapshot->ttl = 1234.5;
-    p_snapshot->rate = 12.3;
-    p_snapshot->volume_unit = FMC_MODEL_VOLUME_UNIT_L;
-    p_snapshot->rate_time_base = FMC_MODEL_TIME_BASE_MINUTE;
-    p_snapshot->ttl_fractional_digits =
-        FMC_PRESENTATION_FRACTIONAL_DIGITS;
-    p_snapshot->rate_fractional_digits =
-        FMC_PRESENTATION_FRACTIONAL_DIGITS;
-}
 
 fm_status_t FMC_PRESENTATION_Init(
     fmc_presentation_t *p_presentation,
@@ -104,11 +87,14 @@ fm_status_t FMC_PRESENTATION_Start(
 }
 
 fm_status_t FMC_PRESENTATION_Advance(
-    fmc_presentation_t *p_presentation)
+    fmc_presentation_t *p_presentation,
+    const fmc_presentation_snapshot_t *p_snapshot)
 {
     fmc_presentation_state_t next_state;
+    fm_status_t status;
 
-    if (p_presentation == NULL)
+    if ((p_presentation == NULL) ||
+        !fmc_presentation_snapshot_is_valid_(p_snapshot))
     {
         return FM_STATUS_EINVAL;
     }
@@ -131,16 +117,24 @@ fm_status_t FMC_PRESENTATION_Advance(
         return FM_STATUS_ESTATE;
     }
 
-    return fmc_presentation_present_state_(p_presentation,
-                                           next_state,
-                                           &p_presentation->snapshot);
+    status = fmc_presentation_present_state_(p_presentation,
+                                             next_state,
+                                             p_snapshot);
+    if (status == FM_STATUS_OK)
+    {
+        p_presentation->snapshot = *p_snapshot;
+    }
+
+    return status;
 }
 
 fm_status_t FMC_PRESENTATION_HandleInput(
     fmc_presentation_t *p_presentation,
-    const fmc_input_event_t *p_input)
+    const fmc_input_event_t *p_input,
+    const fmc_presentation_snapshot_t *p_snapshot)
 {
-    if ((p_presentation == NULL) || (p_input == NULL))
+    if ((p_presentation == NULL) || (p_input == NULL) ||
+        !fmc_presentation_snapshot_is_valid_(p_snapshot))
     {
         return FM_STATUS_EINVAL;
     }
@@ -152,7 +146,7 @@ fm_status_t FMC_PRESENTATION_HandleInput(
          (p_presentation->state ==
           FMC_PRESENTATION_STATE_FIRMWARE_VERSION)))
     {
-        return FMC_PRESENTATION_Advance(p_presentation);
+        return FMC_PRESENTATION_Advance(p_presentation, p_snapshot);
     }
 
     return FM_STATUS_OK;
@@ -207,17 +201,49 @@ static bool fmc_presentation_snapshot_is_valid_(
     }
 
     return (p_snapshot->ttl >= 0.0) &&
-           (p_snapshot->rate >= 0.0) &&
            (p_snapshot->ttl == p_snapshot->ttl) &&
-           (p_snapshot->rate == p_snapshot->rate) &&
            (p_snapshot->ttl <= DBL_MAX) &&
-           (p_snapshot->rate <= DBL_MAX) &&
+           fmc_presentation_rate_state_is_valid_(&p_snapshot->rate) &&
            (p_snapshot->volume_unit == FMC_MODEL_VOLUME_UNIT_L) &&
-           (p_snapshot->rate_time_base == FMC_MODEL_TIME_BASE_MINUTE) &&
+           ((p_snapshot->rate_time_base ==
+             FMC_MODEL_TIME_BASE_SECOND) ||
+            (p_snapshot->rate_time_base ==
+             FMC_MODEL_TIME_BASE_MINUTE)) &&
            (p_snapshot->ttl_fractional_digits ==
-            FMC_PRESENTATION_FRACTIONAL_DIGITS) &&
+            FMC_PRESENTATION_VALUE_FRACTIONAL_DIGITS) &&
            (p_snapshot->rate_fractional_digits ==
-            FMC_PRESENTATION_FRACTIONAL_DIGITS);
+            FMC_PRESENTATION_VALUE_FRACTIONAL_DIGITS);
+}
+
+static bool fmc_presentation_rate_state_is_valid_(
+    const fmc_runtime_rate_state_t *p_rate)
+{
+    bool value_is_valid;
+
+    if (p_rate == NULL)
+    {
+        return false;
+    }
+
+    value_is_valid = (p_rate->value >= 0.0) &&
+                     (p_rate->value == p_rate->value) &&
+                     (p_rate->value <= DBL_MAX);
+
+    switch (p_rate->quality)
+    {
+    case FREQUENCY_OBSERVATION_QUALITY_VALID:
+        return p_rate->value_present && value_is_valid;
+
+    case FREQUENCY_OBSERVATION_QUALITY_UNAVAILABLE:
+        return !p_rate->value_present;
+
+    case FREQUENCY_OBSERVATION_QUALITY_STALE:
+    case FREQUENCY_OBSERVATION_QUALITY_INVALID:
+        return !p_rate->value_present || value_is_valid;
+
+    default:
+        return false;
+    }
 }
 
 static fm_status_t fmc_presentation_present_state_(
@@ -301,6 +327,7 @@ static void fmc_presentation_clear_frame_(
     p_frame->indicator_ttl = false;
     p_frame->indicator_rate = false;
     p_frame->indicator_slash = false;
+    p_frame->indicator_second = false;
     p_frame->indicator_minute = false;
     p_frame->ttl_overflow = false;
     p_frame->rate_overflow = false;
@@ -352,15 +379,32 @@ static fm_status_t fmc_presentation_build_ttl_rate_(
         return status;
     }
 
-    status = fmc_presentation_format_nonnegative_(
-        p_snapshot->rate,
-        FMC_PRESENTATION_BOTTOM_COLUMNS,
-        p_frame->bottom_text,
-        sizeof(p_frame->bottom_text),
-        &p_frame->rate_overflow);
-    if (status != FM_STATUS_OK)
+    if (p_snapshot->rate.quality ==
+        FREQUENCY_OBSERVATION_QUALITY_VALID)
     {
-        return status;
+        status = fmc_presentation_format_nonnegative_(
+            p_snapshot->rate.value,
+            FMC_PRESENTATION_BOTTOM_COLUMNS,
+            p_frame->bottom_text,
+            sizeof(p_frame->bottom_text),
+            &p_frame->rate_overflow);
+        if (status != FM_STATUS_OK)
+        {
+            return status;
+        }
+    }
+    else
+    {
+        uint8_t index;
+
+        for (index = 0U;
+             index < FMC_PRESENTATION_BOTTOM_COLUMNS;
+             index++)
+        {
+            p_frame->bottom_text[index] = '-';
+        }
+        p_frame->bottom_text[FMC_PRESENTATION_BOTTOM_COLUMNS] = '\0';
+        p_frame->rate_overflow = false;
     }
 
     p_frame->alpha_text[0] = FMC_PRESENTATION_LITERS_LEGEND[0];
@@ -369,7 +413,10 @@ static fm_status_t fmc_presentation_build_ttl_rate_(
     p_frame->indicator_ttl = true;
     p_frame->indicator_rate = true;
     p_frame->indicator_slash = true;
-    p_frame->indicator_minute = true;
+    p_frame->indicator_second =
+        (p_snapshot->rate_time_base == FMC_MODEL_TIME_BASE_SECOND);
+    p_frame->indicator_minute =
+        (p_snapshot->rate_time_base == FMC_MODEL_TIME_BASE_MINUTE);
 
     return FM_STATUS_OK;
 }
@@ -384,7 +431,7 @@ static fm_status_t fmc_presentation_format_nonnegative_(
     const display_format_field_t field =
     {
         .visible_width = p_width,
-        .fractional_digits = FMC_PRESENTATION_FRACTIONAL_DIGITS,
+        .fractional_digits = FMC_PRESENTATION_VALUE_FRACTIONAL_DIGITS,
         .align = DISPLAY_FORMAT_ALIGN_RIGHT,
         .pad_char = ' ',
         .overflow_policy = DISPLAY_FORMAT_OVERFLOW_ERROR,

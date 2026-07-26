@@ -13,9 +13,10 @@
  *   app-level short/long recognizer accepts an input action.
  *
  *   A ThreadX periodic timer publishes `FM_MAIN_EVENT_PERIODIC_REFRESH` once
- *   per second into the same owner queue. The owner reads the pulse counter,
- *   dispatches one pulse-delta event, emits optional totalization evidence,
- *   and refreshes the stable provisional Phase 6A TTL/RATE view.
+ *   per second into the same owner queue. The owner performs independent
+ *   pulse-delta and pulse/time observations, dispatches their runtime events,
+ *   emits optional compact live evidence, and refreshes the stable TTL/RATE
+ *   view from canonical runtime state.
  *
  *   A separate one-shot timer owns the nominal three-second dwell of each
  *   temporary startup presentation. It starts only after successful LCD
@@ -45,11 +46,12 @@ void FM_MAIN_Init(void);
  * @brief Run the reduced product runtime owner loop.
  *
  * Calls `FM_MAIN_Init()` once, initializes the local runtime and acquisition
- * observer, starts the configured pulse counter, registers the keyboard IRQ
- * publisher, then waits on the app-level event queue. Keyboard events pass
+ * observers, starts the configured frequency-time and pulse counters,
+ * establishes the frequency baseline, registers the keyboard IRQ publisher,
+ * then waits on the app-level event queue. Keyboard events pass
  * through the app-level short/long recognizer before dispatching semantic
  * input to presentation or runtime. Periodic events perform pulse
- * totalization and refresh TTL/RATE from the provisional Phase 6A snapshot.
+ * totalization, update RATE, and refresh TTL/RATE from a live runtime snapshot.
  * This function does not create another ThreadX thread or control backlight.
  *
  * @warning Foreground app entry. Does not return during normal operation.

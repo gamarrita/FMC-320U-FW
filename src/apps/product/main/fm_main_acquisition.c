@@ -14,6 +14,7 @@ void FM_MAIN_ACQUISITION_Init(fm_main_acquisition_t *p_acquisition)
     }
 
     PULSE_DELTA_Init(&p_acquisition->pulse_delta_observer);
+    FREQUENCY_OBSERVATION_Init(&p_acquisition->frequency_observer);
 }
 
 fm_status_t FM_MAIN_ACQUISITION_ProcessObservation(
@@ -38,6 +39,41 @@ fm_status_t FM_MAIN_ACQUISITION_ProcessObservation(
     }
 
     event.kind = FMC_RUNTIME_EVENT_PULSE_DELTA;
+
+    return FMC_RUNTIME_Dispatch(p_runtime, &event);
+}
+
+fm_status_t FM_MAIN_ACQUISITION_ProcessFrequencyObservation(
+    fm_main_acquisition_t *p_acquisition,
+    const frequency_observation_sample_t *p_sample,
+    fmc_runtime_t *p_runtime)
+{
+    fmc_runtime_event_t event;
+    bool result_available;
+    fm_status_t status;
+
+    if ((p_acquisition == NULL) || (p_sample == NULL) ||
+        (p_runtime == NULL))
+    {
+        return FM_STATUS_EINVAL;
+    }
+
+    status = FREQUENCY_OBSERVATION_Observe(
+        &p_acquisition->frequency_observer,
+        p_sample,
+        &result_available,
+        &event.data.frequency_result);
+    if (status != FM_STATUS_OK)
+    {
+        return status;
+    }
+
+    if (!result_available)
+    {
+        return FM_STATUS_OK;
+    }
+
+    event.kind = FMC_RUNTIME_EVENT_FREQUENCY_RESULT;
 
     return FMC_RUNTIME_Dispatch(p_runtime, &event);
 }

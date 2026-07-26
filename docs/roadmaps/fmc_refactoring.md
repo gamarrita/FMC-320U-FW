@@ -201,6 +201,27 @@ Exit criteria:
 - ISR path does bounded work only;
 - delivery to runtime is serialized and testable.
 
+Deferred technical follow-up:
+- Phase 7 combined-current characterization exposed a non-blocking
+  `fm_port_threadx_idle` timing-profile issue. With silent `product/main` and
+  the normal one-second periodic deadline, PPK2 measured approximately
+  `33.40 uA` average at `0 Hz` and `39.08 uA` average at `100 Hz`. The `0 Hz`
+  profile showed one active cluster per interval; at `100 Hz`, some intervals
+  showed two distinct active peaks separated by a real return to the
+  approximately `20 uA` low-current level.
+- Evidence points to the boundary between the LPTIM1 elapsed-time conversion,
+  ThreadX bulk timer adjustment, and the final SysTick, but no root cause or
+  correction is accepted. A one-tick LPTIM extension increased the number of
+  peaks; a bounded attempt to combine that extension with a pending final
+  SysTick retained the original profile. Both experiments were removed.
+- Legacy's integer `20` conversion for the actual `20.48` LPTIM ticks per
+  ThreadX tick remains comparison evidence only; its timing bias is not an
+  accepted workaround.
+- Further diagnosis belongs in a separate low-power-port workstream and may be
+  developed on a parallel branch. It does not change Phase 7 acquisition,
+  totalization, frequency, RATE, or presentation contracts and does not block
+  Phase 8.
+
 ## Phase 6A: Initial Presentation Slice
 
 Status:
@@ -254,6 +275,11 @@ Completion:
   controlled-value target validation.
 
 ## Phase 7: Essential Acquisition
+
+Status:
+- completed and human-accepted on target hardware;
+- the separate ThreadX/STOP2 timing-profile follow-up is recorded under
+  Phase 5 and is not a remaining Phase 7 gate.
 
 Objective:
 - replace provisional Phase 6A TTL/RATE inputs through short, independently
@@ -372,6 +398,19 @@ Exit criteria:
   human decision;
 - tests and bring-ups cover selected normal, boundary, low-power, and recovery
   paths.
+
+Completion:
+- all planned slices through 7G are closed; conditional 7E3 was not entered;
+- LPTIM4 pulse accumulation, independent pulse-delta and frequency observers,
+  runtime-owned ACM/TTL and RATE updates, and live TTL/RATE presentation are
+  integrated in `product/main`;
+- deterministic regression, canonical `tests/regression` and `product/main`
+  builds, the physical `100 -> 0 -> 100 Hz` matrix, LCD agreement, pulse
+  conservation, recovery without reset, and silent PPK2 characterization were
+  human-accepted;
+- no experimental ThreadX idle-port workaround remains in the Phase 7
+  implementation;
+- Phase 8 is the next roadmap phase.
 
 ## Phase 8: Minimum Measurement User Screens And Navigation
 

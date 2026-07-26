@@ -146,6 +146,13 @@ static bool fm_regression_test_text_eq_(const char *p_actual,
 static fm_status_t fm_regression_test_presentation_sink_(
     const fmc_presentation_frame_t *p_frame,
     void *p_context);
+static void fm_regression_test_make_presentation_snapshot_(
+    fmc_presentation_snapshot_t *p_snapshot,
+    double p_ttl,
+    double p_rate,
+    frequency_observation_quality_t p_quality,
+    bool p_value_present,
+    fmc_model_time_base_t p_time_base);
 static bool fm_regression_test_dispatch_frequency_success_(
     fmc_runtime_t *p_runtime,
     const frequency_observation_result_t *p_result,
@@ -241,6 +248,31 @@ static fm_status_t fm_regression_test_presentation_sink_(
     sink->frame = *p_frame;
 
     return sink->next_status;
+}
+
+static void fm_regression_test_make_presentation_snapshot_(
+    fmc_presentation_snapshot_t *p_snapshot,
+    double p_ttl,
+    double p_rate,
+    frequency_observation_quality_t p_quality,
+    bool p_value_present,
+    fmc_model_time_base_t p_time_base)
+{
+    if (p_snapshot == NULL)
+    {
+        return;
+    }
+
+    p_snapshot->ttl = p_ttl;
+    p_snapshot->rate.value = p_rate;
+    p_snapshot->rate.quality = p_quality;
+    p_snapshot->rate.value_present = p_value_present;
+    p_snapshot->volume_unit = FMC_MODEL_VOLUME_UNIT_L;
+    p_snapshot->rate_time_base = p_time_base;
+    p_snapshot->ttl_fractional_digits =
+        FMC_PRESENTATION_VALUE_FRACTIONAL_DIGITS;
+    p_snapshot->rate_fractional_digits =
+        FMC_PRESENTATION_VALUE_FRACTIONAL_DIGITS;
 }
 
 /*
@@ -1490,6 +1522,8 @@ static bool fm_regression_test_runtime_frequency_result_(void)
 static bool fm_regression_test_main_acquisition_(void)
 {
     fm_main_acquisition_t acquisition;
+    frequency_observation_sample_t frequency_sample;
+    fmc_runtime_rate_state_t rate_state;
     fmc_runtime_t runtime;
     fmc_service_snapshot_t snapshot;
 
@@ -1553,6 +1587,89 @@ static bool fm_regression_test_main_acquisition_(void)
                                                 0U,
                                                 NULL) !=
          FM_STATUS_EINVAL))
+    {
+        return false;
+    }
+
+    /*
+     * The two acquisition operations own independent baselines. Totalization
+     * can advance before frequency is usable, an early frequency sample emits
+     * no event, and frequency dispatch never changes either total.
+     */
+    FM_MAIN_ACQUISITION_Init(&acquisition);
+    FMC_RUNTIME_Init(&runtime);
+    if ((FM_MAIN_ACQUISITION_ProcessObservation(&acquisition,
+                                                12U,
+                                                &runtime) != FM_STATUS_OK) ||
+        (FMC_RUNTIME_ClearPresentationUpdatePending(&runtime) !=
+         FM_STATUS_OK))
+    {
+        return false;
+    }
+
+    frequency_sample.pulse_count = 100U;
+    frequency_sample.timestamp_us = 1000U;
+    if ((FM_MAIN_ACQUISITION_ProcessFrequencyObservation(
+             &acquisition,
+             &frequency_sample,
+             &runtime) != FM_STATUS_OK) ||
+        !FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
+        (FMC_RUNTIME_GetRateState(&runtime, &rate_state) != FM_STATUS_OK) ||
+        (rate_state.quality !=
+         FREQUENCY_OBSERVATION_QUALITY_UNAVAILABLE) ||
+        rate_state.value_present ||
+        (FMC_RUNTIME_ClearPresentationUpdatePending(&runtime) !=
+         FM_STATUS_OK))
+    {
+        return false;
+    }
+
+    frequency_sample.pulse_count = 150U;
+    frequency_sample.timestamp_us = 501000U;
+    if ((FM_MAIN_ACQUISITION_ProcessFrequencyObservation(
+             &acquisition,
+             &frequency_sample,
+             &runtime) != FM_STATUS_OK) ||
+        FMC_RUNTIME_PresentationUpdateIsPending(&runtime))
+    {
+        return false;
+    }
+
+    if ((FM_MAIN_ACQUISITION_ProcessObservation(&acquisition,
+                                                20U,
+                                                &runtime) != FM_STATUS_OK) ||
+        (FMC_RUNTIME_ClearPresentationUpdatePending(&runtime) !=
+         FM_STATUS_OK))
+    {
+        return false;
+    }
+
+    frequency_sample.pulse_count = 200U;
+    frequency_sample.timestamp_us = 1001000U;
+    if ((FM_MAIN_ACQUISITION_ProcessFrequencyObservation(
+             &acquisition,
+             &frequency_sample,
+             &runtime) != FM_STATUS_OK) ||
+        !FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
+        (FMC_RUNTIME_GetRateState(&runtime, &rate_state) != FM_STATUS_OK) ||
+        (rate_state.quality != FREQUENCY_OBSERVATION_QUALITY_VALID) ||
+        !rate_state.value_present ||
+        !fm_regression_test_double_eq_(rate_state.value, 100.0) ||
+        (FMC_RUNTIME_GetSnapshot(&runtime, &snapshot) != FM_STATUS_OK) ||
+        (snapshot.model.acm.pulses != 20U) ||
+        (snapshot.model.ttl.pulses != 20U) ||
+        (FM_MAIN_ACQUISITION_ProcessFrequencyObservation(
+             NULL,
+             &frequency_sample,
+             &runtime) != FM_STATUS_EINVAL) ||
+        (FM_MAIN_ACQUISITION_ProcessFrequencyObservation(
+             &acquisition,
+             NULL,
+             &runtime) != FM_STATUS_EINVAL) ||
+        (FM_MAIN_ACQUISITION_ProcessFrequencyObservation(
+             &acquisition,
+             &frequency_sample,
+             NULL) != FM_STATUS_EINVAL))
     {
         return false;
     }
@@ -2311,8 +2428,8 @@ static bool fm_regression_test_lcd_map_liters_legend_(void)
 }
 
 /*
- * Verifies the bounded startup order, exact provisional version frame, SHORT
- * ESC transition, and immediate stable TTL/RATE frame.
+ * Verifies the bounded startup order, SHORT ESC transition, and that first
+ * entry to TTL/RATE uses the latest supplied live snapshot atomically.
  */
 static bool fm_regression_test_presentation_sequence_(void)
 {
@@ -2323,7 +2440,13 @@ static bool fm_regression_test_presentation_sequence_(void)
     uint32_t calls_before_stable_advance;
 
     sink.next_status = FM_STATUS_OK;
-    FMC_PRESENTATION_MakeDummySnapshot(&snapshot);
+    fm_regression_test_make_presentation_snapshot_(
+        &snapshot,
+        0.0,
+        0.0,
+        FREQUENCY_OBSERVATION_QUALITY_UNAVAILABLE,
+        false,
+        FMC_MODEL_TIME_BASE_SECOND);
 
     if ((FMC_PRESENTATION_Init(&presentation,
                                &snapshot,
@@ -2341,7 +2464,9 @@ static bool fm_regression_test_presentation_sequence_(void)
 
     input.key = FMC_INPUT_KEY_ESC;
     input.action = FMC_INPUT_ACTION_SHORT;
-    if ((FMC_PRESENTATION_HandleInput(&presentation, &input) !=
+    if ((FMC_PRESENTATION_HandleInput(&presentation,
+                                      &input,
+                                      &snapshot) !=
          FM_STATUS_OK) ||
         (FMC_PRESENTATION_GetState(&presentation) !=
          FMC_PRESENTATION_STATE_FIRMWARE_VERSION) ||
@@ -2352,34 +2477,45 @@ static bool fm_regression_test_presentation_sequence_(void)
         sink.frame.indicator_ttl ||
         sink.frame.indicator_rate ||
         sink.frame.indicator_slash ||
+        sink.frame.indicator_second ||
         sink.frame.indicator_minute)
     {
         return false;
     }
 
-    if ((FMC_PRESENTATION_Advance(&presentation) != FM_STATUS_OK) ||
+    fm_regression_test_make_presentation_snapshot_(
+        &snapshot,
+        42.5,
+        100.0,
+        FREQUENCY_OBSERVATION_QUALITY_VALID,
+        true,
+        FMC_MODEL_TIME_BASE_SECOND);
+    if ((FMC_PRESENTATION_Advance(&presentation,
+                                  &snapshot) != FM_STATUS_OK) ||
         (FMC_PRESENTATION_GetState(&presentation) !=
          FMC_PRESENTATION_STATE_TTL_RATE) ||
-        !fm_regression_test_text_eq_(sink.frame.top_text, "   1234.5") ||
-        !fm_regression_test_text_eq_(sink.frame.bottom_text, "    12.3") ||
+        !fm_regression_test_text_eq_(sink.frame.top_text, "     42.5") ||
+        !fm_regression_test_text_eq_(sink.frame.bottom_text, "   100.0") ||
         !fm_regression_test_text_eq_(sink.frame.alpha_text, "Lt") ||
         !sink.frame.indicator_ttl ||
         !sink.frame.indicator_rate ||
         !sink.frame.indicator_slash ||
-        !sink.frame.indicator_minute)
+        !sink.frame.indicator_second ||
+        sink.frame.indicator_minute)
     {
         return false;
     }
 
     calls_before_stable_advance = sink.call_count;
 
-    return (FMC_PRESENTATION_Advance(&presentation) == FM_STATUS_OK) &&
+    return (FMC_PRESENTATION_Advance(&presentation,
+                                     &snapshot) == FM_STATUS_OK) &&
            (sink.call_count == calls_before_stable_advance);
 }
 
 /*
- * Verifies one-decimal rounding, right alignment, zero, periodic refresh input,
- * and visual overflow retaining the least significant row digits.
+ * Verifies numeric live values, both bounded time indicators, visual overflow,
+ * and the common RATE representation for every admitted nonvalid quality.
  */
 static bool fm_regression_test_presentation_values_(void)
 {
@@ -2388,33 +2524,44 @@ static bool fm_regression_test_presentation_values_(void)
     fm_regression_presentation_sink_t sink = {0};
 
     sink.next_status = FM_STATUS_OK;
-    FMC_PRESENTATION_MakeDummySnapshot(&snapshot);
+    fm_regression_test_make_presentation_snapshot_(
+        &snapshot,
+        1234.5,
+        12.3,
+        FREQUENCY_OBSERVATION_QUALITY_VALID,
+        true,
+        FMC_MODEL_TIME_BASE_SECOND);
 
     if ((FMC_PRESENTATION_Init(&presentation,
                                &snapshot,
                                fm_regression_test_presentation_sink_,
                                &sink) != FM_STATUS_OK) ||
         (FMC_PRESENTATION_Start(&presentation) != FM_STATUS_OK) ||
-        (FMC_PRESENTATION_Advance(&presentation) != FM_STATUS_OK) ||
-        (FMC_PRESENTATION_Advance(&presentation) != FM_STATUS_OK))
+        (FMC_PRESENTATION_Advance(&presentation,
+                                  &snapshot) != FM_STATUS_OK) ||
+        (FMC_PRESENTATION_Advance(&presentation,
+                                  &snapshot) != FM_STATUS_OK))
     {
         return false;
     }
 
     snapshot.ttl = 1.26;
-    snapshot.rate = 0.0;
+    snapshot.rate.value = 0.0;
     if ((FMC_PRESENTATION_Refresh(&presentation, &snapshot) !=
          FM_STATUS_OK) ||
         !fm_regression_test_text_eq_(sink.frame.top_text, "      1.3") ||
         !fm_regression_test_text_eq_(sink.frame.bottom_text, "     0.0") ||
         sink.frame.ttl_overflow ||
-        sink.frame.rate_overflow)
+        sink.frame.rate_overflow ||
+        !sink.frame.indicator_second ||
+        sink.frame.indicator_minute)
     {
         return false;
     }
 
     snapshot.ttl = 123456789.14;
-    snapshot.rate = 9876543.26;
+    snapshot.rate.value = 9876543.26;
+    snapshot.rate_time_base = FMC_MODEL_TIME_BASE_MINUTE;
     if ((FMC_PRESENTATION_Refresh(&presentation, &snapshot) !=
          FM_STATUS_OK) ||
         !fm_regression_test_text_eq_(sink.frame.top_text, "3456789.1") ||
@@ -2424,15 +2571,43 @@ static bool fm_regression_test_presentation_values_(void)
         !sink.frame.indicator_ttl ||
         !sink.frame.indicator_rate ||
         !sink.frame.indicator_slash ||
+        sink.frame.indicator_second ||
         !sink.frame.indicator_minute)
     {
         return false;
     }
 
-    snapshot.ttl = -0.1;
+    snapshot.ttl = 15.0;
+    snapshot.rate.quality =
+        FREQUENCY_OBSERVATION_QUALITY_UNAVAILABLE;
+    snapshot.rate.value_present = false;
+    if ((FMC_PRESENTATION_Refresh(&presentation, &snapshot) !=
+         FM_STATUS_OK) ||
+        !fm_regression_test_text_eq_(sink.frame.bottom_text, "-------") ||
+        !sink.frame.indicator_ttl ||
+        !sink.frame.indicator_rate ||
+        !sink.frame.indicator_slash ||
+        sink.frame.indicator_second ||
+        !sink.frame.indicator_minute)
+    {
+        return false;
+    }
 
-    return FMC_PRESENTATION_Refresh(&presentation, &snapshot) ==
-           FM_STATUS_EINVAL;
+    snapshot.rate.quality = FREQUENCY_OBSERVATION_QUALITY_STALE;
+    snapshot.rate.value_present = true;
+    if ((FMC_PRESENTATION_Refresh(&presentation, &snapshot) !=
+         FM_STATUS_OK) ||
+        !fm_regression_test_text_eq_(sink.frame.bottom_text, "-------"))
+    {
+        return false;
+    }
+
+    snapshot.rate.quality = FREQUENCY_OBSERVATION_QUALITY_INVALID;
+    snapshot.rate.value_present = false;
+
+    return (FMC_PRESENTATION_Refresh(&presentation, &snapshot) ==
+            FM_STATUS_OK) &&
+           fm_regression_test_text_eq_(sink.frame.bottom_text, "-------");
 }
 
 /*
@@ -2444,9 +2619,17 @@ static bool fm_regression_test_presentation_failure_(void)
     fmc_presentation_t presentation;
     fmc_presentation_snapshot_t snapshot;
     fm_regression_presentation_sink_t sink = {0};
+    fmc_runtime_event_t event;
+    fmc_runtime_t runtime;
 
     sink.next_status = FM_STATUS_ESTATE;
-    FMC_PRESENTATION_MakeDummySnapshot(&snapshot);
+    fm_regression_test_make_presentation_snapshot_(
+        &snapshot,
+        1234.5,
+        12.3,
+        FREQUENCY_OBSERVATION_QUALITY_VALID,
+        true,
+        FMC_MODEL_TIME_BASE_SECOND);
 
     if ((FMC_PRESENTATION_Init(&presentation,
                                &snapshot,
@@ -2468,7 +2651,8 @@ static bool fm_regression_test_presentation_failure_(void)
     }
 
     sink.next_status = FM_STATUS_ESTATE;
-    if ((FMC_PRESENTATION_Advance(&presentation) != FM_STATUS_ESTATE) ||
+    if ((FMC_PRESENTATION_Advance(&presentation,
+                                  &snapshot) != FM_STATUS_ESTATE) ||
         (FMC_PRESENTATION_GetState(&presentation) !=
          FMC_PRESENTATION_STATE_ALL_SEGMENTS))
     {
@@ -2476,10 +2660,73 @@ static bool fm_regression_test_presentation_failure_(void)
     }
 
     sink.next_status = FM_STATUS_OK;
+    if ((FMC_PRESENTATION_Advance(&presentation,
+                                  &snapshot) != FM_STATUS_OK) ||
+        (FMC_PRESENTATION_GetState(&presentation) !=
+         FMC_PRESENTATION_STATE_FIRMWARE_VERSION))
+    {
+        return false;
+    }
 
-    return (FMC_PRESENTATION_Advance(&presentation) == FM_STATUS_OK) &&
-           (FMC_PRESENTATION_GetState(&presentation) ==
-            FMC_PRESENTATION_STATE_FIRMWARE_VERSION);
+    snapshot.rate.quality =
+        FREQUENCY_OBSERVATION_QUALITY_UNAVAILABLE;
+    snapshot.rate.value_present = true;
+    if (FMC_PRESENTATION_Advance(&presentation,
+                                 &snapshot) != FM_STATUS_EINVAL)
+    {
+        return false;
+    }
+
+    snapshot.rate.value_present = false;
+    snapshot.rate.quality = (frequency_observation_quality_t) 99;
+    if (FMC_PRESENTATION_Advance(&presentation,
+                                 &snapshot) != FM_STATUS_EINVAL)
+    {
+        return false;
+    }
+
+    /*
+     * The runtime pending flag is an integration acknowledgement: failed
+     * presentation leaves it set; only the caller clears it after success.
+     */
+    fm_regression_test_make_presentation_snapshot_(
+        &snapshot,
+        1.0,
+        2.0,
+        FREQUENCY_OBSERVATION_QUALITY_VALID,
+        true,
+        FMC_MODEL_TIME_BASE_SECOND);
+    if (FMC_PRESENTATION_Advance(&presentation,
+                                 &snapshot) != FM_STATUS_OK)
+    {
+        return false;
+    }
+
+    FMC_RUNTIME_Init(&runtime);
+    event.kind = FMC_RUNTIME_EVENT_PULSE_DELTA;
+    event.data.pulse_delta = 1U;
+    if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_OK) ||
+        !FMC_RUNTIME_PresentationUpdateIsPending(&runtime))
+    {
+        return false;
+    }
+
+    sink.next_status = FM_STATUS_ESTATE;
+    if ((FMC_PRESENTATION_Refresh(&presentation, &snapshot) !=
+         FM_STATUS_ESTATE) ||
+        !FMC_RUNTIME_PresentationUpdateIsPending(&runtime))
+    {
+        return false;
+    }
+
+    sink.next_status = FM_STATUS_OK;
+
+    return (FMC_PRESENTATION_Refresh(&presentation, &snapshot) ==
+            FM_STATUS_OK) &&
+           FMC_RUNTIME_PresentationUpdateIsPending(&runtime) &&
+           (FMC_RUNTIME_ClearPresentationUpdatePending(&runtime) ==
+            FM_STATUS_OK) &&
+           !FMC_RUNTIME_PresentationUpdateIsPending(&runtime);
 }
 
 /*

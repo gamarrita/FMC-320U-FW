@@ -14,6 +14,7 @@
 #include "fm_main_input_adapter.h"
 #include "fm_main_input_recognizer.h"
 #include "fm_main_presentation_lcd.h"
+#include "fm_port_frequency_time.h"
 #include "fm_port_pulse_counter.h"
 #include "fm_port_rtc.h"
 #include "fmc_presentation.h"
@@ -183,7 +184,7 @@ static bool fm_main_key_hold_timeout_is_current_(
     const fm_main_owner_state_t *p_owner);
 
 /**
- * @brief ThreadX callback for the one-shot Phase 6A presentation timer.
+ * @brief ThreadX callback for the one-shot startup presentation timer.
  *
  * @param input ThreadX timer input value. Unused.
  */
@@ -219,6 +220,29 @@ static void fm_main_presentation_timer_sync_(
     fm_main_owner_state_t *p_owner);
 
 /**
+ * @brief Compose one presentation-only copy of the canonical runtime state.
+ *
+ * @param p_runtime Runtime owned by the serialized main loop.
+ * @param p_snapshot Caller-owned presentation snapshot.
+ *
+ * @return Runtime snapshot/getter status unchanged.
+ */
+static fm_status_t fm_main_presentation_snapshot_make_(
+    const fmc_runtime_t *p_runtime,
+    fmc_presentation_snapshot_t *p_snapshot);
+
+/**
+ * @brief Acknowledge a pending runtime presentation update.
+ *
+ * Called only after a successful periodic presentation or successful atomic
+ * entry to TTL/RATE.
+ *
+ * @param p_runtime Runtime owned by the serialized main loop.
+ */
+static void fm_main_presentation_update_acknowledge_(
+    fmc_runtime_t *p_runtime);
+
+/**
  * @brief Emit one human-audit trace after successful LCD presentation.
  *
  * Traces are gated by the existing debug-message jumper and never participate
@@ -250,22 +274,22 @@ static void fm_main_periodic_refresh_timer_start_(void);
 /**
  * @brief Handle one periodic refresh event in the owner loop.
  *
- * Resamples debug jumpers, observes and dispatches the pulse counter once, and
- * emits optional totalization evidence. It also re-presents the current
- * provisional Phase 6A TTL/RATE snapshot while that stable view is active.
+ * Resamples debug jumpers, observes and dispatches independent totalization
+ * and frequency samples, and emits optional compact live evidence. It also
+ * presents a fresh canonical runtime snapshot while TTL/RATE is active.
  */
 static void fm_main_periodic_refresh_handle_(
     fm_main_owner_state_t *p_owner);
 
 /**
- * @brief Emit optional ACM/TTL pulse-total evidence for one periodic cycle.
+ * @brief Emit optional compact ACM/TTL/quality evidence for one cycle.
  *
  * Snapshot or formatting failures are diagnostic-only and never affect
  * acquisition or totalization.
  *
  * @param p_runtime Runtime whose canonical totals are reported.
  */
-static void fm_main_totalization_trace_(const fmc_runtime_t *p_runtime);
+static void fm_main_live_trace_(const fmc_runtime_t *p_runtime);
 
 /**
  * @brief Emit one `uint64_t` as decimal without formatted-I/O dependencies.
@@ -474,15 +498,21 @@ static void fm_main_input_recognizer_output_apply_(
 
     if (p_output->runtime_event_valid)
     {
+        fmc_presentation_snapshot_t snapshot;
         fmc_presentation_state_t previous_state;
         fmc_presentation_state_t current_state;
         fm_status_t status;
 
+        status = fm_main_presentation_snapshot_make_(&p_owner->runtime,
+                                                     &snapshot);
+        fm_main_require_status_ok_(status,
+                                   "FM_MAIN:PRESENTATION_SNAPSHOT");
         previous_state = FMC_PRESENTATION_GetState(
             &p_owner->presentation);
         status = FMC_PRESENTATION_HandleInput(
             &p_owner->presentation,
-            &p_output->runtime_event.data.input);
+            &p_output->runtime_event.data.input,
+            &snapshot);
         fm_main_require_status_ok_(status, "FM_MAIN:PRESENTATION_INPUT");
         current_state = FMC_PRESENTATION_GetState(
             &p_owner->presentation);
@@ -491,6 +521,11 @@ static void fm_main_input_recognizer_output_apply_(
         {
             fm_main_presentation_timer_sync_(p_owner);
             fm_main_presentation_trace_(current_state, "ESC_SHORT");
+            if (current_state == FMC_PRESENTATION_STATE_TTL_RATE)
+            {
+                fm_main_presentation_update_acknowledge_(
+                    &p_owner->runtime);
+            }
             return;
         }
 
@@ -598,6 +633,7 @@ static void fm_main_presentation_timer_callback_(ULONG input)
 static void fm_main_presentation_timeout_handle_(
     fm_main_owner_state_t *p_owner)
 {
+    fmc_presentation_snapshot_t snapshot;
     fmc_presentation_state_t state;
     ULONG elapsed_ticks;
     fm_status_t status;
@@ -620,12 +656,22 @@ static void fm_main_presentation_timeout_handle_(
         return;
     }
 
-    status = FMC_PRESENTATION_Advance(&p_owner->presentation);
+    status = fm_main_presentation_snapshot_make_(&p_owner->runtime,
+                                                 &snapshot);
+    fm_main_require_status_ok_(status,
+                               "FM_MAIN:PRESENTATION_SNAPSHOT");
+    status = FMC_PRESENTATION_Advance(&p_owner->presentation,
+                                      &snapshot);
     fm_main_require_status_ok_(status, "FM_MAIN:PRESENTATION_TIMEOUT");
     fm_main_presentation_timer_sync_(p_owner);
     fm_main_presentation_trace_(
         FMC_PRESENTATION_GetState(&p_owner->presentation),
         "TIMEOUT");
+    if (FMC_PRESENTATION_GetState(&p_owner->presentation) ==
+        FMC_PRESENTATION_STATE_TTL_RATE)
+    {
+        fm_main_presentation_update_acknowledge_(&p_owner->runtime);
+    }
 }
 
 static void fm_main_presentation_timer_start_(
@@ -685,6 +731,53 @@ static void fm_main_presentation_timer_sync_(
     fm_main_presentation_timer_cancel_();
 }
 
+static fm_status_t fm_main_presentation_snapshot_make_(
+    const fmc_runtime_t *p_runtime,
+    fmc_presentation_snapshot_t *p_snapshot)
+{
+    fmc_service_snapshot_t service_snapshot;
+    fm_status_t status;
+
+    if ((p_runtime == NULL) || (p_snapshot == NULL))
+    {
+        return FM_STATUS_EINVAL;
+    }
+
+    status = FMC_RUNTIME_GetSnapshot(p_runtime, &service_snapshot);
+    if (status != FM_STATUS_OK)
+    {
+        return status;
+    }
+
+    status = FMC_RUNTIME_GetRateState(p_runtime, &p_snapshot->rate);
+    if (status != FM_STATUS_OK)
+    {
+        return status;
+    }
+
+    p_snapshot->ttl = service_snapshot.ttl_volume;
+    p_snapshot->volume_unit =
+        service_snapshot.model.measurement.active_volume_unit;
+    p_snapshot->rate_time_base =
+        service_snapshot.model.measurement.active_time_base;
+    p_snapshot->ttl_fractional_digits =
+        FMC_PRESENTATION_VALUE_FRACTIONAL_DIGITS;
+    p_snapshot->rate_fractional_digits =
+        FMC_PRESENTATION_VALUE_FRACTIONAL_DIGITS;
+
+    return FM_STATUS_OK;
+}
+
+static void fm_main_presentation_update_acknowledge_(
+    fmc_runtime_t *p_runtime)
+{
+    fm_status_t status;
+
+    status = FMC_RUNTIME_ClearPresentationUpdatePending(p_runtime);
+    fm_main_require_status_ok_(status,
+                               "FM_MAIN:PRESENTATION_ACK");
+}
+
 static void fm_main_presentation_trace_(
     fmc_presentation_state_t state,
     const char *p_cause)
@@ -699,27 +792,26 @@ static void fm_main_presentation_trace_(
     switch (state)
     {
     case FMC_PRESENTATION_STATE_ALL_SEGMENTS:
-        p_state = "ALL_SEGMENTS";
+        p_state = "ALL";
         break;
 
     case FMC_PRESENTATION_STATE_FIRMWARE_VERSION:
-        p_state = "FIRMWARE_VERSION BOTTOM=00.01.00 ALPHA=B0";
+        p_state = "VER";
         break;
 
     case FMC_PRESENTATION_STATE_TTL_RATE:
-        p_state = "TTL_RATE TOP=1234.5 BOTTOM=12.3 UNIT="
-                  FMC_PRESENTATION_LITERS_LEGEND "/MIN";
+        p_state = "TTL";
         break;
 
     case FMC_PRESENTATION_STATE_NOT_STARTED:
     default:
-        p_state = "NOT_STARTED";
+        p_state = "NONE";
         break;
     }
 
-    (void) FM_DEBUG_UartStr("FM_MAIN:PRESENTATION=");
+    (void) FM_DEBUG_UartStr("FM:P=");
     (void) FM_DEBUG_UartStr(p_state);
-    (void) FM_DEBUG_UartStr(" CAUSE=");
+    (void) FM_DEBUG_UartStr(" C=");
     (void) FM_DEBUG_UartStr(p_cause);
     (void) FM_DEBUG_UartStr("\n");
 }
@@ -745,6 +837,7 @@ static void fm_main_periodic_refresh_timer_start_(void)
 static void fm_main_periodic_refresh_handle_(
     fm_main_owner_state_t *p_owner)
 {
+    frequency_observation_sample_t frequency_sample;
     fmc_presentation_snapshot_t snapshot;
     fm_status_t status;
     uint16_t current_count;
@@ -763,27 +856,47 @@ static void fm_main_periodic_refresh_handle_(
         current_count,
         &p_owner->runtime);
     fm_main_require_status_ok_(status, "FM_MAIN:ACQUISITION");
-    fm_main_totalization_trace_(&p_owner->runtime);
+
+    /*
+     * Frequency owns an independent counter baseline. A pulse may arrive
+     * between this read and the totalization read above; it then belongs to
+     * the current frequency window and the next totalization delta.
+     */
+    frequency_sample.pulse_count =
+        FM_PORT_PulseCounterReadStable();
+    status = FM_PORT_FrequencyTimeRead(
+        &frequency_sample.timestamp_us);
+    fm_main_require_status_ok_(status, "FM_MAIN:FREQUENCY_TIME");
+    status = FM_MAIN_ACQUISITION_ProcessFrequencyObservation(
+        &p_owner->acquisition,
+        &frequency_sample,
+        &p_owner->runtime);
+    fm_main_require_status_ok_(status, "FM_MAIN:FREQUENCY");
+
+    fm_main_live_trace_(&p_owner->runtime);
 
     if (FMC_PRESENTATION_GetState(&p_owner->presentation) ==
         FMC_PRESENTATION_STATE_TTL_RATE)
     {
-        FMC_PRESENTATION_MakeDummySnapshot(&snapshot);
+        status = fm_main_presentation_snapshot_make_(&p_owner->runtime,
+                                                     &snapshot);
+        fm_main_require_status_ok_(status,
+                                   "FM_MAIN:PRESENTATION_SNAPSHOT");
         status = FMC_PRESENTATION_Refresh(&p_owner->presentation,
                                           &snapshot);
         fm_main_require_status_ok_(status,
                                    "FM_MAIN:PRESENTATION_REFRESH");
-        fm_main_presentation_trace_(
-            FMC_PRESENTATION_GetState(&p_owner->presentation),
-            "REFRESH");
+        fm_main_presentation_update_acknowledge_(&p_owner->runtime);
     }
 
     FM_DEBUG_LedRun(FM_DEBUG_LED_OFF);
 }
 
-static void fm_main_totalization_trace_(const fmc_runtime_t *p_runtime)
+static void fm_main_live_trace_(const fmc_runtime_t *p_runtime)
 {
     fmc_service_snapshot_t snapshot;
+    fmc_runtime_rate_state_t rate;
+    char quality;
     fm_status_t status;
 
     if (!FM_DEBUG_MsgIsEnabled() || (p_runtime == NULL))
@@ -797,10 +910,35 @@ static void fm_main_totalization_trace_(const fmc_runtime_t *p_runtime)
         return;
     }
 
-    FM_DEBUG_UartStr("FM_MAIN:TOTALIZATION ACM_PULSES=");
+    status = FMC_RUNTIME_GetRateState(p_runtime, &rate);
+    if (status != FM_STATUS_OK)
+    {
+        return;
+    }
+
+    switch (rate.quality)
+    {
+    case FREQUENCY_OBSERVATION_QUALITY_VALID:
+        quality = 'V';
+        break;
+    case FREQUENCY_OBSERVATION_QUALITY_UNAVAILABLE:
+        quality = 'U';
+        break;
+    case FREQUENCY_OBSERVATION_QUALITY_STALE:
+        quality = 'S';
+        break;
+    case FREQUENCY_OBSERVATION_QUALITY_INVALID:
+    default:
+        quality = 'I';
+        break;
+    }
+
+    FM_DEBUG_UartStr("FM:LIVE A=");
     fm_main_totalization_uint64_trace_(snapshot.model.acm.pulses);
-    FM_DEBUG_UartStr(" TTL_PULSES=");
+    FM_DEBUG_UartStr(" T=");
     fm_main_totalization_uint64_trace_(snapshot.model.ttl.pulses);
+    FM_DEBUG_UartStr(" Q=");
+    FM_DEBUG_UartMsg(&quality, 1U);
     FM_DEBUG_UartStr("\n");
 }
 
@@ -894,6 +1032,7 @@ void FM_MAIN_Init(void)
 void FM_MAIN_Main(void)
 {
     fm_main_owner_state_t owner;
+    frequency_observation_sample_t frequency_baseline;
     fmc_presentation_snapshot_t presentation_snapshot;
     fm_main_event_t event;
     fm_status_t project_status;
@@ -902,10 +1041,32 @@ void FM_MAIN_Main(void)
     FM_MAIN_Init();
     FMC_RUNTIME_Init(&owner.runtime);
     FM_MAIN_ACQUISITION_Init(&owner.acquisition);
+    project_status = FM_PORT_FrequencyTimeStart();
+    fm_main_require_status_ok_(project_status,
+                               "FM_MAIN:FREQUENCY_TIME_START");
     if (!FM_PORT_PulseCounterStart())
     {
         FM_DEBUG_PanicMsg("FM_MAIN:PULSE_COUNTER_START");
     }
+
+    /*
+     * Establish the frequency baseline immediately without waiting for a
+     * nonzero counter. This keeps zero-frequency startup valid and leaves the
+     * pulse-delta observer's accepted zero baseline independent.
+     */
+    frequency_baseline.pulse_count =
+        FM_PORT_PulseCounterReadStable();
+    project_status = FM_PORT_FrequencyTimeRead(
+        &frequency_baseline.timestamp_us);
+    fm_main_require_status_ok_(project_status,
+                               "FM_MAIN:FREQUENCY_TIME_BASELINE");
+    project_status =
+        FM_MAIN_ACQUISITION_ProcessFrequencyObservation(
+            &owner.acquisition,
+            &frequency_baseline,
+            &owner.runtime);
+    fm_main_require_status_ok_(project_status,
+                               "FM_MAIN:FREQUENCY_BASELINE");
 
     FM_MAIN_INPUT_RECOGNIZER_Init(&owner.input_recognizer);
     owner.key_hold_start_ticks = 0U;
@@ -915,7 +1076,11 @@ void FM_MAIN_Main(void)
     fm_main_require_status_ok_(project_status,
                                "FM_MAIN:LCD_INIT");
 
-    FMC_PRESENTATION_MakeDummySnapshot(&presentation_snapshot);
+    project_status = fm_main_presentation_snapshot_make_(
+        &owner.runtime,
+        &presentation_snapshot);
+    fm_main_require_status_ok_(project_status,
+                               "FM_MAIN:PRESENTATION_SNAPSHOT");
     project_status = FMC_PRESENTATION_Init(
         &owner.presentation,
         &presentation_snapshot,

@@ -108,6 +108,14 @@ fm_status_t FM_MAIN_PRESENTATION_LCD_Present(
     }
 
     status = fm_main_presentation_lcd_set_indicator_(
+        FM_LCD_LAYOUT_INDICATOR_S,
+        p_frame->indicator_second);
+    if (status != FM_STATUS_OK)
+    {
+        return status;
+    }
+
+    status = fm_main_presentation_lcd_set_indicator_(
         FM_LCD_LAYOUT_INDICATOR_M,
         p_frame->indicator_minute);
     if (status != FM_STATUS_OK)

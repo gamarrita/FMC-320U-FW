@@ -47,7 +47,7 @@ void FM_MAIN_EVENT_MakeKeyboard(fm_main_event_t *p_event,
 /**
  * @brief Populate an app-level periodic refresh event.
  *
- * Phase 6A consumes this event to refresh stable TTL/RATE presentation.
+ * Product main consumes this event to acquire and refresh live TTL/RATE.
  * Later slices may also update measurements without changing the
  * product-domain runtime contract.
  *
@@ -68,7 +68,7 @@ void FM_MAIN_EVENT_MakeKeyHoldTimeout(fm_main_event_t *p_event);
 /**
  * @brief Populate an app-level presentation timeout event.
  *
- * This event is produced by the Phase 6A one-shot presentation timer and
+ * This event is produced by the startup one-shot presentation timer and
  * consumed only by the product owner loop.
  *
  * @param p_event Caller-owned event destination.
