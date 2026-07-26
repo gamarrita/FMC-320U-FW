@@ -48,6 +48,7 @@ typedef enum
     FM_REGRESSION_TEST_CASE_PULSE_DELTA_VECTORS,
     FM_REGRESSION_TEST_CASE_FREQUENCY_OBSERVATION_VECTORS,
     FM_REGRESSION_TEST_CASE_OBSERVER_INDEPENDENCE,
+    FM_REGRESSION_TEST_CASE_RUNTIME_FREQUENCY_RESULT,
     FM_REGRESSION_TEST_CASE_MAIN_ACQUISITION,
     FM_REGRESSION_TEST_CASE_RUNTIME_EVENTS,
     FM_REGRESSION_TEST_CASE_RUNTIME_INPUT_EVENTS,
@@ -117,6 +118,7 @@ static bool fm_regression_test_rate_error_paths_(void);
 static bool fm_regression_test_pulse_delta_vectors_(void);
 static bool fm_regression_test_frequency_observation_vectors_(void);
 static bool fm_regression_test_observer_independence_(void);
+static bool fm_regression_test_runtime_frequency_result_(void);
 static bool fm_regression_test_main_acquisition_(void);
 static bool fm_regression_test_runtime_events_(void);
 static bool fm_regression_test_runtime_input_events_(void);
@@ -144,6 +146,12 @@ static bool fm_regression_test_text_eq_(const char *p_actual,
 static fm_status_t fm_regression_test_presentation_sink_(
     const fmc_presentation_frame_t *p_frame,
     void *p_context);
+static bool fm_regression_test_dispatch_frequency_success_(
+    fmc_runtime_t *p_runtime,
+    const frequency_observation_result_t *p_result,
+    frequency_observation_quality_t p_expected_quality,
+    bool p_expected_value_present,
+    double p_expected_value);
 
 /* Public function definitions */
 void FM_RegressionTest_Run(void)
@@ -1184,6 +1192,295 @@ static bool fm_regression_test_observer_independence_(void)
         (result.quality == FREQUENCY_OBSERVATION_QUALITY_VALID) &&
         (result.pulse_delta == 100U) &&
         (result.elapsed_us == 1000000U);
+}
+
+/*
+ * Verifies the deterministic 7F integration chain from admitted pulse/time
+ * observations through runtime-owned RATE state. Physical sampling remains a
+ * later product-main composition responsibility.
+ */
+static bool fm_regression_test_runtime_frequency_result_(void)
+{
+    frequency_observation_t observer;
+    frequency_observation_sample_t sample;
+    frequency_observation_result_t result;
+    fmc_runtime_event_t event;
+    fmc_runtime_rate_state_t rate_state;
+    fmc_service_snapshot_t snapshot;
+    fmc_runtime_t runtime;
+    bool available;
+
+    FREQUENCY_OBSERVATION_Init(&observer);
+    FMC_RUNTIME_Init(&runtime);
+    runtime.service.model.acm.pulses = 123U;
+    runtime.service.model.ttl.pulses = 456U;
+
+    if ((FMC_RUNTIME_GetRateState(&runtime, &rate_state) != FM_STATUS_OK) ||
+        (rate_state.quality !=
+         FREQUENCY_OBSERVATION_QUALITY_UNAVAILABLE) ||
+        rate_state.value_present ||
+        !fm_regression_test_double_eq_(rate_state.value, 0.0) ||
+        FMC_RUNTIME_PresentationUpdateIsPending(&runtime))
+    {
+        return false;
+    }
+
+    /* The first trusted sample is reported and applied as unavailable. */
+    sample.pulse_count = 10U;
+    sample.timestamp_us = 1000U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_UNAVAILABLE) ||
+        !fm_regression_test_dispatch_frequency_success_(
+            &runtime,
+            &result,
+            FREQUENCY_OBSERVATION_QUALITY_UNAVAILABLE,
+            false,
+            0.0))
+    {
+        return false;
+    }
+
+    /*
+     * An early sample produces no result, so integration has no event to
+     * dispatch and runtime remains unchanged.
+     */
+    sample.pulse_count = 15U;
+    sample.timestamp_us = 501000U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        available ||
+        FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
+        (FMC_RUNTIME_GetRateState(&runtime, &rate_state) != FM_STATUS_OK) ||
+        (rate_state.quality !=
+         FREQUENCY_OBSERVATION_QUALITY_UNAVAILABLE) ||
+        rate_state.value_present)
+    {
+        return false;
+    }
+
+    /* Nine pulses over the inclusive 900 ms limit produce exactly 10 L/s. */
+    sample.pulse_count = 19U;
+    sample.timestamp_us =
+        1000U + FREQUENCY_OBSERVATION_MIN_ELAPSED_US;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_VALID) ||
+        (result.pulse_delta != 9U) ||
+        (result.elapsed_us != FREQUENCY_OBSERVATION_MIN_ELAPSED_US) ||
+        !fm_regression_test_dispatch_frequency_success_(
+            &runtime,
+            &result,
+            FREQUENCY_OBSERVATION_QUALITY_VALID,
+            true,
+            10.0))
+    {
+        return false;
+    }
+
+    /* Eleven pulses over the inclusive 1.1 s limit also produce 10 L/s. */
+    sample.pulse_count = 30U;
+    sample.timestamp_us =
+        1000U +
+        FREQUENCY_OBSERVATION_MIN_ELAPSED_US +
+        FREQUENCY_OBSERVATION_MAX_ELAPSED_US;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_VALID) ||
+        (result.pulse_delta != 11U) ||
+        (result.elapsed_us != FREQUENCY_OBSERVATION_MAX_ELAPSED_US) ||
+        !fm_regression_test_dispatch_frequency_success_(
+            &runtime,
+            &result,
+            FREQUENCY_OBSERVATION_QUALITY_VALID,
+            true,
+            10.0))
+    {
+        return false;
+    }
+
+    /* A complete zero-pulse window is a present and valid numeric zero. */
+    sample.timestamp_us += 1000000U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_VALID) ||
+        (result.pulse_delta != 0U) ||
+        !fm_regression_test_dispatch_frequency_success_(
+            &runtime,
+            &result,
+            FREQUENCY_OBSERVATION_QUALITY_VALID,
+            true,
+            0.0))
+    {
+        return false;
+    }
+
+    /* A late sample becomes stale, resynchronizes, and retains numeric zero. */
+    sample.pulse_count = 31U;
+    sample.timestamp_us +=
+        FREQUENCY_OBSERVATION_MAX_ELAPSED_US + 100001U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_STALE) ||
+        !fm_regression_test_dispatch_frequency_success_(
+            &runtime,
+            &result,
+            FREQUENCY_OBSERVATION_QUALITY_STALE,
+            true,
+            0.0))
+    {
+        return false;
+    }
+
+    /* A normal sample after stale proves recovery from the new baseline. */
+    sample.pulse_count = 41U;
+    sample.timestamp_us += 1000000U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_VALID) ||
+        (result.pulse_delta != 10U) ||
+        !fm_regression_test_dispatch_frequency_success_(
+            &runtime,
+            &result,
+            FREQUENCY_OBSERVATION_QUALITY_VALID,
+            true,
+            10.0))
+    {
+        return false;
+    }
+
+    /* Equal monotonic time is invalid and retains the last numeric RATE. */
+    sample.pulse_count = 50U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_INVALID) ||
+        !fm_regression_test_dispatch_frequency_success_(
+            &runtime,
+            &result,
+            FREQUENCY_OBSERVATION_QUALITY_INVALID,
+            true,
+            10.0))
+    {
+        return false;
+    }
+
+    /* Invalid clears the observer, so the next sample is a new baseline. */
+    sample.pulse_count = 60U;
+    sample.timestamp_us = 6000000U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_UNAVAILABLE) ||
+        !fm_regression_test_dispatch_frequency_success_(
+            &runtime,
+            &result,
+            FREQUENCY_OBSERVATION_QUALITY_UNAVAILABLE,
+            false,
+            0.0))
+    {
+        return false;
+    }
+
+    sample.pulse_count = 70U;
+    sample.timestamp_us += 1000000U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_VALID) ||
+        (result.pulse_delta != 10U) ||
+        !fm_regression_test_dispatch_frequency_success_(
+            &runtime,
+            &result,
+            FREQUENCY_OBSERVATION_QUALITY_VALID,
+            true,
+            10.0))
+    {
+        return false;
+    }
+
+    /*
+     * Direct malformed runtime events test atomicity below the observer
+     * boundary: no RATE state or pending flag may change on failure.
+     */
+    event.kind = FMC_RUNTIME_EVENT_FREQUENCY_RESULT;
+    event.data.frequency_result.quality =
+        FREQUENCY_OBSERVATION_QUALITY_VALID;
+    event.data.frequency_result.pulse_delta = 1U;
+    event.data.frequency_result.elapsed_us = 0U;
+    if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_ERANGE) ||
+        FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
+        (FMC_RUNTIME_GetRateState(&runtime, &rate_state) != FM_STATUS_OK) ||
+        (rate_state.quality != FREQUENCY_OBSERVATION_QUALITY_VALID) ||
+        !rate_state.value_present ||
+        !fm_regression_test_double_eq_(rate_state.value, 10.0))
+    {
+        return false;
+    }
+
+    runtime.service.model.measurement.calibration_pulses_per_unit =
+        FMC_MODEL_CALIBRATION_PULSES_PER_UNIT_MIN - 1.0;
+    event.data.frequency_result.elapsed_us = 1000000U;
+    if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_ERANGE) ||
+        FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
+        (FMC_RUNTIME_GetRateState(&runtime, &rate_state) != FM_STATUS_OK) ||
+        (rate_state.quality != FREQUENCY_OBSERVATION_QUALITY_VALID) ||
+        !rate_state.value_present ||
+        !fm_regression_test_double_eq_(rate_state.value, 10.0))
+    {
+        return false;
+    }
+    runtime.service.model.measurement.calibration_pulses_per_unit =
+        FMC_MODEL_CALIBRATION_PULSES_PER_UNIT_DEFAULT;
+
+    event.data.frequency_result.quality =
+        (frequency_observation_quality_t) 99;
+    if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_EINVAL) ||
+        FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
+        (FMC_RUNTIME_GetRateState(&runtime, &rate_state) != FM_STATUS_OK) ||
+        (rate_state.quality != FREQUENCY_OBSERVATION_QUALITY_VALID) ||
+        !rate_state.value_present ||
+        !fm_regression_test_double_eq_(rate_state.value, 10.0))
+    {
+        return false;
+    }
+
+    /*
+     * A final snapshot proves the entire frequency sequence conserved both
+     * independent totalizers; no tested path can silently update ACM or TTL.
+     */
+    return
+        (FMC_RUNTIME_GetRateState(NULL, &rate_state) == FM_STATUS_EINVAL) &&
+        (FMC_RUNTIME_GetRateState(&runtime, NULL) == FM_STATUS_EINVAL) &&
+        (FMC_RUNTIME_GetSnapshot(&runtime, &snapshot) == FM_STATUS_OK) &&
+        (snapshot.model.acm.pulses == 123U) &&
+        (snapshot.model.ttl.pulses == 456U);
 }
 
 /*
@@ -2556,6 +2853,39 @@ done:
     return passed;
 }
 
+/*
+ * Apply one already produced observation result and verify the common runtime
+ * success contract used by every stage of the 7F integration sequence.
+ */
+static bool fm_regression_test_dispatch_frequency_success_(
+    fmc_runtime_t *p_runtime,
+    const frequency_observation_result_t *p_result,
+    frequency_observation_quality_t p_expected_quality,
+    bool p_expected_value_present,
+    double p_expected_value)
+{
+    fmc_runtime_rate_state_t rate_state;
+    fmc_runtime_event_t event;
+
+    event.kind = FMC_RUNTIME_EVENT_FREQUENCY_RESULT;
+    event.data.frequency_result = *p_result;
+
+    if ((FMC_RUNTIME_Dispatch(p_runtime, &event) != FM_STATUS_OK) ||
+        !FMC_RUNTIME_PresentationUpdateIsPending(p_runtime) ||
+        (FMC_RUNTIME_GetRateState(p_runtime, &rate_state) != FM_STATUS_OK) ||
+        (rate_state.quality != p_expected_quality) ||
+        (rate_state.value_present != p_expected_value_present) ||
+        !fm_regression_test_double_eq_(rate_state.value, p_expected_value) ||
+        (FMC_RUNTIME_ClearPresentationUpdatePending(p_runtime) !=
+         FM_STATUS_OK) ||
+        FMC_RUNTIME_PresentationUpdateIsPending(p_runtime))
+    {
+        return false;
+    }
+
+    return true;
+}
+
 static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case)
 {
     switch (p_case)
@@ -2595,6 +2925,9 @@ static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case)
 
     case FM_REGRESSION_TEST_CASE_OBSERVER_INDEPENDENCE:
         return fm_regression_test_observer_independence_();
+
+    case FM_REGRESSION_TEST_CASE_RUNTIME_FREQUENCY_RESULT:
+        return fm_regression_test_runtime_frequency_result_();
 
     case FM_REGRESSION_TEST_CASE_MAIN_ACQUISITION:
         return fm_regression_test_main_acquisition_();
@@ -2711,6 +3044,11 @@ static void fm_regression_test_emit_case_(fm_regression_test_case_t p_case,
     case FM_REGRESSION_TEST_CASE_OBSERVER_INDEPENDENCE:
         (void) FM_DEBUG_UartStr(
             "REGRESSION_TEST:OBSERVER_INDEPENDENCE:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_RUNTIME_FREQUENCY_RESULT:
+        (void) FM_DEBUG_UartStr(
+            "REGRESSION_TEST:RUNTIME_FREQUENCY_RESULT:");
         break;
 
     case FM_REGRESSION_TEST_CASE_MAIN_ACQUISITION:

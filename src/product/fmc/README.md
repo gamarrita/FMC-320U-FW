@@ -14,7 +14,7 @@ The initial split is:
 - `fmc_volume.*`: pure visible-volume calculation from ACM/TTL pulse counters,
 - `fmc_service.*`: live FMC state owner and snapshot/update boundary,
 - `fmc_runtime.*`: RTOS-neutral product event dispatch boundary over the
-  service.
+  service, including current RATE value, presence, and observation quality.
 
 ## Current Boundary
 
@@ -26,8 +26,8 @@ The current implemented slices are:
 - `fmc_version.h`: compile-time checked provisional version components,
 - `fmc_units.*`: product unit policy and operative factor helpers,
 - `fmc_rate.*`: active-unit rate derived from captured pulse/time windows,
-- `fmc_runtime.*`: minimal product event dispatch, service ownership, and
-  presentation-update pending boundary,
+- `fmc_runtime.*`: product event dispatch, service ownership, current
+  RATE/quality state, and presentation-update pending boundary,
 - `fmc_service.*`: live state owner and snapshot/update boundary,
 - `fmc_volume.*`: active-unit volume derived from ACM/TTL pulse counters.
 

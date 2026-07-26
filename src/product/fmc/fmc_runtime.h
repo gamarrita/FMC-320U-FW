@@ -30,6 +30,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "frequency_observation.h"
 #include "fmc_input.h"
 #include "fmc_service.h"
 #include "fm_status.h"
@@ -50,6 +51,10 @@ typedef enum
      * A zero delta is accepted as a no-op.
      */
     FMC_RUNTIME_EVENT_PULSE_DELTA,
+    /**
+     * Apply one already admitted frequency-observation result to RATE state.
+     */
+    FMC_RUNTIME_EVENT_FREQUENCY_RESULT,
     /** Reset the ACM total after the caller has authorized the operation. */
     FMC_RUNTIME_EVENT_RESET_ACM,
     /** Reset the TTL total after the caller has authorized the operation. */
@@ -65,6 +70,7 @@ typedef enum
  *
  * The active payload is selected by `kind`:
  * - `data.pulse_delta` for `FMC_RUNTIME_EVENT_PULSE_DELTA`
+ * - `data.frequency_result` for `FMC_RUNTIME_EVENT_FREQUENCY_RESULT`
  * - `data.input` for `FMC_RUNTIME_EVENT_INPUT`
  *
  * Payload fields for other event kinds are ignored.
@@ -75,9 +81,28 @@ typedef struct
     union
     {
         uint64_t pulse_delta;
+        frequency_observation_result_t frequency_result;
         fmc_input_event_t input;
     } data;
 } fmc_runtime_event_t;
+
+/**
+ * @brief Current runtime RATE value and observation quality.
+ *
+ * `value`, when present, uses the active volume unit and active RATE time base
+ * from the runtime-owned measurement configuration. The value is current and
+ * usable only when `quality` is `FREQUENCY_OBSERVATION_QUALITY_VALID`.
+ *
+ * `value_present` distinguishes a valid numeric zero from no calculated RATE.
+ * `STALE` and `INVALID` may retain a prior value for diagnostics, but that
+ * retained value is not current or usable. `UNAVAILABLE` has no value present.
+ */
+typedef struct
+{
+    double value;
+    frequency_observation_quality_t quality;
+    bool value_present;
+} fmc_runtime_rate_state_t;
 
 /**
  * @brief Caller-owned runtime state for one FMC instrument instance.
@@ -94,6 +119,7 @@ typedef struct
 typedef struct
 {
     fmc_service_t service;
+    fmc_runtime_rate_state_t rate;
     fmc_input_event_t last_input;
     bool presentation_update_pending;
     bool last_input_valid;
@@ -123,6 +149,17 @@ void FMC_RUNTIME_Init(fmc_runtime_t *p_runtime);
  * presentation update as pending. The current slice does not map input to menu
  * navigation, backlight, wake, reset, or edit behavior.
  *
+ * A frequency-result event consumes its by-value
+ * `frequency_observation_result_t` payload. `VALID` invokes pure RATE
+ * mathematics using the runtime-owned measurement configuration and the
+ * supplied actual `elapsed_us`. Other recognized qualities update RATE quality
+ * without invoking RATE mathematics. Every successfully applied frequency
+ * result marks presentation update as pending.
+ *
+ * RATE calculation is atomic: a calculation error, invalid quality enum, or
+ * other rejected frequency event leaves RATE and presentation-pending state
+ * unchanged. Observation `INVALID` is never synthesized from a RATE error.
+ *
  * Unsupported event kinds are rejected without modifying runtime state. Errors
  * returned by the owned service are propagated to the caller.
  *
@@ -134,10 +171,29 @@ void FMC_RUNTIME_Init(fmc_runtime_t *p_runtime);
  * @return `FM_STATUS_EINVAL` when any pointer is `NULL`, the event kind is
  *         invalid, or an input key/action combination is invalid.
  * @return `FM_STATUS_ERANGE` when the owned service reports a range error,
- *         such as pulse-counter overflow.
+ *         such as pulse-counter overflow, or RATE calculation reports invalid
+ *         numeric input.
+ * @return `FM_STATUS_ENOTSUP` when RATE calculation reports a valid but
+ *         currently unsupported measurement configuration.
  */
 fm_status_t FMC_RUNTIME_Dispatch(fmc_runtime_t *p_runtime,
                                  const fmc_runtime_event_t *p_event);
+
+/**
+ * @brief Copy current RATE value, presence, and quality together.
+ *
+ * The returned state owns no pointers into `p_runtime`; later dispatches do
+ * not change a previously returned value.
+ *
+ * @param p_runtime Initialized runtime object to inspect.
+ * @param p_rate_state Caller-owned output state.
+ *
+ * @return `FM_STATUS_OK` on success.
+ * @return `FM_STATUS_EINVAL` when any pointer is `NULL`.
+ */
+fm_status_t FMC_RUNTIME_GetRateState(
+    const fmc_runtime_t *p_runtime,
+    fmc_runtime_rate_state_t *p_rate_state);
 
 /**
  * @brief Copy the live FMC service state and derived visible values.

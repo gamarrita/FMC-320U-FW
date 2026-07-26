@@ -10,6 +10,9 @@ Contain reusable system services with a clear technical responsibility.
 
 Current intended modules:
 - `display_format.*`: bounded numeric-to-text formatting for display fields.
+- `frequency_observation.*`: stateful admission of nominal one-second
+  pulse/time windows with explicit quality, independent of hardware, RATE,
+  totals, and scheduling.
 - `pulse_delta.*`: stateful modulo-16-bit counter observation and raw pulse
   delta formation without hardware, timing, totals, or RATE ownership.
 

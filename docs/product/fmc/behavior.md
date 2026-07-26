@@ -130,8 +130,11 @@ cannot be trusted. It produces no RATE window and ends the active frequency
 baseline; one trusted sample establishes a new unavailable baseline before a
 later trusted sample can restore valid observation.
 
-**Unresolved:** Frequency-observation behavior across low-power transitions
-remains undecided.
+**Accepted:** During active observation, the normal one-second ThreadX sleep
+may transparently enter Stop2 between deadlines. Accepted target evidence
+shows frequency windows and their monotonic timestamps continuing across those
+normal Run/Stop2 transitions. The mechanism for entering and leaving the
+future indefinite inactive sleep remains unselected.
 
 **Deferred:** A future presentation cadence may become less frequent during
 inactivity and return to one second after pulses, value changes, or operator

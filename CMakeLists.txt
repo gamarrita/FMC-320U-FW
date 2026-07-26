@@ -47,7 +47,7 @@ set(FM_AVAILABLE_APPS
 )
 
 # Edit this value to select the firmware app built by the canonical flow.
-set(FM_ACTIVE_APP_DEFAULT "bringups/frequency_observation")
+set(FM_ACTIVE_APP_DEFAULT "tests/regression")
 
 # Remove selector entries stored by older revisions.
 unset(FM_ACTIVE_APP CACHE)

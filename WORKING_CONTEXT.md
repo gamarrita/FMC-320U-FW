@@ -6,11 +6,15 @@
 - Workstream span: all Phase 7 slices, from 7-0A through 7G, as ordered by
   `docs/roadmaps/fmc_refactoring.md`.
 - Workstream state: active.
-- Active slice: `7F — RATE Integration`.
-- Slice state: opened by human approval after accepting all required 7D and 7E
-  contract, physical, regression, and current evidence. Entry review and
-  human-gated implementation decisions remain pending; no 7F code change has
-  been authorized.
+- Active slice: `7F — RATE Integration closeout`.
+- Slice state: technically closed and human-accepted. The deterministic
+  `frequency_observation -> fmc_runtime -> fmc_rate` integration is
+  implemented without composing the physical path in `product/main`.
+  Canonical regression and product-main builds pass. The human-executed target
+  regression reported every case `PASS`, including the new
+  `RUNTIME_FREQUENCY_RESULT` chain, and the human accepted that execution as
+  7F exit evidence. The repository handoff remains uncommitted until the human
+  authorizes commit and push; 7G has not been opened.
 - Completed slice: `7E2 — Silent Frequency Current Characterization`.
 - 7E2 completion state: human-accepted. The approved PPK2 run measured 23 uA
   average over approximately 74 silent seconds. Reinstalling the debug jumpers
@@ -355,21 +359,98 @@ by-value frequency-result event, conversion of integer `elapsed_us` to seconds
 only for `VALID`, and retention of RATE value and quality together. It must
 preserve the independent pulse-delta path and may not update ACM or TTL.
 
-No 7F implementation change is authorized yet. Its entry review must reconcile
-the accepted handoff with the existing `fmc_rate` and `fmc_runtime` contracts,
-then present the first unresolved human decision before editing.
+The approved 7F integration boundary is a deterministic regression chain that
+feeds counter/timestamp samples through the real `frequency_observation`
+module, dispatches each available result through the real `fmc_runtime`
+boundary, and verifies the real pure `fmc_rate` result and quality state.
+These regressions execute on target but inject physical samples so failures
+remain attributable to observer, runtime, or RATE semantics. They also verify
+that frequency events do not modify ACM or TTL.
+
+7F does not yet connect LPTIM3/LPTIM4 observations in `product/main`, replace
+the provisional presentation snapshot, or repeat the physical 7E matrix.
+Those live composition responsibilities remain in 7G.
+
+The approved public type boundary reuses
+`frequency_observation_result_t` directly as the by-value payload of the
+dedicated runtime frequency-result event, including its existing
+`frequency_observation_quality_t`. `fmc_runtime` therefore depends explicitly
+on the RTOS-neutral technical observer contract; it does not introduce a
+duplicate product enum, result structure, or semantic mapping adapter.
+
+`fmc_runtime` owns one public by-value RATE state containing `double value`,
+the observation `quality`, and `bool value_present`. Initialization is
+`UNAVAILABLE` with no value present. A successful `VALID` result calculates
+and stores RATE, including a present numeric zero for a valid-zero window.
+`STALE` and `INVALID` do not calculate and retain a prior numeric value when
+one exists, while their quality makes it non-current and unusable.
+`UNAVAILABLE` exposes no numeric value and clears `value_present`. Any internal
+zero used to initialize storage is deterministic hygiene, not a safe RATE
+fallback. A getter returns value, quality, and presence together; RATE does
+not become canonical `fmc_model` or `fmc_service` state.
+
+Frequency-result dispatch is atomic. For `VALID`, runtime converts
+`elapsed_us` to seconds, calculates into a local value, and commits the new
+RATE state only after `FMC_RATE_Calc()` succeeds. Calculation, configuration,
+range, argument, or unknown-quality errors are returned with the prior state
+unchanged. They are not translated into observation `INVALID`, whose meaning
+remains a failed physical sample. `UNAVAILABLE`, `STALE`, and `INVALID` never
+invoke RATE mathematics and apply only their approved state transitions.
+Runtime consumes an already admitted observer result and does not duplicate
+the observer's `900,000..1,100,000 us` window validation.
+
+Every successfully applied frequency-result event sets
+`presentation_update_pending`, including valid-zero, unavailable, stale, and
+invalid quality. This flag reports that RATE/quality state has new information
+to consume; it does not select the later LCD rendering. An early observer
+sample produces no event and therefore no pending update. A dispatch or RATE
+calculation error also leaves the pending flag unchanged.
+
+The approved 7F regression matrix drives the real observer-to-runtime-to-RATE
+chain through initialization, baseline unavailable, valid windows using actual
+elapsed time at both admitted boundaries, valid zero, stale, invalid, new
+unavailable baseline, and valid recovery. Direct runtime error vectors verify
+unknown quality and failed RATE calculation atomically. Every successful
+result checks the pending-update contract, and all frequency cases prove ACM
+and TTL remain unchanged. Existing pure unit, calibration, time-base, observer,
+and RATE vectors remain authoritative rather than being duplicated.
+
+Closure verification requires canonical builds of `tests/regression` and
+`product/main`, plus target execution of the regression image. No generator,
+PPK2, CubeMX change, physical product-main composition, or new bring-up is
+part of 7F.
+
+The deterministic integration and its public runtime contract are implemented.
+Canonical Debug builds pass for both `tests/regression` and `product/main`.
+The final configured and linked artifact is `tests/regression`, ready for
+human-controlled target flashing.
+
+The human executed that regression artifact on target. UART reported
+`RUNTIME_FREQUENCY_RESULT:PASS`, every pre-existing regression case also
+reported `PASS`, and the suite ended with `REGRESSION_TEST:PASS`. This supplies
+the required target evidence for the approved 7F matrix without detecting a
+regression in pulse delta, observer independence, totals, runtime input,
+presentation, LCD mapping, keyboard, or the main event queue.
+
+The 7F handoff must include a human-oriented review guide identifying the
+relevant regression code and explaining why deterministic module integration
+is a sound first step before physical `product/main` composition. This
+explanation is a closure deliverable, not a new product or module contract.
+
+All 7F entry decisions, implementation, canonical builds, target regression
+evidence, and technical closure are human-approved. The slice is closed.
 
 ## Next Gated Slice: 7G Combined Live Integration
 
-7G cannot open until 7F math, runtime, and target evidence are
-human-accepted.
+The 7G entry gate is now satisfied because 7C and 7F are human-accepted.
+7G remains unopened until the human explicitly starts it.
 
 ## Current Exclusions
 
 - further `.ioc`, CubeMX, or generated-code changes without explicit human
   approval;
 - another frequency-observation implementation or functional matrix;
-- 7F RATE runtime integration before its entry decisions are approved;
+- 7G physical RATE composition in `product/main`;
 - presentation changes before 7G;
 - user/configuration screens and navigation;
 - Backup SRAM, Flash, RTC, temperature, Bluetooth, or printing;
