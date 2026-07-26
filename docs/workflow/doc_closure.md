@@ -18,6 +18,13 @@ leave the repository ready to identify the next active workstream.
 - Do not keep documentation as backup history; Git does that.
 - Move every durable outcome to its owning product document, specification,
   roadmap, public header, or legacy-disposition register.
+- Before deleting or materially compressing a current product document or
+  technical specification, identify the current owner of every durable,
+  accepted contract it contains. Delete it only when all such content is
+  preserved by identified authorities or has been explicitly retired by human
+  decision. Keep the document when it still owns a coherent cross-cutting
+  contract. If completeness, ownership, or retirement is uncertain, stop and
+  ask the human before changing it.
 - Delete or compress temporary narration, superseded plans, duplicated
   rationale, and validation history already visible in code, tests, specs, or
   Git.
@@ -33,6 +40,10 @@ leave the repository ready to identify the next active workstream.
   gates.
 - Accepted product behavior and technical contracts are in their owning
   documents, not only in `WORKING_CONTEXT.md`.
+- Every deleted or materially compressed product document or technical
+  specification has an identified absorbing authority or an explicit human
+  retirement decision. Documents that still uniquely own a coherent
+  cross-cutting contract are preserved.
 - No other `.md` claims to define the closed or replaced active workstream.
 - References to superseded contexts, routes, files, and temporary decisions are
   removed.
@@ -54,5 +65,8 @@ Report:
 - documentation added, deleted, or compressed;
 - stale references found or remaining;
 - durable outcomes moved to their owners;
+- product documents and technical specifications preserved because of unique
+  ownership, and the absorbing authority or human disposition for each one
+  removed;
 - whether build verification was skipped because the closure was
   documentation-only.
