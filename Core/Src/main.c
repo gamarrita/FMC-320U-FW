@@ -98,6 +98,7 @@ int main(void)
   MX_SPI1_Init();
   MX_LPTIM1_Init();
   MX_LPTIM4_Init();
+  MX_LPTIM3_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */

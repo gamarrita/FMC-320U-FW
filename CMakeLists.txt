@@ -42,11 +42,12 @@ set(FM_AVAILABLE_APPS
     bringups/display_format_lcd
     bringups/keyboard_input
     bringups/pulse_counter
+    bringups/frequency_observation
     tests/regression
 )
 
 # Edit this value to select the firmware app built by the canonical flow.
-set(FM_ACTIVE_APP_DEFAULT "product/main")
+set(FM_ACTIVE_APP_DEFAULT "bringups/frequency_observation")
 
 # Remove selector entries stored by older revisions.
 unset(FM_ACTIVE_APP CACHE)
@@ -104,8 +105,10 @@ set(FM_COMMON_SOURCES
     ${FM_SRC_DIR}/product/fmc/fmc_units.c
     ${FM_SRC_DIR}/product/fmc/fmc_volume.c
     ${FM_SRC_DIR}/services/display_format.c
+    ${FM_SRC_DIR}/services/frequency_observation.c
     ${FM_SRC_DIR}/services/pulse_delta.c
     ${FM_SRC_DIR}/port/fm_port_dwt.c
+    ${FM_SRC_DIR}/port/fm_port_frequency_time.c
     ${FM_SRC_DIR}/port/fm_port_gpio.c
     ${FM_SRC_DIR}/port/fm_port_gpio_exti.c
     ${FM_SRC_DIR}/port/fm_port_pcf8553_ctrl.c

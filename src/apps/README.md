@@ -71,6 +71,7 @@ Examples:
 - `set(FM_ACTIVE_APP_DEFAULT "bringups/lcd_blink")`
 - `set(FM_ACTIVE_APP_DEFAULT "bringups/display_format_lcd")`
 - `set(FM_ACTIVE_APP_DEFAULT "bringups/keyboard_input")`
+- `set(FM_ACTIVE_APP_DEFAULT "bringups/frequency_observation")`
 - `set(FM_ACTIVE_APP_DEFAULT "tests/regression")`
 
 Do not select the normal app through a cached `-DFM_ACTIVE_APP=...` configure

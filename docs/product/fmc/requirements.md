@@ -29,6 +29,10 @@ This document applies to the FMC-320U product line.
 - A failed LCD initialization shall prevent the visible startup sequence from
   beginning.
 - Phase 6A shall not read, write, or otherwise impose backlight state.
+- The product shall support an activity-gated low-power lifecycle. After five
+  seconds without newly counted primary pulses, acquisition may remove its
+  periodic one-second deadline and remain inactive until new primary activity
+  is detected, without discarding accumulated pulses.
 
 **Candidate**
 
@@ -43,8 +47,9 @@ Evidence:
 
 **Unresolved**
 
-- Reset classes, broader startup dependency ordering, wake behavior outside
-  presentation, and acceptable power limits are not yet approved.
+- Reset classes, broader startup dependency ordering, the mechanisms used to
+  enter and leave activity-gated sleep, wake behavior outside presentation,
+  and acceptable power limits are not yet approved.
 
 ## Measurement, Rate, And Totalization
 
@@ -65,6 +70,16 @@ Evidence:
   active measurement configuration.
 - Rate shall be derived from a pulse delta and a positive elapsed-time window,
   using the active volume unit and active time base.
+- The first frequency-observation realization shall support nonzero physical
+  inputs from `1 Hz` through the accepted `1 kHz` primary-input limit.
+  Frequencies below `1 Hz` have no guaranteed representative RATE observation,
+  but shall remain eligible for normal pulse accumulation and totalization.
+- Within an accepted frequency window, observed pulses shall match the
+  independently observed physical pulses exactly and observed elapsed time
+  shall be within `+/-1%` of an independent temporal reference.
+- Runtime shall retain RATE value and explicit observation quality together.
+  RATE mathematics shall execute only for a valid pulse/time window, and
+  frequency-result events shall remain independent from ACM/TTL updates.
 - The active measurement model shall keep calibration, volume unit, and rate
   time base explicit.
 - Presentation shall receive accepted TTL and RATE values; it shall not own
@@ -74,6 +89,7 @@ Evidence:
 
 Evidence:
 - `docs/specs/fmc/acquisition.md`;
+- `docs/specs/fmc/frequency_observation.md`;
 - legacy `fmx.c::PulseUpdate()` and `fm_fmc.c::FM_FMC_PulseAdd()`;
 - `src/product/fmc/fmc_model.h`;
 - `src/product/fmc/fmc_service.h`;
@@ -93,9 +109,8 @@ Evidence:
 
 **Unresolved**
 
-- RATE-observation window ownership, absent or invalid measurement
-  presentation, calibration-unit expansion, and exact reset authorization
-  flows remain undecided.
+- Absent or invalid RATE measurement presentation, calibration-unit expansion,
+  and exact reset authorization flows remain undecided.
 
 ## Operator Interaction
 

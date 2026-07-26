@@ -16,14 +16,21 @@ separately and is not a decision state.
 measurement, operator interaction, and selected recovery or low-power
 conditions.
 
+**Accepted:** The target acquisition lifecycle distinguishes inactivity
+without a periodic acquisition deadline from active observation at a nominal
+one-second cadence with Stop2 available between deadlines. Five seconds
+without newly counted primary pulses permits the inactive state. The first
+integration retains the current one-second refresh while the mechanisms for
+entering and leaving indefinite-duration sleep remain unselected.
+
 Evidence:
 - roadmap;
 - `legacy/derived/fmc/use_cases.extraction-v1.yaml`;
 - legacy startup and runtime inventories.
 
 **Unresolved:** Exact lifecycle states outside the accepted Phase 6A
-presentation, sleep entry, wake sources, and non-LCD failure paths are not
-approved.
+presentation, sleep-entry and activity-detection mechanisms, other wake
+sources, and non-LCD failure paths are not approved.
 
 ## Power-On And Startup
 
@@ -99,8 +106,32 @@ Evidence:
 TTL/RATE values are shown on entry rather than waiting for the first periodic
 refresh.
 
-**Unresolved:** RATE-observation cadence, zero-flow recognition, smoothing, and
-frequency-observation behavior across low-power transitions remain undecided.
+**Accepted:** The first frequency-observation realization establishes its
+baseline when acquisition starts, completes consecutive windows at a nominal
+one-second cadence, uses actual elapsed time, and makes each completed window
+available without multi-window averaging or smoothing.
+
+**Accepted:** A complete, temporally admissible frequency window containing no
+pulses is a valid zero observation and may make RATE zero immediately. It does
+not end active observation; only the separate five-second inactivity condition
+based on newly counted primary pulses permits the future inactive state.
+
+**Accepted:** Frequency quality is `UNAVAILABLE` when no complete usable
+pulse/time window currently exists. It is not zero flow and does not provide a
+numeric RATE.
+
+**Accepted:** Frequency quality is `STALE` when a previous valid window was not
+replaced within its expected deadline. No new RATE is calculated; a retained
+previous value is not current and remains explicitly stale. Intentional
+inactivity has no frequency deadline and is not stale.
+
+**Accepted:** Frequency quality is `INVALID` when a supplied physical sample
+cannot be trusted. It produces no RATE window and ends the active frequency
+baseline; one trusted sample establishes a new unavailable baseline before a
+later trusted sample can restore valid observation.
+
+**Unresolved:** Frequency-observation behavior across low-power transitions
+remains undecided.
 
 **Deferred:** A future presentation cadence may become less frequent during
 inactivity and return to one second after pulses, value changes, or operator

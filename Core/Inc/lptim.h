@@ -34,6 +34,8 @@ extern "C" {
 
 extern LPTIM_HandleTypeDef hlptim1;
 
+extern LPTIM_HandleTypeDef hlptim3;
+
 extern LPTIM_HandleTypeDef hlptim4;
 
 /* USER CODE BEGIN Private defines */
@@ -41,6 +43,7 @@ extern LPTIM_HandleTypeDef hlptim4;
 /* USER CODE END Private defines */
 
 void MX_LPTIM1_Init(void);
+void MX_LPTIM3_Init(void);
 void MX_LPTIM4_Init(void);
 
 /* USER CODE BEGIN Prototypes */

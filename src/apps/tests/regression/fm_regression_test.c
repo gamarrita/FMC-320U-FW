@@ -13,6 +13,7 @@
 #include "fm_board.h"
 #include "fm_board_keyboard.h"
 #include "fm_debug.h"
+#include "frequency_observation.h"
 #include "fm_main_acquisition.h"
 #include "fm_main_event.h"
 #include "fm_main_input_adapter.h"
@@ -45,6 +46,8 @@ typedef enum
     FM_REGRESSION_TEST_CASE_RATE_WINDOWS,
     FM_REGRESSION_TEST_CASE_RATE_ERROR_PATHS,
     FM_REGRESSION_TEST_CASE_PULSE_DELTA_VECTORS,
+    FM_REGRESSION_TEST_CASE_FREQUENCY_OBSERVATION_VECTORS,
+    FM_REGRESSION_TEST_CASE_OBSERVER_INDEPENDENCE,
     FM_REGRESSION_TEST_CASE_MAIN_ACQUISITION,
     FM_REGRESSION_TEST_CASE_RUNTIME_EVENTS,
     FM_REGRESSION_TEST_CASE_RUNTIME_INPUT_EVENTS,
@@ -112,6 +115,8 @@ static bool fm_regression_test_error_paths_(void);
 static bool fm_regression_test_rate_windows_(void);
 static bool fm_regression_test_rate_error_paths_(void);
 static bool fm_regression_test_pulse_delta_vectors_(void);
+static bool fm_regression_test_frequency_observation_vectors_(void);
+static bool fm_regression_test_observer_independence_(void);
 static bool fm_regression_test_main_acquisition_(void);
 static bool fm_regression_test_runtime_events_(void);
 static bool fm_regression_test_runtime_input_events_(void);
@@ -724,6 +729,461 @@ static bool fm_regression_test_pulse_delta_vectors_(void)
 
     return (PULSE_DELTA_Observe(NULL, 0U, &delta) == FM_STATUS_EINVAL) &&
            (PULSE_DELTA_Observe(&observer, 0U, NULL) == FM_STATUS_EINVAL);
+}
+
+/*
+ * Verifies every durable 7D frequency-window decision with injected samples.
+ *
+ * The vectors deliberately avoid a hardware clock: physical accuracy belongs
+ * to the 7E bring-up, while this test proves exact state transitions and
+ * arithmetic in the RTOS-neutral observer.
+ */
+static bool fm_regression_test_frequency_observation_vectors_(void)
+{
+    frequency_observation_t observer;
+    frequency_observation_sample_t sample;
+    frequency_observation_result_t result;
+    bool available;
+
+    FREQUENCY_OBSERVATION_Init(&observer);
+
+    sample.pulse_count = 100U;
+    sample.timestamp_us = 1000U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_UNAVAILABLE) ||
+        (result.pulse_delta != 0U) ||
+        (result.elapsed_us != 0U))
+    {
+        return false;
+    }
+
+    sample.pulse_count = 200U;
+    sample.timestamp_us = 1001123U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_VALID) ||
+        (result.pulse_delta != 100U) ||
+        (result.elapsed_us != 1000123U))
+    {
+        return false;
+    }
+
+    sample.timestamp_us += 1000000U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_VALID) ||
+        (result.pulse_delta != 0U) ||
+        (result.elapsed_us != 1000000U))
+    {
+        return false;
+    }
+
+    FREQUENCY_OBSERVATION_Reset(&observer);
+    sample.pulse_count = 65530U;
+    sample.timestamp_us = 0U;
+    if (FREQUENCY_OBSERVATION_Observe(&observer,
+                                      &sample,
+                                      &available,
+                                      &result) != FM_STATUS_OK)
+    {
+        return false;
+    }
+
+    sample.pulse_count = 9U;
+    sample.timestamp_us = FREQUENCY_OBSERVATION_MIN_ELAPSED_US;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_VALID) ||
+        (result.pulse_delta != 15U) ||
+        (result.elapsed_us != FREQUENCY_OBSERVATION_MIN_ELAPSED_US))
+    {
+        return false;
+    }
+
+    FREQUENCY_OBSERVATION_Reset(&observer);
+    sample.pulse_count = 1U;
+    sample.timestamp_us = 100U;
+    if (FREQUENCY_OBSERVATION_Observe(&observer,
+                                      &sample,
+                                      &available,
+                                      &result) != FM_STATUS_OK)
+    {
+        return false;
+    }
+
+    sample.pulse_count = 0U;
+    sample.timestamp_us =
+        100U + FREQUENCY_OBSERVATION_MAX_ELAPSED_US;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_VALID) ||
+        (result.pulse_delta != 65535U) ||
+        (result.elapsed_us != FREQUENCY_OBSERVATION_MAX_ELAPSED_US))
+    {
+        return false;
+    }
+
+    FREQUENCY_OBSERVATION_Reset(&observer);
+    sample.pulse_count = 100U;
+    sample.timestamp_us = 0U;
+    if (FREQUENCY_OBSERVATION_Observe(&observer,
+                                      &sample,
+                                      &available,
+                                      &result) != FM_STATUS_OK)
+    {
+        return false;
+    }
+
+    result.quality = FREQUENCY_OBSERVATION_QUALITY_INVALID;
+    result.pulse_delta = 123U;
+    result.elapsed_us = 456U;
+    sample.pulse_count = 150U;
+    sample.timestamp_us = 500000U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_INVALID) ||
+        (result.pulse_delta != 123U) ||
+        (result.elapsed_us != 456U))
+    {
+        return false;
+    }
+
+    sample.pulse_count = 200U;
+    sample.timestamp_us = 1000000U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_VALID) ||
+        (result.pulse_delta != 100U) ||
+        (result.elapsed_us != 1000000U))
+    {
+        return false;
+    }
+
+    sample.pulse_count = 320U;
+    sample.timestamp_us = 2200001U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_STALE))
+    {
+        return false;
+    }
+
+    sample.pulse_count = 420U;
+    sample.timestamp_us = 3200001U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_VALID) ||
+        (result.pulse_delta != 100U) ||
+        (result.elapsed_us != 1000000U))
+    {
+        return false;
+    }
+
+    FREQUENCY_OBSERVATION_Reset(&observer);
+    sample.pulse_count = 10U;
+    sample.timestamp_us = 1000U;
+    if (FREQUENCY_OBSERVATION_Observe(&observer,
+                                      &sample,
+                                      &available,
+                                      &result) != FM_STATUS_OK)
+    {
+        return false;
+    }
+
+    sample.pulse_count = 20U;
+    sample.timestamp_us = 1101001U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_UNAVAILABLE))
+    {
+        return false;
+    }
+
+    sample.pulse_count = 30U;
+    sample.timestamp_us = 2101001U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_VALID) ||
+        (result.pulse_delta != 10U))
+    {
+        return false;
+    }
+
+    sample.pulse_count = 40U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_INVALID))
+    {
+        return false;
+    }
+
+    sample.pulse_count = 50U;
+    sample.timestamp_us = 500U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_UNAVAILABLE))
+    {
+        return false;
+    }
+
+    sample.pulse_count = 60U;
+    sample.timestamp_us = 400U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_INVALID))
+    {
+        return false;
+    }
+
+    sample.pulse_count = 70U;
+    sample.timestamp_us = 100U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_UNAVAILABLE))
+    {
+        return false;
+    }
+
+    sample.pulse_count = 80U;
+    sample.timestamp_us =
+        100U + FREQUENCY_OBSERVATION_MIN_ELAPSED_US;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_VALID) ||
+        (result.pulse_delta != 10U))
+    {
+        return false;
+    }
+
+    if ((FREQUENCY_OBSERVATION_Invalidate(&observer, &result) !=
+         FM_STATUS_OK) ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_INVALID) ||
+        (result.pulse_delta != 0U) ||
+        (result.elapsed_us != 0U))
+    {
+        return false;
+    }
+
+    sample.pulse_count = 90U;
+    sample.timestamp_us = 0U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_UNAVAILABLE))
+    {
+        return false;
+    }
+
+    FREQUENCY_OBSERVATION_Reset(&observer);
+    sample.pulse_count = 100U;
+    sample.timestamp_us = 0U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_UNAVAILABLE))
+    {
+        return false;
+    }
+
+    FREQUENCY_OBSERVATION_Init(NULL);
+    FREQUENCY_OBSERVATION_Reset(NULL);
+
+    return
+        (FREQUENCY_OBSERVATION_Observe(NULL,
+                                       &sample,
+                                       &available,
+                                       &result) == FM_STATUS_EINVAL) &&
+        (FREQUENCY_OBSERVATION_Observe(&observer,
+                                       NULL,
+                                       &available,
+                                       &result) == FM_STATUS_EINVAL) &&
+        (FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       NULL,
+                                       &result) == FM_STATUS_EINVAL) &&
+        (FREQUENCY_OBSERVATION_Observe(&observer,
+                                       &sample,
+                                       &available,
+                                       NULL) == FM_STATUS_EINVAL) &&
+        (FREQUENCY_OBSERVATION_Invalidate(NULL, &result) ==
+         FM_STATUS_EINVAL) &&
+        (FREQUENCY_OBSERVATION_Invalidate(&observer, NULL) ==
+         FM_STATUS_EINVAL);
+}
+
+/*
+ * Verifies that frequency observers and pulse totalization retain independent
+ * baselines even when their trusted sample sequences are interleaved.
+ */
+static bool fm_regression_test_observer_independence_(void)
+{
+    frequency_observation_t observer_a;
+    frequency_observation_t observer_b;
+    frequency_observation_sample_t sample;
+    frequency_observation_result_t result;
+    pulse_delta_observer_t pulse_observer;
+    uint64_t pulse_delta;
+    bool available;
+
+    FREQUENCY_OBSERVATION_Init(&observer_a);
+    FREQUENCY_OBSERVATION_Init(&observer_b);
+    PULSE_DELTA_Init(&pulse_observer);
+
+    if ((PULSE_DELTA_Observe(&pulse_observer, 100U, &pulse_delta) !=
+         FM_STATUS_OK) ||
+        (pulse_delta != 100U))
+    {
+        return false;
+    }
+
+    sample.pulse_count = 400U;
+    sample.timestamp_us = 0U;
+    if (FREQUENCY_OBSERVATION_Observe(&observer_a,
+                                      &sample,
+                                      &available,
+                                      &result) != FM_STATUS_OK)
+    {
+        return false;
+    }
+
+    sample.pulse_count = 50U;
+    sample.timestamp_us = 100U;
+    if (FREQUENCY_OBSERVATION_Observe(&observer_b,
+                                      &sample,
+                                      &available,
+                                      &result) != FM_STATUS_OK)
+    {
+        return false;
+    }
+
+    if ((PULSE_DELTA_Observe(&pulse_observer, 150U, &pulse_delta) !=
+         FM_STATUS_OK) ||
+        (pulse_delta != 50U))
+    {
+        return false;
+    }
+
+    sample.pulse_count = 450U;
+    sample.timestamp_us = 500000U;
+    result.pulse_delta = 999U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer_a,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        available ||
+        (result.pulse_delta != 999U))
+    {
+        return false;
+    }
+
+    sample.pulse_count = 70U;
+    sample.timestamp_us =
+        100U + FREQUENCY_OBSERVATION_MIN_ELAPSED_US;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer_b,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_VALID) ||
+        (result.pulse_delta != 20U))
+    {
+        return false;
+    }
+
+    if ((PULSE_DELTA_Observe(&pulse_observer, 10U, &pulse_delta) !=
+         FM_STATUS_OK) ||
+        (pulse_delta != 65396U))
+    {
+        return false;
+    }
+
+    sample.pulse_count = 500U;
+    sample.timestamp_us = 1000000U;
+    if ((FREQUENCY_OBSERVATION_Observe(&observer_a,
+                                       &sample,
+                                       &available,
+                                       &result) != FM_STATUS_OK) ||
+        !available ||
+        (result.quality != FREQUENCY_OBSERVATION_QUALITY_VALID) ||
+        (result.pulse_delta != 100U) ||
+        (result.elapsed_us != 1000000U))
+    {
+        return false;
+    }
+
+    FREQUENCY_OBSERVATION_Reset(&observer_b);
+
+    if ((PULSE_DELTA_Observe(&pulse_observer, 20U, &pulse_delta) !=
+         FM_STATUS_OK) ||
+        (pulse_delta != 10U))
+    {
+        return false;
+    }
+
+    sample.pulse_count = 600U;
+    sample.timestamp_us = 2000000U;
+
+    return
+        (FREQUENCY_OBSERVATION_Observe(&observer_a,
+                                       &sample,
+                                       &available,
+                                       &result) == FM_STATUS_OK) &&
+        available &&
+        (result.quality == FREQUENCY_OBSERVATION_QUALITY_VALID) &&
+        (result.pulse_delta == 100U) &&
+        (result.elapsed_us == 1000000U);
 }
 
 /*
@@ -2130,6 +2590,12 @@ static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case)
     case FM_REGRESSION_TEST_CASE_PULSE_DELTA_VECTORS:
         return fm_regression_test_pulse_delta_vectors_();
 
+    case FM_REGRESSION_TEST_CASE_FREQUENCY_OBSERVATION_VECTORS:
+        return fm_regression_test_frequency_observation_vectors_();
+
+    case FM_REGRESSION_TEST_CASE_OBSERVER_INDEPENDENCE:
+        return fm_regression_test_observer_independence_();
+
     case FM_REGRESSION_TEST_CASE_MAIN_ACQUISITION:
         return fm_regression_test_main_acquisition_();
 
@@ -2235,6 +2701,16 @@ static void fm_regression_test_emit_case_(fm_regression_test_case_t p_case,
 
     case FM_REGRESSION_TEST_CASE_PULSE_DELTA_VECTORS:
         (void) FM_DEBUG_UartStr("REGRESSION_TEST:PULSE_DELTA_VECTORS:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_FREQUENCY_OBSERVATION_VECTORS:
+        (void) FM_DEBUG_UartStr(
+            "REGRESSION_TEST:FREQUENCY_OBSERVATION_VECTORS:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_OBSERVER_INDEPENDENCE:
+        (void) FM_DEBUG_UartStr(
+            "REGRESSION_TEST:OBSERVER_INDEPENDENCE:");
         break;
 
     case FM_REGRESSION_TEST_CASE_MAIN_ACQUISITION:
