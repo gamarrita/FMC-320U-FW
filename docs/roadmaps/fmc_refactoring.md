@@ -201,7 +201,10 @@ Exit criteria:
 - ISR path does bounded work only;
 - delivery to runtime is serialized and testable.
 
-Deferred technical follow-up:
+Parallel technical follow-up `LP-1` — ThreadX/STOP2 final-tick profile:
+- State: open, non-blocking, and not part of an active workstream.
+- Ownership: the Phase 5 ThreadX/timer/low-power technical domain. This does
+  not reopen completed Phase 5 or make the issue a Phase 8 dependency.
 - Phase 7 combined-current characterization exposed a non-blocking
   `fm_port_threadx_idle` timing-profile issue. With silent `product/main` and
   the normal one-second periodic deadline, PPK2 measured approximately
@@ -217,10 +220,15 @@ Deferred technical follow-up:
 - Legacy's integer `20` conversion for the actual `20.48` LPTIM ticks per
   ThreadX tick remains comparison evidence only; its timing bias is not an
   accepted workaround.
-- Further diagnosis belongs in a separate low-power-port workstream and may be
-  developed on a parallel branch. It does not change Phase 7 acquisition,
-  totalization, frequency, RATE, or presentation contracts and does not block
-  Phase 8.
+- Entry: the human explicitly opens a separate low-power-port workstream,
+  preferably on a parallel branch, without changing the active product phase.
+- Exit: correlate LPTIM1 compare, elapsed-tick adjustment, final SysTick, task
+  wake, and PPK2 evidence; then explicitly accept either the existing profile
+  or one verified correction. Any correction must preserve ThreadX time,
+  canonical builds, acquisition regressions, and the `0 Hz`/`100 Hz` physical
+  behavior before `LP-1` closes.
+- `LP-1` does not change Phase 7 acquisition, totalization, frequency, RATE, or
+  presentation contracts and does not block Phase 8.
 
 ## Phase 6A: Initial Presentation Slice
 
@@ -278,8 +286,10 @@ Completion:
 
 Status:
 - completed and human-accepted on target hardware;
-- the separate ThreadX/STOP2 timing-profile follow-up is recorded under
-  Phase 5 and is not a remaining Phase 7 gate.
+- the separate ThreadX/STOP2 timing-profile follow-up is recorded as `LP-1`
+  under the Phase 5 technical domain;
+- edge-coherent LPTIM3 frequency capture is recorded as the parallel follow-up
+  `FREQ-1`; neither follow-up is a remaining Phase 7 gate.
 
 Objective:
 - replace provisional Phase 6A TTL/RATE inputs through short, independently
@@ -411,6 +421,37 @@ Completion:
 - no experimental ThreadX idle-port workaround remains in the Phase 7
   implementation;
 - Phase 8 is the next roadmap phase.
+
+Parallel technical follow-up `FREQ-1` — edge-coherent LPTIM3 measurement:
+- State: deferred, open, important, non-blocking, and not part of an active
+  workstream.
+- Ownership: the Phase 7 physical-frequency technical domain. This does not
+  reopen completed Phase 7 or make the work a Phase 8 dependency.
+- Current baseline: the accepted first realization estimates frequency from
+  cumulative LPTIM4 pulses over an approximately one-second LPTIM3 timestamp
+  window. It remains valid and implemented.
+- Objective: evaluate and implement the pending edge-to-edge technique in
+  which the primary pulse remains the asynchronous LPTIM4 count source and
+  also drives an LPTIM3 capture, allowing the time observation to be aligned
+  to physical input edges.
+- Entry gates: explicitly open a separate frequency-acquisition workstream;
+  decide whether edge capture complements or replaces the current window
+  producer; approve the required CubeMX pin/channel, interrupt, DMA, autonomous
+  mode, and Stop2 path before changing hardware configuration.
+- Contract gates: edge-baseline startup, missing-edge and zero-flow behavior,
+  supported period/frequency range, timestamp wrap, capture loss or overrun,
+  quality mapping, recovery, and interaction with the existing one-second
+  observer must be decided before implementation. Legacy `0.1 Hz` behavior is
+  not restored automatically.
+- Architecture boundary: LPTIM4 pulse accumulation and the independent
+  `pulse_delta` baseline must remain correct even when capture is unavailable,
+  late, invalid, or asleep. Edge capture may supply frequency timing; it must
+  not become the owner of ACM/TTL.
+- Exit: deterministic capture/quality regressions plus target validation in
+  Run and Stop2 demonstrate edge-coherent timing, the approved range, missing
+  edges, wrap/recovery, no pulse loss or duplication, and accepted current.
+  Legacy capture and the reported STM32U575 behavior remain evidence until
+  reproduced through the selected documented technique.
 
 ## Phase 8: Minimum Measurement User Screens And Navigation
 

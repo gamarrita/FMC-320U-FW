@@ -8,7 +8,8 @@ It is about how to manage changes in the repo.
 It is not the workflow entrypoint for agents.
 It is not the style guide.
 
-For task routing, use `WORKING_CONTEXT.md`.
+For task routing, use `WORKING_CONTEXT.md` when an active workstream exists.
+Otherwise follow `docs/project/WORKFLOW.md` and the applicable roadmap.
 For style and naming, use `STYLE.md`.
 
 ---
@@ -99,6 +100,6 @@ If a stable repository rule changed:
 
 ## Related Documents
 
-- task routing: `WORKING_CONTEXT.md`
+- active task routing, when present: `WORKING_CONTEXT.md`
 - style and naming: `STYLE.md`
 - workflow stages: `docs/workflow/README.md`

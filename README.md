@@ -29,7 +29,7 @@ Authored firmware code belongs under `src/`.
 For agents:
 - start with `AGENTS.md`
 - use `docs/project/WORKFLOW.md` for continuity across conversations
-- use `WORKING_CONTEXT.md` for the active workstream
+- use `WORKING_CONTEXT.md` when an active workstream exists
 - use the referenced product documentation, roadmaps, and specifications for
   accepted behavior, durable strategy, and technical authority
 - use `STYLE.md` for naming and code structure

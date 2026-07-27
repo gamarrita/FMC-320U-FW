@@ -40,7 +40,7 @@ reframe it only when the workstream changes.
 ## Related Docs
 
 - `AGENTS.md`: stable agent policy
-- `WORKING_CONTEXT.md`: active workstream and active slice
+- `WORKING_CONTEXT.md`: active workstream and active slice, when one exists
 - `docs/project/WORKFLOW.md`: working-context terminology and lifecycle
 - `docs/roadmaps/`: durable refactor strategy
 - `docs/product/`: current reviewed product documentation

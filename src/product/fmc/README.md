@@ -41,6 +41,5 @@ These modules should not own:
 Those responsibilities should be added as separate product modules when their
 slice becomes active.
 
-For the active refactor context, use:
-- `WORKING_CONTEXT.md`
-- `docs/roadmaps/fmc_refactoring.md`
+For an active refactor context, use `WORKING_CONTEXT.md` when present and the
+applicable section of `docs/roadmaps/fmc_refactoring.md`.

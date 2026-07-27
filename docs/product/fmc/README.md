@@ -48,8 +48,17 @@ Related repository roles:
   glass elements and physical mapping.
 - public headers own implemented module contracts.
 - `legacy/` preserves historical evidence, not current authority.
-- `WORKING_CONTEXT.md` owns the active workstream and its single active slice;
-  the roadmap owns durable sequencing.
+- `WORKING_CONTEXT.md`, when present, owns the active workstream and its single
+  active slice; the roadmap owns durable sequencing.
+
+Human learning references:
+
+- [fmc_service tutorial](../../turotial/fmc_service.md);
+- [fmc_runtime tutorial](../../turotial/fmc_runtime.md);
+- [Phase 7 acquisition tutorial](../../turotial/phase7_acquisition.md).
+
+These protected tutorials explain architecture for human readers. They do not
+replace product documents, technical specifications, or public headers.
 
 ## Product Overview
 

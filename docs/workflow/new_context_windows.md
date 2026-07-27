@@ -4,8 +4,8 @@
 > It is not part of the active agent route, does not define the current
 > workstream, and should not be used as source of truth for implementation.
 >
-> For agent work, start with `AGENTS.md` and `WORKING_CONTEXT.md`, then follow
-> the applicable roadmap and specifications referenced there.
+> For agent work, start with `AGENTS.md` and, when present,
+> `WORKING_CONTEXT.md`, then follow the applicable roadmap and specifications.
 >
 > Do not apply `docs/workflow/doc_closure.md` to delete or compress this file
 > unless the user explicitly asks to curate human tutorial/reference material.

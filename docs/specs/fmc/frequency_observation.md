@@ -379,7 +379,10 @@ inactive time.
 The selected technique does not align its timestamp to an input edge. That is
 not required for pulse-count-over-elapsed-time observation. Edge-coherent
 capture remains a possible future technique for period or edge-timestamp
-measurement, not a prerequisite for this realization.
+measurement, not a prerequisite for this realization. Its open implementation
+and decision work is tracked as `FREQ-1` in
+`docs/roadmaps/fmc_refactoring.md`; that follow-up is not an accepted extension
+of this contract until its own gates are reviewed.
 
 Target temporal validation uses the connected stable signal generator as the
 independent pattern at 1 kHz. For a valid window:

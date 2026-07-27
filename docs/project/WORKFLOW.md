@@ -49,10 +49,10 @@ The repository:
 ## Complete New-Conversation Cycle
 
 1. Identify the repository, current branch, HEAD commit, and worktree status.
-2. Read the user request, `AGENTS.md`, and `WORKING_CONTEXT.md`.
-3. Follow the references from `WORKING_CONTEXT.md` to the applicable roadmap,
-   product documentation, specifications, local READMEs, and technical
-   authorities.
+2. Read the user request, `AGENTS.md`, and `WORKING_CONTEXT.md` when present.
+3. When a working context exists, follow its references to the applicable
+   roadmap, product documentation, specifications, local READMEs, and
+   technical authorities.
 4. Inspect relevant code, tests, and legacy evidence only as required by the
    active slice.
 5. State the interpreted objective, intended files, boundaries, authorities,

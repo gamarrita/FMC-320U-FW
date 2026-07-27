@@ -3,8 +3,8 @@
 > This tutorial is not part of the active agent route, does not define the
 > current workstream, and does not define the public API contract.
 >
-> For agent work, start with `AGENTS.md` and `WORKING_CONTEXT.md`, then follow
-> the applicable roadmap and specifications referenced there.
+> For agent work, start with `AGENTS.md` and, when present,
+> `WORKING_CONTEXT.md`, then follow the applicable roadmap and specifications.
 >
 > The authoritative API contract is `src/product/fmc/fmc_service.h`.
 > Do not apply `docs/workflow/doc_closure.md` to delete or compress this file
@@ -507,4 +507,4 @@ mezclarse.
 - `src/product/fmc/fmc_service.c`
 - `src/product/fmc/README.md`
 - `docs/roadmaps/fmc_refactoring.md`
-- `WORKING_CONTEXT.md`
+- `WORKING_CONTEXT.md`, when an active workstream exists
