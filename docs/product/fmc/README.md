@@ -89,9 +89,9 @@ This map reports documentation coverage, not firmware implementation status.
 | Pulse and signal acquisition | Conserving counter-backed pulses through bounded deltas | [Requirements](requirements.md) and `docs/specs/fmc/acquisition.md` | Focused Phase 7A | Accepted | Reviewed Phase 7A decisions; runtime/service contracts; legacy acquisition | Phase 7B1 bring-up |
 | Flow-rate calculation | Deriving active-unit rate from pulse and time windows | [Requirements](requirements.md) | Focused core | Accepted | `fmc_rate.h`; `fmc_units.h` | Acquisition or display slice |
 | Totalization | ACM/TTL accumulation, visible totals, and resets | [Requirements](requirements.md) | Focused core | Accepted | `fmc_model.h`; `fmc_volume.h`; `fmc_service.h` | Operational reset flow |
-| Presentation | Startup sequence and TTL/RATE projection into visible output | [User interface](user_interface.md) | Focused Phase 6A | Accepted | Reviewed Phase 6A decisions; presentation and LCD contracts | Phase 7 live data integration |
-| Operator input | Semantic keys and actions after hardware translation | [User interface](user_interface.md) | Focused vocabulary | Accepted | `fmc_input.h`; product app README | Selected input slice |
-| Navigation | Context-dependent visible consequences of operator input | [User interface](user_interface.md) | Surface | Candidate | Frozen legacy extraction; legacy user/setup inventory | Phases 8 through 10 |
+| Presentation | Startup, live TTL/RATE and ACM/RATE, placeholders, and transverse POINT | [User interface](user_interface.md) and [Behavior](behavior.md) | Focused Phase 8 contract | Accepted | Reviewed Phase 6A and Phase 8 decisions; presentation and LCD contracts | Functional implementation slices |
+| Operator input | Semantic mechanical and external-button actions after hardware translation | [User interface](user_interface.md) and [Behavior](behavior.md) | Focused Phase 8 contract | Accepted | `fmc_input.h`; reviewed Phase 8 decisions | Functional implementation slices |
+| Navigation | Context-dependent visible consequences in the five-screen user menu | [User interface](user_interface.md) | Focused Phase 8 contract | Accepted | Reviewed Phase 8 decisions; legacy coverage register | Configuration navigation in Phase 10 |
 | Configuration and calibration | Editable measurement and product settings | [Requirements](requirements.md) | Surface | Candidate | Model contract; frozen legacy extraction; legacy inventory | Phase 10 |
 | Persistence and defaults | Retention, restore, validation, and factory data | [Requirements](requirements.md) | Surface | Candidate | Roadmap; frozen legacy extraction; legacy inventory | Phases 11 and 12 |
 | RTC and time | Current time, editing, validity, and timestamp use | [Behavior](behavior.md) | Surface | Candidate | Roadmap; frozen legacy extraction; legacy `fm_rtc` inventory | Phase 9 |
@@ -99,7 +99,7 @@ This map reports documentation coverage, not firmware implementation status.
 | Information logging | Event selection, timestamping, retention, and retrieval | [Requirements](requirements.md) | Surface | Deferred | Frozen legacy extraction; legacy log inventory | Logging slice |
 | Communications and commands | External protocol and command behavior | [Requirements](requirements.md) | Surface | Deferred | Legacy command/USART inventory | Transport decision |
 | Printing | Ticket content and print workflow | [User interface](user_interface.md) | Surface | Deferred | Frozen legacy extraction; legacy `fm_ppt` inventory | Phase 15 |
-| Bluetooth | Connection window and communication workflow | [User interface](user_interface.md) | Surface | Deferred | Frozen legacy extraction; legacy `fm_mxc` inventory | Phase 14 |
+| Logged-data download | Operator purpose and future transport workflow | [User interface](user_interface.md) | Placeholder only | Deferred | Frozen legacy extraction; legacy `fm_mxc` inventory | Phase 14 |
 | Optional sensing | PT100 and other optional product extensions | [Requirements](requirements.md) | Surface | Deferred | Frozen legacy extraction; roadmap | Phase 13 product selection |
 | Diagnostics, service, and validation | Product-facing diagnostic or service behavior | [Requirements](requirements.md) | Surface | Unresolved | Current bring-ups; command/debug legacy inventory | Service requirement |
 
@@ -116,13 +116,17 @@ Evidence:
 
 ## Current Focused Depth
 
-**Accepted:** Phase 6A completed the bounded initial presentation slice.
+**Accepted:** Phase 6A completed the bounded initial presentation slice. The
+Phase 8 product contract defines the complete minimum user menu required before
+its functional implementation slices.
 
 Evidence:
 - `docs/roadmaps/fmc_refactoring.md`.
 
-Its visible scope is limited to startup all-segments, provisional firmware
-version, and steady TTL/RATE. Exact content, timing, transitions, formatting,
-and deferred boundaries are owned by
-[User interface](user_interface.md). Firmware release and tag policy is owned
-by [Firmware Versioning](../../project/firmware_versioning.md).
+The accepted Phase 8 contract adds live ACM/RATE, inert PRINT, LOG_DOWNLOAD,
+and DATE_TIME positions, complete bounded navigation, ACM reset, transverse
+POINT, external-button semantics, and backlight behavior. Exact content,
+timing, transitions, formatting, and deferred boundaries are owned by
+[User interface](user_interface.md) and [Behavior](behavior.md). Firmware
+release and tag policy is owned by
+[Firmware Versioning](../../project/firmware_versioning.md).

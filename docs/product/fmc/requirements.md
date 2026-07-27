@@ -28,7 +28,8 @@ This document applies to the FMC-320U product line.
   the display is reactivated.
 - A failed LCD initialization shall prevent the visible startup sequence from
   beginning.
-- Phase 6A shall not read, write, or otherwise impose backlight state.
+- Successful presentation of the startup all-segments screen shall activate
+  the display backlight for the accepted bounded interval.
 - The product shall support an activity-gated low-power lifecycle. After five
   seconds without newly counted primary pulses, acquisition may remove its
   periodic one-second deadline and remain inactive until new primary activity
@@ -66,6 +67,9 @@ Evidence:
   discarded. Rearming the counter at zero begins a new guaranteed accumulation
   interval.
 - ACM reset is user-allowed; TTL reset requires a privileged caller or flow.
+- The Phase 8 user menu shall authorize ACM reset only from ACM/RATE, through
+  LONG ENTER or EXT_2 SHORT, without confirmation. It shall not expose TTL
+  reset.
 - Visible ACM and TTL volume shall be derived from pulse-backed totals and the
   active measurement configuration.
 - Rate shall be derived from a pulse delta and a positive elapsed-time window,
@@ -100,6 +104,9 @@ Evidence:
   totalization, acquisition, filtering, or the RATE observation window.
 - When the active visible volume unit is liters, presentation shall render its
   shared alphanumeric legend as `Lt`.
+- ACM/RATE shall place ACM on the upper row and RATE on the lower row, reuse
+  TTL/RATE unit, time-base, quality, formatting, and overflow rules, and show
+  zero ACM as `0.0`.
 
 Evidence:
 - `docs/specs/fmc/acquisition.md`;
@@ -121,10 +128,8 @@ Evidence:
 - `legacy/derived/fmc/use_cases.extraction-v1.yaml`;
 - legacy FMC and acquisition-related inventory.
 
-**Unresolved**
-
-- Calibration-unit expansion and exact reset authorization flows remain
-  undecided.
+**Unresolved:** Calibration-unit expansion and privileged TTL-reset
+authorization remain undecided.
 
 ## Operator Interaction
 
@@ -137,23 +142,26 @@ Evidence:
   input contract.
 - Hardware pins, edges, timers, and RTOS types shall not be exposed as product
   input identities.
+- Normal operation shall expose TTL/RATE, ACM/RATE, PRINT, LOG_DOWNLOAD, and
+  DATE_TIME in that order, with TTL/RATE as the initial user screen.
+- Mechanical SHORT DOWN and UP shall traverse that order without wrapping;
+  EXT_1 SHORT shall traverse forward and wrap.
+- Every in-scope input shall have the consequence or explicit no-op defined in
+  the accepted Phase 8 transition table.
+- PRINT, LOG_DOWNLOAD, and DATE_TIME shall be visible inert placeholders until
+  their respective functions are implemented.
+- Each physical EXT_1 or EXT_2 actuation shall produce at most one SHORT event;
+  a button held at boot shall not act until it has been released stably.
+- Every valid physical button press shall activate the backlight without
+  consuming its semantic action, and shall restart a fixed ten-second interval.
+- Pulse observations shall drive one transverse POINT indication consistently
+  across startup and user screens.
 
 Evidence:
-- `src/product/fmc/fmc_input.h`.
-
-**Candidate**
-
-- Accepted input should produce predictable visible consequences in operational
-  and configuration contexts.
-
-Evidence:
-- `legacy/derived/fmc/use_cases.extraction-v1.yaml`;
-- legacy user/setup inventory.
-
-**Unresolved**
-
-- External-button product functions, debounce, wake/backlight effects, complete
-  key consequences, and navigation policy are not approved.
+- `src/product/fmc/fmc_input.h`;
+- `docs/product/fmc/user_interface.md`;
+- `docs/product/fmc/behavior.md`;
+- reviewed legacy user/setup evidence.
 
 ## Configuration, Persistence, And Time
 
@@ -212,3 +220,6 @@ Evidence:
 
 Each function requires a focused product decision before implementation. Its
 presence in evidence does not make it mandatory for a release.
+
+The accepted Phase 8 PRINT, LOG_DOWNLOAD, and DATE_TIME placeholders reserve
+menu positions only; they do not accept or implement these deferred functions.

@@ -18,18 +18,18 @@ evidence is recorded separately as provenance.
   ESC keys plus EXT_1 and EXT_2 external input identities.
 - Mechanical keys distinguish SHORT and LONG actions; external identities use
   SHORT only in the current semantic contract.
+- EXT_1 and EXT_2 are physical active-low pushbuttons. Their current semantic
+  SHORT action occurs on the accepted press transition, not on release.
 - The visible output uses the custom segmented LCD represented by the current
   LCD technical specification.
 
 Evidence:
 - `src/product/fmc/fmc_input.h`;
-- `docs/specs/lcd/lcd_true_source.yaml`.
+- `docs/specs/lcd/lcd_true_source.yaml`;
+- reviewed Phase 8 input decision.
 
-**Unresolved**
-
-- Physical availability and final product purpose of external buttons.
-- Audible, printed, wireless, or service outputs that should count as operator
-  interface surfaces.
+**Deferred:** Audible, printed, wireless, or service outputs beyond the
+Phase 8 placeholder screens require their own focused product decisions.
 
 ## LCD Technical Authority
 
@@ -47,18 +47,25 @@ physical routing.
 
 ## Operational Interface
 
-**Accepted:** The implemented Phase 6A operational interface includes startup
-feedback, provisional firmware identity, and a steady TTL/RATE view.
+**Accepted:** The operational interface starts with startup feedback and
+provisional firmware identity, then exposes this user-menu order:
 
-**Candidate:** Later operational depth may include ACM/RATE, time, status, and
-selected optional workflows.
+1. TTL/RATE;
+2. ACM/RATE;
+3. PRINT;
+4. LOG_DOWNLOAD;
+5. DATE_TIME.
+
+TTL/RATE and ACM/RATE are live measurement screens. The remaining three are
+visible, inert placeholders so the complete Phase 8 menu can be traversed in
+`product/main` before their functions are implemented.
 
 Evidence:
 - `legacy/derived/fmc/use_cases.extraction-v1.yaml`;
 - legacy user-flow inventory.
 
-**Unresolved:** Later screen order, return behavior, alarm overlays, backlight
-policy, and complete key consequences are not approved.
+Temperature, alarm overlays, printing, logged-data transfer, and date/time
+behavior beyond these placeholders are outside Phase 8.
 
 ## Configuration Interface
 
@@ -73,7 +80,7 @@ Evidence:
 **Unresolved:** Entry authorization, edit cursor behavior, validation feedback,
 save/cancel rules, navigation, and exact configuration scope are not approved.
 
-Configuration screens remain outside the Phase 6A slice.
+Configuration screens remain outside Phase 8.
 
 ## Semantic Input And Visible Consequences
 
@@ -84,25 +91,21 @@ Evidence:
 - `src/product/fmc/fmc_input.h`;
 - `src/apps/product/main/README.md`.
 
-**Candidate:** The active UI context will assign visible meaning to each
-accepted semantic event.
-
-**Unresolved:** No complete key-to-transition table is accepted. Existing
-frozen-extraction and legacy transitions remain evidence or candidates until a
-focused UI slice reviews them.
+**Accepted:** The Phase 8 startup and user-menu consequences are defined below.
+Configuration meanings remain deferred to their configuration slice.
 
 ## Superficial Interface Map
 
 | Area | Visible purpose | Decision state | Current depth |
 |---|---|---|---|
 | Startup | Confirm display availability and identify firmware before normal operation | Accepted | Phase 6A implemented |
-| Primary operation | Show TTL and rate | Accepted | Phase 6A implemented |
-| Secondary operation | Show ACM and rate | Candidate | Surface |
-| Time | Show date/time when valid | Candidate | Surface |
+| Primary operation | Show TTL and rate | Accepted | Phase 7 live |
+| Secondary operation | Show ACM and rate | Accepted | Phase 8 contract |
+| Time | Expose a DATE_TIME menu position | Accepted | Phase 8 inert placeholder |
 | Status and alarms | Indicate conditions requiring operator attention | Candidate | Surface |
 | Configuration | Edit authorized product settings | Candidate | Surface |
-| Printing | Initiate and report ticket output | Deferred | Domain only |
-| Bluetooth | Expose a bounded connection workflow | Deferred | Domain only |
+| Printing | Expose a PRINT menu position | Accepted | Phase 8 inert placeholder; workflow deferred |
+| Logged-data download | Expose a LOG_DOWNLOAD menu position | Accepted | Phase 8 inert placeholder; transport and workflow deferred |
 | Service and diagnostics | Support authorized inspection or tests | Unresolved | Domain only |
 
 This map describes documentation coverage, not implemented firmware.
@@ -133,10 +136,11 @@ reactivation.
 - Coverage includes numeric digits, decimal points, both alphanumeric
   characters, legends, and indicators.
 - Writing numeric eights alone does not satisfy this state.
-- Backlight is excluded and remains untouched.
 - The state serves both as a visual check and an unambiguous startup signal.
 - Its nominal duration is 3 seconds, beginning after successful presentation.
 - SHORT ESC advances to firmware version exactly as timeout does.
+- Every other SHORT or LONG input is a no-op for startup navigation. A valid
+  physical press still applies the accepted backlight activity policy.
 
 Physical element identity and mapping remain owned by
 `docs/specs/lcd/lcd_true_source.yaml`.
@@ -148,10 +152,13 @@ Physical element identity and mapping remain owned by
 - The top numeric row is empty.
 - The bottom numeric row shows `00.01.00`.
 - The alphanumeric field shows `B0`.
-- Every standalone indicator is off.
+- Every screen-specific standalone indicator is off. POINT follows its
+  transverse activity rule.
 - The value is an unpublished Phase 6A dummy, not a released firmware version.
 - Its nominal duration is 3 seconds, beginning after successful presentation.
 - SHORT ESC advances to TTL/RATE exactly as timeout does.
+- Every other SHORT or LONG input is a no-op for startup navigation. A valid
+  physical press still applies the accepted backlight activity policy.
 
 Released version meaning, LCD encoding limits, and tag traceability belong to
 [Firmware Versioning](../../project/firmware_versioning.md).
@@ -171,7 +178,8 @@ Released version meaning, LCD encoding limits, and tag traceability belong to
   yet operator-selectable.
 - The shared alphanumeric field shows `Lt` for both rows.
 - `TTL`, `RATE`, slash, and second indicators remain active, including during
-  visual overflow. All unrelated indicators remain off.
+  visual overflow. All unrelated screen-specific indicators remain off; POINT
+  follows its transverse activity rule.
 - The initial controlled values are `1234.5` TTL and `12.3` RATE. They are valid
   provisional inputs, not absent or invalid states.
 - Values are shown immediately on entry and presented again once per second.
@@ -197,6 +205,85 @@ second indicators remain active.
 
 Visible representation of internal formatting errors is deferred.
 
+## Phase 8 User Menu
+
+### Navigation
+
+**Accepted**
+
+- TTL/RATE is the initial user-menu screen after startup.
+- Mechanical SHORT DOWN moves one position forward and stops at DATE_TIME.
+- Mechanical SHORT UP moves one position backward and stops at TTL/RATE.
+- EXT_1 SHORT moves one position forward and wraps from DATE_TIME to TTL/RATE.
+- Mechanical SHORT ENTER and SHORT ESC are no-ops on every Phase 8 user
+  screen.
+- EXT_2 SHORT is a no-op except for the ACM reset defined below.
+- Every unassigned mechanical LONG action is a no-op. LONG ENTER resets ACM
+  only while ACM/RATE is active.
+- One accepted input event causes at most one transition or one reset request.
+
+The complete transition table is:
+
+| Active screen | SHORT DOWN | SHORT UP | SHORT ENTER | SHORT ESC | EXT_1 SHORT | EXT_2 SHORT | LONG ENTER | Other LONG |
+|---|---|---|---|---|---|---|---|---|
+| TTL/RATE | ACM/RATE | No-op | No-op | No-op | ACM/RATE | No-op | No-op | No-op |
+| ACM/RATE | PRINT | TTL/RATE | No-op | No-op | PRINT | Reset ACM | Reset ACM | No-op |
+| PRINT | LOG_DOWNLOAD | ACM/RATE | No-op | No-op | LOG_DOWNLOAD | No-op | No-op | No-op |
+| LOG_DOWNLOAD | DATE_TIME | PRINT | No-op | No-op | DATE_TIME | No-op | No-op | No-op |
+| DATE_TIME | No-op | LOG_DOWNLOAD | No-op | No-op | TTL/RATE | No-op | No-op | No-op |
+
+LONG ESC, LONG UP, and LONG DOWN do not enter configuration or change
+resolution in Phase 8. Those meanings belong to Phase 10.
+
+### ACM/RATE
+
+**Accepted**
+
+- The upper row shows ACM and the lower row shows RATE.
+- The upper-row `ACM` indicator is active. `TTL` and the lower-row `ACM`
+  indicator are off.
+- RATE, slash, time-base indicator, shared `Lt` alpha field, numeric
+  formatting, visual overflow, and RATE-quality representation match
+  TTL/RATE.
+- ACM uses the same active volume unit and visible resolution as TTL.
+- Zero ACM displays as `0.0`.
+- The screen is presented immediately on entry from a fresh coherent snapshot
+  and again once per accepted one-second presentation cycle.
+
+The LCD's upper and lower ACM indicators remain independent BSP capabilities.
+Their use is selected by each screen composition; there is no global rule that
+forbids the lower indicator.
+
+### ACM Reset
+
+**Accepted:** LONG ENTER or EXT_2 SHORT while ACM/RATE is active directly
+requests one ACM reset. There is no confirmation, cancellation, password,
+transient state, or separate success screen. After the reset, ACM/RATE is
+presented immediately from a fresh snapshot and normally shows `0.0`.
+
+The reset does not clear the hardware pulse counter or acquisition baselines.
+A pulse delta pending at the reset boundary, or accepted afterward, may make
+the next periodic ACM value nonzero. TTL is never reset from the Phase 8 user
+menu.
+
+### Deferred-Function Placeholders
+
+**Accepted:** These screens are static, inert, and have no peripheral,
+communication, RTC, print, configuration, workflow, or timeout side effects:
+
+| Screen | Alpha field | Upper row | Lower row |
+|---|---|---|---|
+| PRINT | `PR` | Empty | `OFF` |
+| LOG_DOWNLOAD | `LD` | Empty | `OFF` |
+| DATE_TIME | `DT` | Empty | `OFF` |
+
+All screen-specific indicators are off. The transverse POINT activity
+indicator remains governed by [behavior.md](behavior.md).
+
+`LOG_DOWNLOAD` names the operator purpose. Bluetooth may later be one transport
+for that function, but is not the screen identity because printing may also
+use Bluetooth.
+
 ### Presentation Failures
 
 **Accepted**
@@ -213,13 +300,17 @@ decisions for a later selected slice.
 
 ### Backlight
 
-**Deferred:** Phase 6A neither reads nor changes backlight state and does not
-couple it to startup timing.
+**Accepted:** Successful presentation of the startup all-segments screen and
+every valid physical button press request backlight activation. The same
+ten-second inactivity interval is restarted by each request. The press still
+performs its normal semantic action; it is not consumed only to illuminate the
+display. Detailed timing and failure behavior are owned by
+[behavior.md](behavior.md).
 
 ## Deferred Interface Functions
 
-**Deferred:** Complete operational navigation, configuration screens, logging
-views, printer flow, Bluetooth flow, optional PT100 presentation, complete
+**Deferred:** Configuration screens, actual logged-data download, printer
+flow, date/time content and editing, optional PT100 presentation, complete
 alarm behavior, and exact legacy UI reproduction.
 
 Evidence:

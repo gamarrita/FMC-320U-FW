@@ -453,33 +453,224 @@ Parallel technical follow-up `FREQ-1` — edge-coherent LPTIM3 measurement:
   Legacy capture and the reported STM32U575 behavior remain evidence until
   reproduced through the selected documented technique.
 
+Parallel technical follow-up `ROBUST-1` — runtime failure model audit:
+- State: deferred, open, cross-cutting, non-blocking, and not part of an active
+  workstream.
+- Ownership: product-wide runtime robustness. This does not reopen completed
+  phases, replace the active working context, or make the audit a Phase 8
+  dependency.
+- Intent: favor prevention and deterministic operation over speculative
+  runtime recovery. A failure becomes part of a runtime contract only when it
+  is observable, has a relevant consequence, and has an effective response.
+- Current baseline: public contracts and application composition already
+  contain argument, state, HAL, transport, and fatal-path checks, but the
+  repository does not yet record a systematic per-module decision about which
+  failures are detectable, which responses are useful, or when retry,
+  reinitialization, fail-stop, or reset is justified.
+- Entry gate: explicitly open a separate robustness workstream. Do not remove
+  checks or change runtime behavior as incidental work in another phase.
+- Audit method: for each in-scope operation record the failure hypothesis,
+  detection mechanism and limits, consequence, natural retry opportunity,
+  selected response, response owner, and verification evidence. Distinguish
+  development contract defects, initialization failures, transient observable
+  failures, undetectable physical corruption, and persistent integrity
+  failures.
+- Decision gates: retain development-facing validation where it prevents or
+  exposes defects; remove false recovery semantics and checks that provide no
+  useful safety only after their callers and consequences are reviewed;
+  require evidence that retry, peripheral reinitialization, or reset can
+  restore a known-good state without losing or duplicating measurement state.
+- Documentation boundary: stable cross-cutting policy belongs in `STYLE.md`;
+  accepted operation-specific behavior belongs in the owning public header or
+  product contract. The audit must not duplicate those contracts in the
+  roadmap.
+- Phase 8 boundary: Phase 8 introduces no new LCD retry, rollback, readback, or
+  recovery policy. It may preserve existing error propagation until
+  `ROBUST-1` reviews it, but failure handling is not expanded into a user-menu
+  product requirement.
+- Exit: reviewed modules have an explicit failure classification and owner;
+  approved contract and policy changes are documented at their authorities;
+  focused regression and required target evidence demonstrate every changed
+  response; obsolete checks and fatal paths are removed only where that
+  evidence supports removal.
+
 ## Phase 8: Minimum Measurement User Screens And Navigation
 
 Objective:
-- complete the minimum operator path for live flow measurement;
-- integrate TTL/RATE and ACM/RATE into one bounded navigation model.
+- complete a traversable five-screen operator path in normal `product/main`;
+- provide live TTL/RATE and ACM/RATE behavior now;
+- reserve PRINT, LOG_DOWNLOAD, and DATE_TIME positions with inert placeholders
+  until their functional phases.
+
+Responsibility boundaries:
+- `fmc_ui` owns startup and user-menu state, semantic input consequences,
+  semantic frames, POINT logical state, and explicit UI requests;
+- product-main remains the single serialized owner, obtains fresh coherent
+  runtime snapshots, consumes UI requests exactly once, owns ThreadX timers,
+  and coordinates immediate and periodic presentation;
+- `fmc_runtime` continues to own measurement, RATE, totals, and the ACM-reset
+  primitive, but no longer retains passive menu input;
+- the LCD adapter maps semantic frames only;
+- existing board GPIO and keyboard facades expose physical behavior without
+  leaking HAL, EXTI, active-low polarity, or ThreadX into product modules;
+- `fm_main_ext_button` makes RTOS-neutral per-button debounce decisions;
+- `fm_main_backlight` owns safe activation and expiry coordination in the app.
 
 Dependencies:
 - Phase 7 live TTL/RATE acquisition;
 - completed Phase 6A presentation path;
-- semantic input and runtime-owner contracts.
+- semantic input and runtime-owner contracts;
+- coherent runtime snapshots containing ACM, TTL, and RATE;
+- `docs/specs/lcd/lcd_true_source.yaml` for physical LCD capabilities and
+  mapping facts;
+- before slice 8C, a human-applied CubeMX regeneration that configures PD3 and
+  PD4 as active-low EXTI inputs with internal pull-ups and both edges, and PE0
+  as the active-low LCD backlight output with the approved safe initial state.
 
-Decision gates:
-- exact two-screen navigation and return behavior;
-- ACM reset authorization, confirmation, and feedback;
-- visible zero, absent, stale, invalid, and overflow behavior;
-- refresh, activity, backlight, and pulse-indicator policy.
+Accepted product decisions:
+- user-menu order is TTL/RATE, ACM/RATE, PRINT, LOG_DOWNLOAD, DATE_TIME;
+  startup enters TTL/RATE;
+- mechanical SHORT DOWN/UP traverse boundedly; EXT_1 SHORT traverses forward
+  cyclically; the product UI contract records every other action or no-op;
+- PRINT, LOG_DOWNLOAD, and DATE_TIME are visible static placeholders with no
+  workflows, peripherals, configuration, RTC data, or timeouts;
+- temperature, alarms, configuration, resolution shortcuts, printing,
+  logged-data transfer, and date/time functionality remain outside Phase 8;
+- LONG ENTER and EXT_2 SHORT reset ACM directly and only on ACM/RATE; there is
+  no confirmation state; TTL reset remains privileged future work;
+- ACM/RATE reuses the accepted TTL/RATE numeric, RATE-quality, unit, time-base,
+  and overflow rules, with ACM in the upper row;
+- every screen is presented at most once per accepted one-second cycle; live
+  views are also immediate on entry and ACM/RATE is immediate after reset;
+- POINT is a transverse accepted-pulse-observation witness: nonzero delta
+  toggles once, zero delta turns it off;
+- every valid physical press activates and restarts a fixed ten-second
+  backlight interval without consuming the action;
+- EXT_1 and EXT_2 use a press-edge SHORT with independent stable-release
+  rearm; they have no LONG or repeat behavior.
+
+Accepted architecture decisions:
+- first rename `fmc_presentation` to `fmc_ui` as an isolated mechanical change,
+  with matching public names and no compatibility aliases;
+- `fmc_ui` later owns startup plus the five user states and returns only
+  `FMC_UI_REQUEST_NONE` or `FMC_UI_REQUEST_RESET_ACM`;
+- semantic/BSP ACM indicator names remain positional as `ACM_TOP` and
+  `ACM_BOTTOM`; legacy `ACM_1` and `ACM_2` names are not propagated into the
+  new UI contract, and no global rule disables either physical indicator;
+- `fmc_ui` does not call runtime, LCD, ThreadX, HAL, GPIO, or timers;
+- the input handler returns `fm_status_t`, initializes its output request to
+  `FMC_UI_REQUEST_NONE`, and never invokes callbacks or runtime operations;
+- product-main consumes reset requests once, executes the runtime reset, takes
+  a fresh snapshot, and presents the updated ACM/RATE frame;
+- recognizers deliver `fmc_input_event_t` to product-main, which routes menu
+  input directly to `fmc_ui`; Phase 8 removes the passive runtime input event
+  and retained last-input fields;
+- external-button debounce remains outside product UI and is driven by
+  product-main using two independent one-shot timers and GPIO reads;
+- the existing `fm_board_keyboard` facade is extended for EXT_1 and EXT_2 and
+  uses the existing EXTI route; no new external-button BSP is introduced;
+- `fm_main_ext_button` has no ThreadX, HAL, queue, backlight, UI, or runtime
+  dependency. Per button it owns armed/release-candidate decisions and returns
+  semantic SHORT plus timer start, restart, or cancel instructions;
+- product-main owns the two ThreadX debounce timers, performs required GPIO
+  reads, and routes each timer callback as a serialized timeout event back to
+  the helper;
+- `fm_port_gpio` and `fm_board` expose backlight On/Off operations that hide
+  active-low polarity. They are `void` operations with no fabricated status,
+  readback, or software state, and `FM_BOARD_Init()` reasserts off;
+- the app-facing backlight controller exposes initialization and activation
+  request rather than requiring callers to balance independent On/Off calls;
+- backlight activation commits a valid expiry before the active-low output is
+  turned on. Its ThreadX one-shot callback turns the output off directly
+  instead of depending on a queue that may be full; deadline/generation state
+  prevents a stale callback from defeating a newer request. Timer create or
+  rearm failure leaves the nonessential backlight off/disabled, reports the
+  failure once, and keeps measurement running;
+- Phase 8 adds no LCD readback, retry, rollback, reinitialization, or
+  transactional navigation layer. Cross-cutting failure policy remains in
+  deferred follow-up `ROBUST-1`.
+
+Hardware configuration gate before 8C:
+- human configures CubeMX PD3 as `EXT_BUTTON_1` and PD4 as `EXT_BUTTON_2`, EXTI
+  rising/falling, internal pull-up;
+- human configures PE0 as `LCD_BACKLIGHT`, GPIO output push-pull, no pull, low
+  speed, initial high/off;
+- generated changes are reviewed before repository-facing wrappers or app
+  integration proceed;
+- `FM_BOARD_Init()` reasserts backlight off through the board facade.
 
 Legacy evidence:
 - the implemented legacy user path placed TTL/RATE before ACM/RATE;
-- broader legacy menus also included date/time, printing, Bluetooth, and
-  optional temperature, but those are not measurement-minimum dependencies.
+- broader legacy menus also included date/time, printing, a Bluetooth-named
+  download window, and optional temperature;
+- `legacy/analysis/fmc_user_navigation.md` reconstructs the preserved flow and
+  records evidence conflicts without promoting legacy behavior.
+
+Legacy boundary:
+- the current five-screen order and bounded mechanical navigation replace the
+  incomplete and internally inconsistent legacy order;
+- LOG_DOWNLOAD replaces the ambiguous Bluetooth screen name because it states
+  operator purpose independently of transport;
+- direct ACM reset through LONG ENTER and EXT_2 is deliberately retained, but
+  only in the active ACM/RATE context;
+- the current external-button trigger, debounce, POINT, backlight, refresh, and
+  ownership rules replace timer-coupled legacy mechanisms;
+- configuration entry, resolution shortcuts, alarm actions, real deferred
+  workflows, and temperature remain evidence only.
+
+Risks:
+- copying the monolithic legacy `fm_user` or `fmx` ownership shape;
+- coupling product navigation to LCD mapping, ThreadX, HAL, timers, GPIO, or
+  reset primitives;
+- allowing inert placeholders to start deferred workflows or fabricate data;
+- losing, duplicating, or delaying accepted input while integrating EXTI
+  bounce filtering with the owner queue;
+- allowing a stale backlight expiry to defeat a newer activation request;
+- resetting acquisition counters or baselines together with ACM;
+- changing acquisition cadence, Stop2 behavior, or pulse conservation while
+  adding presentation activity;
+- mixing `ROBUST-1` cleanup into the functional slices.
+
+### Incremental User-Interface Route
+
+`8-0A -> 8A -> 8B -> 8C -> 8D -> 8E`
+
+| Slice | Bounded result | Entry or decision gate | Exit evidence |
+|---|---|---|---|
+| 8-0A: Evidence and route foundation | Reconstruct relevant legacy navigation, expose conflicts, define Phase 8 ownership boundaries, and establish the incremental route | Phase 7 is closed; current product/UI authorities and preserved legacy sources are available | Human-accepted evidence analysis and route foundation |
+| 8A: Five-screen UI contract | Consolidate the reviewed screen, navigation, input, reset, refresh, POINT, backlight, hardware-prerequisite, and architecture decisions without changing code | 8-0A is accepted and the sequential human review has closed the listed decisions | Product owners and the legacy coverage register agree; the complete transition table and implementation gates are reviewable |
+| 8B: Pure UI and mechanical rename | First rename `fmc_presentation` to `fmc_ui` in isolation, verify it, then implement the RTOS-neutral five-state navigation, semantic frames, placeholder content, logical POINT state, and reset request | 8A is human-accepted and implementation is authorized | Canonical builds after the isolated rename; deterministic regression covers startup, five states, every input consequence, frames, POINT decisions, requests, failures, and invalid arguments without ThreadX or LCD hardware |
+| 8C: Owner-loop, external input, and reset integration | Remove passive runtime input, connect UI to coherent snapshots, extend the existing board keyboard facade for EXT_1/EXT_2, add independent app debounce, and execute authorized ACM reset | 8B is accepted; human CubeMX gate is complete and generated diff reviewed | Regression and canonical builds show serialized input, five visible screens, bounded/cyclic navigation, bounce/hold/boot-held behavior, exactly-once reset, and live updates |
+| 8D: Transverse POINT and safe backlight | Complete periodic POINT application and add the last functional slice: safe startup/input backlight activation with committed ten-second expiry | 8C is accepted; PE0 generated configuration and board path are available | Focused tests and target evidence cover POINT observations, startup and input activation, deadline restart, stale expiry, fail-off behavior, and no measurement/low-power regression |
+| 8E: Combined target validation | Validate the complete Phase 8 operator path on target | Required slices 8A through 8D are accepted | Canonical builds, regression, and target evidence cover five-screen order and bounds, EXT_1 cycle, both ACM reset paths and no-ops, bounce/hold/boot-held inputs, POINT at zero/isolated/continuous flow, backlight startup/restart/expiry, and Run/Stop2 pulse conservation |
+
+Phase 8-0A is closed and human-accepted. Contract consolidation belongs to the
+documentation-only 8A slice. `WORKING_CONTEXT.md` owns its current active
+status. No source, test, CubeMX, protected, or generated file change belongs to
+8A.
+
+Human approval is required before:
+- beginning an implementation slice;
+- applying or regenerating the accepted CubeMX hardware configuration;
+- editing any protected or generated code outside allowed `USER CODE`
+  boundaries.
 
 Exit criteria:
-- TTL/RATE and ACM/RATE navigation is traceable to approved UI behavior;
-- transitions, formatting, live updates, and approved reset behavior have
-  focused tests and target validation;
-- configuration screens and advanced capabilities remain out of scope.
+- all five user-menu positions are visible and navigable in normal
+  `product/main`;
+- every in-scope semantic input has an explicit accepted consequence or no-op;
+- ACM resets directly and only through LONG ENTER or EXT_2 while ACM/RATE is
+  active; TTL and acquisition counter/baselines remain untouched;
+- transitions, static placeholders, formatting, quality display, live updates,
+  and reset refresh have focused regression and target validation;
+- external buttons produce one press action despite bounce and require stable
+  release before rearm;
+- POINT and backlight behavior match their accepted temporal contracts;
+- navigation remains independent from LCD physical mapping, ThreadX types,
+  acquisition ownership, and persistence;
+- configuration, alarms, temperature, and real placeholder workflows remain
+  out of scope;
+- acquisition and Run/Stop2 behavior show no regression.
 
 ## Phase 9: RTC, Calendar, And Associated Screens
 

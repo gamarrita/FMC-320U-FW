@@ -59,9 +59,8 @@ Evidence:
 - `src/apps/product/main/fm_main.c`;
 - frozen legacy startup evidence.
 
-**Deferred:** Backlight behavior, retry and recovery policy, first-programming
-behavior, invalid-retention recovery, and alternate diagnostics remain outside
-Phase 6A.
+**Deferred:** LCD retry and recovery policy, first-programming behavior,
+invalid-retention recovery, and alternate diagnostics remain outside Phase 8.
 
 ## Acquisition, Calculation, And Updates
 
@@ -138,9 +137,25 @@ shows frequency windows and their monotonic timestamps continuing across those
 normal Run/Stop2 transitions. The mechanism for entering and leaving the
 future indefinite inactive sleep remains unselected.
 
+**Accepted:** Once LCD startup has begun, every startup or user-menu screen is
+presented at most once per accepted one-second presentation cycle. Live
+measurement screens are additionally presented immediately on entry, and
+ACM/RATE is presented immediately after an accepted reset. Navigation never
+shows a retained frame from the preceding screen before the fresh active frame.
+
+**Accepted:** POINT is a transverse pulse-activity witness on startup, user,
+and future configuration screens:
+
+- its initial logical state is off;
+- each accepted periodic pulse observation with `pulse_delta > 0` toggles it
+  once, regardless of the number of pulses in that observation;
+- an accepted observation with `pulse_delta == 0` sets it off;
+- the resulting state is applied once to the next active frame;
+- it does not react per physical edge and does not replay individual pulses.
+
 **Deferred:** A future presentation cadence may become less frequent during
-inactivity and return to one second after pulses, value changes, or operator
-interaction. This is not current product behavior.
+inactivity and return to one second after activity. This is not Phase 8
+behavior.
 
 ## Totalization And Resets
 
@@ -153,25 +168,48 @@ Evidence:
 - `src/product/fmc/fmc_model.h`;
 - `src/product/fmc/fmc_service.h`.
 
-**Unresolved:** Confirmation prompts, password or service authorization,
-persistence timing, reset feedback, and reset behavior during abnormal
-conditions are not approved.
+**Accepted:** While ACM/RATE is active, LONG ENTER and EXT_2 SHORT each
+authorize one direct ACM reset. There is no confirmation or cancellation
+state. The visible ACM/RATE frame is refreshed immediately from the
+post-reset snapshot. Resetting the runtime total does not clear the hardware
+counter or observation baseline; a pending or later accepted pulse delta can
+make ACM nonzero at the next periodic presentation. TTL reset is unavailable
+from the user menu.
+
+**Deferred:** Privileged TTL reset, persistence timing, and reset behavior
+during future abnormal states belong to later focused work.
 
 ## Operator Input
 
 **Accepted:** Product input preserves key identity and SHORT/LONG action
-identity after hardware translation. The current runtime can accept that event
-without assigning menu, wake, backlight, reset, or edit consequences.
+identity after hardware translation. Product-main serializes accepted input
+and gives it directly to the active UI context; measurement runtime does not
+retain passive menu input.
 
 Evidence:
 - `src/product/fmc/fmc_input.h`;
-- `src/product/fmc/fmc_runtime.h`.
+- `docs/product/fmc/user_interface.md`.
 
-**Candidate:** Later UI behavior should map semantic input to visible
-consequences according to the active operational or configuration context.
+**Accepted:** EXT_1 and EXT_2 generate at most one SHORT action for one
+physical press. The first accepted falling transition acts immediately. Each
+button remains independently disarmed until a rising transition has remained
+released for 100 ms; falling during that interval cancels the release
+candidate. A button held low at boot generates no action and must be stably
+released before it can arm. External buttons do not generate LONG or repeat
+actions.
 
-**Unresolved:** Complete navigation, external-button consequences, debounce,
-activity policy, and long-press meanings remain undecided.
+**Accepted:** Successful presentation of the all-segments startup screen turns
+the backlight on and arms a ten-second one-shot interval. Every valid physical
+mechanical or external-button press turns it on immediately and restarts that
+interval, even when the active UI assigns the semantic action no visible
+consequence. The first press is not consumed as a wake-only action. Periodic
+refresh, pulse observations, and internal UI changes do not extend the
+interval.
+
+Backlight control is nonessential to measurement. If its controller cannot be
+created or safely rearmed, the backlight remains or is driven off, the feature
+is disabled and reported once, and measurement continues without panic or
+reset. A stale expiry cannot turn off a newer activation interval.
 
 ## Configuration And Persistence
 
