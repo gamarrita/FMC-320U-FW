@@ -12,6 +12,23 @@
 
 # Como identificar `fmc_runtime` con y sin RTOS
 
+## Nota de evolucion para Phase 8
+
+El ejemplo de `FmcRuntimeThread` que aparece mas abajo explica una posible
+separacion conceptual, pero no es la arquitectura aprobada para Phase 8 en
+`product/main`. La ruta directa siguiente todavia no esta completamente
+implementada en el HEAD anterior a 8B/8C.
+
+En la arquitectura Phase 8:
+
+- product-main es el unico propietario de la serializacion y la orquestacion;
+- `fmc_runtime` posee medicion, RATE y totalizadores;
+- las entradas semanticas del operador llegan directamente a `fmc_ui`;
+- `fmc_runtime` no es el bus universal de entradas, UI o funciones futuras.
+
+El recorrido actual aprobado y su evolucion se explican en
+`docs/turotial/input_ui_architecture.md`.
+
 ## Dos usos de la palabra runtime
 
 Conviene separar dos conceptos:

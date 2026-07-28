@@ -28,8 +28,8 @@ This document applies to the FMC-320U product line.
   the display is reactivated.
 - A failed LCD initialization shall prevent the visible startup sequence from
   beginning.
-- Successful presentation of the startup all-segments screen shall activate
-  the display backlight for the accepted bounded interval.
+- Successful presentation of the startup all-segments screen shall request
+  display-backlight activation for the accepted bounded interval.
 - The product shall support an activity-gated low-power lifecycle. After five
   seconds without newly counted primary pulses, acquisition may remove its
   periodic one-second deadline and remain inactive until new primary activity
@@ -149,13 +149,22 @@ authorization remain undecided.
 - Every in-scope input shall have the consequence or explicit no-op defined in
   the accepted Phase 8 transition table.
 - PRINT, LOG_DOWNLOAD, and DATE_TIME shall be visible inert placeholders until
-  their respective functions are implemented.
+  their respective functions are implemented. Their lower-row `OFF` text shall
+  be right-aligned across the seven numeric positions.
 - Each physical EXT_1 or EXT_2 actuation shall produce at most one SHORT event;
-  a button held at boot shall not act until it has been released stably.
-- Every valid physical button press shall activate the backlight without
-  consuming its semantic action, and shall restart a fixed ten-second interval.
-- Pulse observations shall drive one transverse POINT indication consistently
-  across startup and user screens.
+  each button shall remain disarmed at boot until its released level has been
+  stable for 100 ms, whether it starts released or held.
+- Every valid physical button press shall request backlight activation without
+  consuming its semantic action, and in normal operation shall restart a fixed
+  ten-second interval.
+- Each accepted periodic presentation event shall cause exactly one
+  presentation attempt of the active user-menu screen. Entry into each of the
+  five user-menu screens shall cause an immediate presentation attempt,
+  including entry into an inert placeholder. Immediate entry or reset
+  presentation shall not suppress the next periodic attempt.
+- Pulse observations shall drive one POINT indication consistently across the
+  five user-menu screens. Startup pulse observations shall not affect its
+  initial off state on TTL/RATE.
 
 Evidence:
 - `src/product/fmc/fmc_input.h`;

@@ -503,13 +503,23 @@ Objective:
   until their functional phases.
 
 Responsibility boundaries:
-- `fmc_ui` owns startup and user-menu state, semantic input consequences,
-  semantic frames, POINT logical state, and explicit UI requests;
-- product-main remains the single serialized owner, obtains fresh coherent
-  runtime snapshots, consumes UI requests exactly once, owns ThreadX timers,
-  and coordinates immediate and periodic presentation;
+- `fmc_ui` owns the one visible UI context, global navigation, startup and
+  user-menu state, semantic input consequences, semantic frames, POINT logical
+  state, and explicit UI requests;
+- a future active configuration or feature flow may own its local pure
+  interaction state, including an edit draft and selected field, under
+  `fmc_ui` coordination; UI drafts are not authoritative live configuration;
+- product-main remains the single serialized orchestration owner, obtains
+  fresh coherent runtime snapshots, consumes UI requests exactly once, owns
+  ThreadX timers, and coordinates immediate and periodic presentation;
+- single serialized ownership does not require one monolithic source file:
+  product-main may delegate a concrete future workflow to an app-local
+  controller while retaining event order and effect execution ownership;
 - `fmc_runtime` continues to own measurement, RATE, totals, and the ACM-reset
   primitive, but no longer retains passive menu input;
+- future RTC, configuration, persistence, communication, printing, and sensor
+  capabilities keep domain-specific ownership rather than turning
+  `fmc_runtime` into a universal product event bus;
 - the LCD adapter maps semantic frames only;
 - existing board GPIO and keyboard facades expose physical behavior without
   leaking HAL, EXTI, active-low polarity, or ThreadX into product modules;
@@ -540,31 +550,54 @@ Accepted product decisions:
   no confirmation state; TTL reset remains privileged future work;
 - ACM/RATE reuses the accepted TTL/RATE numeric, RATE-quality, unit, time-base,
   and overflow rules, with ACM in the upper row;
-- every screen is presented at most once per accepted one-second cycle; live
-  views are also immediate on entry and ACM/RATE is immediate after reset;
-- POINT is a transverse accepted-pulse-observation witness: nonzero delta
-  toggles once, zero delta turns it off;
-- every valid physical press activates and restarts a fixed ten-second
-  backlight interval without consuming the action;
+- temporary startup views are not periodically re-presented; each accepted
+  one-second event produces one attempt for the active user view, while entry
+  into any of the five user screens and ACM reset also produce independent
+  immediate presentation attempts;
+- POINT is a user-menu accepted-pulse-observation witness initialized off on
+  TTL/RATE: nonzero delta toggles once and zero delta turns it off;
+- every valid physical press requests activation and, in normal operation,
+  restarts a fixed ten-second backlight interval without consuming the action;
 - EXT_1 and EXT_2 use a press-edge SHORT with independent stable-release
   rearm; they have no LONG or repeat behavior.
 
 Accepted architecture decisions:
 - first rename `fmc_presentation` to `fmc_ui` as an isolated mechanical change,
   with matching public names and no compatibility aliases;
-- `fmc_ui` later owns startup plus the five user states and returns only
-  `FMC_UI_REQUEST_NONE` or `FMC_UI_REQUEST_RESET_ACM`;
+- in Phase 8, `fmc_ui` owns startup plus the five user states and its request
+  vocabulary contains only `FMC_UI_REQUEST_NONE` and
+  `FMC_UI_REQUEST_RESET_ACM`; that bounded Phase 8 vocabulary does not freeze
+  the request contract for later vertical capabilities;
+- the Phase 8 request contract uses `fmc_ui_request_t`, a structure containing
+  only one `fmc_ui_request_kind_t kind` member. It has no payload union,
+  reserved fields, callback, transaction identifier, or speculative
+  future-capability data;
 - semantic/BSP ACM indicator names remain positional as `ACM_TOP` and
   `ACM_BOTTOM`; legacy `ACM_1` and `ACM_2` names are not propagated into the
   new UI contract, and no global rule disables either physical indicator;
 - `fmc_ui` does not call runtime, LCD, ThreadX, HAL, GPIO, or timers;
-- the input handler returns `fm_status_t`, initializes its output request to
-  `FMC_UI_REQUEST_NONE`, and never invokes callbacks or runtime operations;
+- the input handler returns `fm_status_t`, receives an output
+  `fmc_ui_request_t *`, initializes its `kind` to `FMC_UI_REQUEST_NONE`, and
+  never invokes callbacks or runtime operations;
 - product-main consumes reset requests once, executes the runtime reset, takes
   a fresh snapshot, and presents the updated ACM/RATE frame;
 - recognizers deliver `fmc_input_event_t` to product-main, which routes menu
   input directly to `fmc_ui`; Phase 8 removes the passive runtime input event
   and retained last-input fields;
+- `fmc_input_event_t` remains operator-input vocabulary. Periodic ticks,
+  measurement observations, and future asynchronous service results are not
+  disguised as key input;
+- UI navigation and local editing are distinct responsibilities. A future
+  editor may transform a caller-provided live value into a UI-owned draft, but
+  product-main must submit an explicit UI request to the owning domain service
+  before that candidate becomes active or persistent;
+- no generic command bus, callback registry, speculative feature controller,
+  or future editor is introduced in Phase 8; those boundaries are added only
+  when a concrete vertical capability requires them;
+- slice 8C reconciles `fmc_input.h` with that route: the type remains a
+  hardware-neutral key/action identity, its comments no longer assign external
+  SHORT to release or require runtime as the consumer, and physical press-edge
+  recognition remains producer-owned;
 - external-button debounce remains outside product UI and is driven by
   product-main using two independent one-shot timers and GPIO reads;
 - the existing `fm_board_keyboard` facade is extended for EXT_1 and EXT_2 and
@@ -580,12 +613,14 @@ Accepted architecture decisions:
   readback, or software state, and `FM_BOARD_Init()` reasserts off;
 - the app-facing backlight controller exposes initialization and activation
   request rather than requiring callers to balance independent On/Off calls;
+- every required ThreadX timer create, deactivate, change, or activate
+  operation must return `TX_SUCCESS`; another result follows the existing
+  fatal product-main panic path, with no backlight-specific degraded mode,
+  retry, user alarm, disabled state, or Debug/Release distinction;
 - backlight activation commits a valid expiry before the active-low output is
   turned on. Its ThreadX one-shot callback turns the output off directly
   instead of depending on a queue that may be full; deadline/generation state
-  prevents a stale callback from defeating a newer request. Timer create or
-  rearm failure leaves the nonessential backlight off/disabled, reports the
-  failure once, and keeps measurement running;
+  prevents a stale callback from defeating a newer request;
 - Phase 8 adds no LCD readback, retry, rollback, reinitialization, or
   transactional navigation layer. Cross-cutting failure policy remains in
   deferred follow-up `ROBUST-1`.
@@ -620,6 +655,10 @@ Legacy boundary:
 
 Risks:
 - copying the monolithic legacy `fm_user` or `fmx` ownership shape;
+- replacing it with a monolithic `fmc_ui` that combines global navigation,
+  domain validation, persistence, and asynchronous feature execution;
+- turning `fmc_runtime_event_t` or the private product-main queue payload into
+  a universal event vocabulary for unrelated product domains;
 - coupling product navigation to LCD mapping, ThreadX, HAL, timers, GPIO, or
   reset primitives;
 - allowing inert placeholders to start deferred workflows or fabricate data;
@@ -639,15 +678,15 @@ Risks:
 |---|---|---|---|
 | 8-0A: Evidence and route foundation | Reconstruct relevant legacy navigation, expose conflicts, define Phase 8 ownership boundaries, and establish the incremental route | Phase 7 is closed; current product/UI authorities and preserved legacy sources are available | Human-accepted evidence analysis and route foundation |
 | 8A: Five-screen UI contract | Consolidate the reviewed screen, navigation, input, reset, refresh, POINT, backlight, hardware-prerequisite, and architecture decisions without changing code | 8-0A is accepted and the sequential human review has closed the listed decisions | Product owners and the legacy coverage register agree; the complete transition table and implementation gates are reviewable |
-| 8B: Pure UI and mechanical rename | First rename `fmc_presentation` to `fmc_ui` in isolation, verify it, then implement the RTOS-neutral five-state navigation, semantic frames, placeholder content, logical POINT state, and reset request | 8A is human-accepted and implementation is authorized | Canonical builds after the isolated rename; deterministic regression covers startup, five states, every input consequence, frames, POINT decisions, requests, failures, and invalid arguments without ThreadX or LCD hardware |
-| 8C: Owner-loop, external input, and reset integration | Remove passive runtime input, connect UI to coherent snapshots, extend the existing board keyboard facade for EXT_1/EXT_2, add independent app debounce, and execute authorized ACM reset | 8B is accepted; human CubeMX gate is complete and generated diff reviewed | Regression and canonical builds show serialized input, five visible screens, bounded/cyclic navigation, bounce/hold/boot-held behavior, exactly-once reset, and live updates |
-| 8D: Transverse POINT and safe backlight | Complete periodic POINT application and add the last functional slice: safe startup/input backlight activation with committed ten-second expiry | 8C is accepted; PE0 generated configuration and board path are available | Focused tests and target evidence cover POINT observations, startup and input activation, deadline restart, stale expiry, fail-off behavior, and no measurement/low-power regression |
-| 8E: Combined target validation | Validate the complete Phase 8 operator path on target | Required slices 8A through 8D are accepted | Canonical builds, regression, and target evidence cover five-screen order and bounds, EXT_1 cycle, both ACM reset paths and no-ops, bounce/hold/boot-held inputs, POINT at zero/isolated/continuous flow, backlight startup/restart/expiry, and Run/Stop2 pulse conservation |
+| 8B: Pure UI and mechanical rename | First rename `fmc_presentation` to `fmc_ui` in isolation, verify it, then implement the RTOS-neutral five-state navigation, semantic frames, placeholder content, logical POINT state, and reset request | 8A is human-accepted and implementation is authorized | Canonical builds after the isolated rename; deterministic regression covers startup, five states, every input consequence, frames including right-aligned `"    OFF"`, user-menu POINT decisions, requests, failures, and invalid arguments without ThreadX or LCD hardware |
+| 8C: Owner-loop, external input, and reset integration | Reconcile `fmc_input.h`, remove passive runtime input, connect UI to coherent snapshots, extend the existing board keyboard facade for EXT_1/EXT_2, add independent app debounce, and execute authorized ACM reset | 8B is accepted; human CubeMX gate is complete and generated diff reviewed | Regression and canonical builds show the hardware-neutral input contract, serialized input, five visible screens, bounded/cyclic navigation, bounce/hold behavior, released-at-boot and held-at-boot arming, exactly-once reset, and live updates |
+| 8D: User-menu POINT and safe backlight | Complete periodic user-menu POINT application and add the last functional slice: safe startup/input backlight activation with committed ten-second expiry | 8C is accepted; PE0 generated configuration and board path are available | Focused tests and target evidence cover POINT observations on all five user screens, startup and input activation, deadline restart, stale expiry, fatal timer-contract handling, and no measurement/low-power regression |
+| 8E: Combined target validation | Validate the complete Phase 8 operator path on target | Required slices 8A through 8D are accepted | Canonical builds, regression, and target evidence cover five-screen order and bounds, exact PR/LD/DT/OFF placeholder glyphs including the inferred numeric F, EXT_1 cycle, both ACM reset paths and no-ops, bounce/hold and both boot-level input cases, POINT at zero/isolated/continuous flow, backlight startup/restart/expiry, and Run/Stop2 pulse conservation |
 
-Phase 8-0A is closed and human-accepted. Contract consolidation belongs to the
-documentation-only 8A slice. `WORKING_CONTEXT.md` owns its current active
-status. No source, test, CubeMX, protected, or generated file change belongs to
-8A.
+Phase 8-0A and the documentation-only 8A contract consolidation are closed and
+human-accepted. `WORKING_CONTEXT.md` owns the current active status and now
+routes implementation through 8B. No CubeMX, protected, generated, or 8C
+integration change belongs to 8B.
 
 Human approval is required before:
 - beginning an implementation slice;

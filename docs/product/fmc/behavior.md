@@ -137,21 +137,34 @@ shows frequency windows and their monotonic timestamps continuing across those
 normal Run/Stop2 transitions. The mechanism for entering and leaving the
 future indefinite inactive sleep remains unselected.
 
-**Accepted:** Once LCD startup has begun, every startup or user-menu screen is
-presented at most once per accepted one-second presentation cycle. Live
-measurement screens are additionally presented immediately on entry, and
-ACM/RATE is presented immediately after an accepted reset. Navigation never
-shows a retained frame from the preceding screen before the fresh active frame.
+**Accepted:** The temporary all-segments and firmware-version startup views are
+presented on entry and are not periodically re-presented. Once the user menu
+begins, processing each accepted one-second presentation event causes exactly
+one presentation attempt of the active user view. Live measurement screens are
+additionally updated from a fresh snapshot. Entry into every user-menu screen,
+including an inert placeholder, causes an immediate presentation attempt, and
+ACM/RATE is presented immediately after an accepted reset. An immediate
+presentation is independent from and does not suppress the next periodic
+attempt. Navigation never shows a retained frame from the preceding screen
+before the fresh active frame on a successful write.
 
-**Accepted:** POINT is a transverse pulse-activity witness on startup, user,
-and future configuration screens:
+Periodic presentation does not restart a startup duration or the backlight
+interval.
 
-- its initial logical state is off;
-- each accepted periodic pulse observation with `pulse_delta > 0` toggles it
-  once, regardless of the number of pulses in that observation;
+**Accepted:** POINT is a pulse-activity witness across the five user-menu
+screens only:
+
+- its logical state starts off on first entry to TTL/RATE;
+- each accepted periodic pulse observation while the user menu is active with
+  `pulse_delta > 0` toggles it once, regardless of the number of pulses in that
+  observation;
 - an accepted observation with `pulse_delta == 0` sets it off;
-- the resulting state is applied once to the next active frame;
+- the resulting state is applied to that cycle's active user frame;
 - it does not react per physical edge and does not replay individual pulses.
+
+During startup, POINT is physically on only as part of the all-segments check
+and is off on the firmware-version view. Pulse observations before the user
+menu begins do not alter the logical state that starts on TTL/RATE.
 
 **Deferred:** A future presentation cadence may become less frequent during
 inactivity and return to one second after activity. This is not Phase 8
@@ -194,22 +207,21 @@ Evidence:
 physical press. The first accepted falling transition acts immediately. Each
 button remains independently disarmed until a rising transition has remained
 released for 100 ms; falling during that interval cancels the release
-candidate. A button held low at boot generates no action and must be stably
-released before it can arm. External buttons do not generate LONG or repeat
-actions.
+candidate. Initialization samples each button independently. An initially high
+button starts the same 100 ms stable-release interval before arming. An
+initially low button generates no action and remains disarmed until a later
+rising transition starts that interval. Only a falling transition after
+arming generates SHORT and disarms the button again. External buttons do not
+generate LONG or repeat actions.
 
-**Accepted:** Successful presentation of the all-segments startup screen turns
-the backlight on and arms a ten-second one-shot interval. Every valid physical
-mechanical or external-button press turns it on immediately and restarts that
-interval, even when the active UI assigns the semantic action no visible
-consequence. The first press is not consumed as a wake-only action. Periodic
-refresh, pulse observations, and internal UI changes do not extend the
+**Accepted:** Successful presentation of the all-segments startup screen
+requests backlight activation. Every valid physical mechanical or
+external-button press makes the same request without consuming its semantic
+action, even when the active UI assigns that action no visible consequence.
+Each request first commits a valid ten-second one-shot expiry and then turns
+the backlight on. Periodic refresh, pulse observations, and internal UI changes
+do not extend the interval. A stale expiry cannot turn off a newer activation
 interval.
-
-Backlight control is nonessential to measurement. If its controller cannot be
-created or safely rearmed, the backlight remains or is driven off, the feature
-is disabled and reported once, and measurement continues without panic or
-reset. A stale expiry cannot turn off a newer activation interval.
 
 ## Configuration And Persistence
 

@@ -135,6 +135,8 @@ reactivation.
 - Activate every LCD segment controllable by software at the same time.
 - Coverage includes numeric digits, decimal points, both alphanumeric
   characters, legends, and indicators.
+- POINT is physically forced on in this view solely as part of the segment
+  check. It does not represent pulse activity during startup.
 - Writing numeric eights alone does not satisfy this state.
 - The state serves both as a visual check and an unambiguous startup signal.
 - Its nominal duration is 3 seconds, beginning after successful presentation.
@@ -152,8 +154,7 @@ Physical element identity and mapping remain owned by
 - The top numeric row is empty.
 - The bottom numeric row shows `00.01.00`.
 - The alphanumeric field shows `B0`.
-- Every screen-specific standalone indicator is off. POINT follows its
-  transverse activity rule.
+- Every screen-specific standalone indicator, including POINT, is off.
 - The value is an unpublished Phase 6A dummy, not a released firmware version.
 - Its nominal duration is 3 seconds, beginning after successful presentation.
 - SHORT ESC advances to TTL/RATE exactly as timeout does.
@@ -222,10 +223,12 @@ Visible representation of internal formatting errors is deferred.
   only while ACM/RATE is active.
 - One accepted input event causes at most one transition or one reset request.
 
-The complete transition table is:
+The complete Phase 8 startup and user-menu input table is:
 
-| Active screen | SHORT DOWN | SHORT UP | SHORT ENTER | SHORT ESC | EXT_1 SHORT | EXT_2 SHORT | LONG ENTER | Other LONG |
+| Active view | SHORT DOWN | SHORT UP | SHORT ENTER | SHORT ESC | EXT_1 SHORT | EXT_2 SHORT | LONG ENTER | Other LONG |
 |---|---|---|---|---|---|---|---|---|
+| ALL_SEGMENTS | No-op | No-op | No-op | FIRMWARE_VERSION | No-op | No-op | No-op | No-op |
+| FIRMWARE_VERSION | No-op | No-op | No-op | TTL/RATE | No-op | No-op | No-op | No-op |
 | TTL/RATE | ACM/RATE | No-op | No-op | No-op | ACM/RATE | No-op | No-op | No-op |
 | ACM/RATE | PRINT | TTL/RATE | No-op | No-op | PRINT | Reset ACM | Reset ACM | No-op |
 | PRINT | LOG_DOWNLOAD | ACM/RATE | No-op | No-op | LOG_DOWNLOAD | No-op | No-op | No-op |
@@ -277,8 +280,15 @@ communication, RTC, print, configuration, workflow, or timeout side effects:
 | LOG_DOWNLOAD | `LD` | Empty | `OFF` |
 | DATE_TIME | `DT` | Empty | `OFF` |
 
-All screen-specific indicators are off. The transverse POINT activity
-indicator remains governed by [behavior.md](behavior.md).
+`OFF` is right-aligned across the seven lower numeric positions. The exact
+semantic lower-row text is `"    OFF"` with four leading spaces.
+
+All screen-specific indicators are off. The user-menu POINT activity indicator
+remains governed by [behavior.md](behavior.md).
+
+Entry into each placeholder causes an immediate presentation attempt. Its
+static content is also presented during the normal user-menu periodic cycle so
+the POINT state remains current.
 
 `LOG_DOWNLOAD` names the operator purpose. Bluetooth may later be one transport
 for that function, but is not the screen identity because printing may also

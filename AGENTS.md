@@ -9,7 +9,8 @@ It is not extended technical documentation.
 
 Use:
 - `docs/project/WORKFLOW.md` for human-agent-repository continuity
-- `STYLE.md` for naming, code structure and new contracts locations. 
+- `STYLE.md` for naming, code structure, new contract locations, and
+  cross-cutting authored error-handling rules.
 
 ---
 
@@ -23,7 +24,8 @@ For active work, read in this order:
 5. roadmap and specification files referenced by `WORKING_CONTEXT.md`, when
    applicable
 6. local `README.md` files for the touched folders
-7. `STYLE.md` for naming and code structure questions
+7. `STYLE.md` for naming, code structure, contract-location, and
+   error-handling questions
 
 `WORKING_CONTEXT.md` should stay short and operational. It names one active
 workstream and exactly one active slice. It normally persists while that
@@ -196,7 +198,8 @@ Use this split:
   specification
 - durable refactor strategy in `docs/roadmaps/`
 - onboarding and repository maps in `README.md` files
-- naming and code structure in `STYLE.md`
+- naming, code structure, and cross-cutting authored error handling in
+  `STYLE.md`
 - public contracts for implemented modules in their headers
 
 Do not duplicate stable policy, product requirements, roadmap content, or module

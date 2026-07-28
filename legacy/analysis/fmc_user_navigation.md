@@ -170,8 +170,8 @@ The evidence did not establish one unambiguous current policy for:
 The current Phase 8 contracts now define these policies independently of LCD
 physical mapping: a valid physical press both acts and restarts a ten-second
 backlight interval; POINT is driven once per accepted periodic pulse
-observation; all active screens participate in the one-second presentation
-cycle.
+observation while the user menu is active; the five user screens participate
+in the one-second presentation cycle while temporary startup views do not.
 
 ## Evidence Conflicts And Gaps
 
@@ -182,8 +182,8 @@ cycle.
 | External buttons | Legacy assigns navigation/reset actions; current product app does not deliver them | EXT_1 cycles forward; EXT_2 resets only on ACM/RATE; press-edge debounce is explicitly defined |
 | LONG shortcuts | Legacy enters setup or changes resolution from TTL/RATE | Deferred to Phase 10; they are no-ops in Phase 8 |
 | Flow-alarm reset | Named but marked unimplemented | Alarms remain outside the minimum measurement slice |
-| Backlight | Word intent, frozen unresolved entry, and timer-coupled code do not form one contract | Every valid physical press and successful all-segments startup presentation arm/restart a safe fixed ten-second interval |
-| Pulse indicator | Source wording and implementation observation point differ in precision | POINT toggles once for a nonzero accepted observation and turns off for a zero observation, across all screens |
+| Backlight | Word intent, frozen unresolved entry, and timer-coupled code do not form one contract | Every valid physical press and successful all-segments startup presentation request activation; normal operation rearms a safe fixed ten-second interval, while unexpected ThreadX timer status follows the common fatal app path |
+| Pulse indicator | Source wording and implementation observation point differ in precision | POINT toggles once for a nonzero accepted observation and turns off for a zero observation across the five user-menu screens; startup uses no functional pulse witness |
 | Later-screen returns | Word/YAML and code differ on date/time return timing and target | DATE_TIME is an inert last position; DOWN is a no-op, UP returns to LOG_DOWNLOAD, and EXT_1 wraps to TTL/RATE |
 
 ## Current Architecture Boundary

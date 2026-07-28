@@ -939,6 +939,7 @@ character_encoding:
       "9": [C, D, E, F, G]
       "A": [B, C, D, E, F, G]
       "E": [A, B, D, E, G]
+      "F": [B, D, E, G]
       "L": [A, B, E]
       "O": [A, B, C, E, F, G]
       "P": [B, D, E, F, G]
@@ -948,6 +949,7 @@ character_encoding:
     remarks:
       - "Encoding above reflects currently proven behavior, not IEC or ANSI naming"
       - "Geometric labels follow the artwork convention, not the most common calculator convention"
+      - "The F glyph is an inferred composition required by the Phase 8 OFF placeholder; it remains pending visual hardware validation in Phase 8E"
   digit_14seg:
     status: "operational"
     note: "Legacy firmware demonstrates successful rendering of many alphanumeric characters"

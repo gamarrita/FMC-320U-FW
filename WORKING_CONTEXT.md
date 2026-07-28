@@ -10,11 +10,13 @@ placeholders.
 Status:
 - Phase 7 is completed and human-accepted;
 - Phase 8-0A, evidence and route foundation, is completed and human-accepted;
-- Phase 8A, five-screen UI contract, is the single active slice and is
-  documentation-only;
-- Phase 8B, pure UI and mechanical rename, is the single next gated slice;
-- no Phase 8 source, test, CubeMX, generated, or protected-file change is
-  authorized by this context.
+- Phase 8A, five-screen UI contract, is completed and human-accepted;
+- Phase 8B, pure UI and mechanical rename, is the single active slice and its
+  implementation is explicitly authorized;
+- Phase 8C, owner-loop, external-input, and reset integration, is the single
+  next gated slice;
+- no CubeMX, generated, protected-file, hardware-integration, or Phase 8C
+  change is authorized by this context.
 
 ## Authorities And Evidence
 
@@ -40,79 +42,68 @@ Status:
 
 Legacy documents and code are evidence, not current product authority. The
 current `fmc_presentation` header remains implementation authority until the
-isolated Phase 8B rename establishes `fmc_ui`.
+isolated Phase 8B rename establishes `fmc_ui`. The current `fmc_input.h`
+release-trigger and runtime-consumer wording describes the implementation
+before Phase 8 integration; slice 8C must reconcile it with the accepted
+press-edge producer and direct UI route.
 
-## Active Slice: Phase 8A Five-Screen UI Contract
+## Active Slice: Phase 8B Pure UI And Mechanical Rename
 
 ### Boundary
 
-Consolidate the sequentially reviewed Phase 8 decisions at their proper
-authorities. The accepted user-menu order is:
+Implement only the RTOS- and hardware-neutral UI boundary accepted in 8A.
+Begin with an isolated mechanical rename from `fmc_presentation` to `fmc_ui`,
+including matching files, public symbols, types, and macros, with no
+compatibility aliases or behavior change. Canonical builds and the current
+regression must pass before adding new UI behavior.
 
-```text
-TTL_RATE -> ACM_RATE -> PRINT -> LOG_DOWNLOAD -> DATE_TIME
-```
-
-TTL/RATE and ACM/RATE are live screens. PRINT, LOG_DOWNLOAD, and DATE_TIME are
-static inert placeholders. The active slice records complete navigation,
-direct ACM reset, external-button semantics, periodic presentation, transverse
-POINT, safe backlight behavior, later implementation ownership, and CubeMX
-prerequisites.
+After that rename evidence passes, extend the pure module with startup plus the
+five user states, bounded mechanical navigation, cyclic EXT_1 navigation,
+semantic frames, right-aligned `"    OFF"` placeholders, logical user-menu
+POINT state, and the accepted `fmc_ui_request_t` request contract.
 
 ### Deliverables
 
-- update `docs/product/fmc/user_interface.md` with exact screen composition and
-  the complete startup/user-menu input table;
-- update `docs/product/fmc/behavior.md` with temporal reset, refresh, external
-  debounce, POINT, and backlight behavior;
-- update `docs/product/fmc/requirements.md` with concise normative obligations;
-- record reviewed legacy dispositions in
-  `docs/workflow/fmc_legacy_coverage.md`;
-- reconcile the Phase 8 roadmap and legacy analysis with the accepted
-  decisions;
-- keep Phase 8B as the one next gated slice.
+- rename `fmc_presentation.*` and its public namespace to `fmc_ui.*` without
+  compatibility aliases;
+- run canonical builds and current regression after the isolated rename;
+- implement the five-state user-menu behavior and complete accepted input
+  consequences in the pure UI;
+- compose exact live and placeholder semantic frames, including POINT;
+- return only the accepted Phase 8 NONE or RESET_ACM request kinds through
+  `fmc_ui_request_t`;
+- add deterministic RTOS-free regression for states, transitions, frames,
+  requests, no-ops, failures, and invalid arguments;
+- rerun canonical builds after the behavioral addition.
 
 ### Out Of Scope
 
-- source, header, test, build-system, CubeMX, generated-code, or protected-file
-  changes;
-- creating `fmc_ui`, renaming `fmc_presentation`, or changing runtime/app
-  ownership;
+- app owner-loop integration or direct runtime reset execution;
+- changing `fmc_input.h`, `fmc_runtime`, or recognizer routing;
 - configuring PD3, PD4, or PE0;
 - implementing external-button debounce, ACM reset routing, POINT, or
-  backlight;
+  backlight in `product/main`;
+- ThreadX, HAL, GPIO, EXTI, LCD mapping, or timer dependencies inside `fmc_ui`;
 - implementing printing, logged-data transfer, Bluetooth, RTC/date-time,
   temperature, alarms, configuration, resolution editing, or TTL reset;
 - performing the cross-cutting `ROBUST-1` runtime failure audit;
-- canonical build or target validation.
+- target hardware validation.
 
 ### Closure Criteria
 
-Phase 8A closes only when:
-- product authorities agree on the five screens, exact placeholder content,
-  full transition/no-op table, direct ACM reset, refresh, POINT, and backlight;
-- the legacy coverage register records the reviewed dispositions without
-  treating evidence as authority;
-- the roadmap defines the accepted architecture and hardware gate without
-  duplicating detailed product contracts;
-- documentation links, formatting, and frozen-evidence integrity checks pass;
-- the human reviews the consolidated contract and authorizes Phase 8B.
+Phase 8B closes only when:
+- the isolated rename passes canonical builds and the preexisting regression
+  before behavioral work is added;
+- the pure UI implements startup plus all five user states without RTOS or
+  hardware dependencies;
+- every accepted input consequence or no-op, semantic frame, POINT decision,
+  and request is covered deterministically;
+- invalid arguments and presentation failures preserve the accepted module
+  contract;
+- final canonical builds and regression pass;
+- the human reviews the evidence and authorizes Phase 8C.
 
-## Next Gated Slice: Phase 8B Pure UI And Mechanical Rename
-
-Phase 8B begins only after Phase 8A is accepted and implementation is
-explicitly authorized.
-
-Its first bounded change is an isolated mechanical rename from
-`fmc_presentation` to `fmc_ui`, including matching files, public symbols,
-types, and macros, with no compatibility aliases. Canonical builds and current
-regression must pass before new behavior is added.
-
-The remainder of 8B stays RTOS- and hardware-neutral. It adds the five UI
-states, bounded mechanical and cyclic EXT_1 navigation, exact semantic frames,
-static placeholders, logical POINT state, and the sole explicit request
-`FMC_UI_REQUEST_RESET_ACM`. It does not connect GPIO, EXTI, ThreadX timers,
-runtime reset, backlight, or CubeMX configuration.
+## Next Gated Slice: Phase 8C Owner-Loop, External Input, And Reset Integration
 
 Phase 8C remains blocked behind both accepted 8B evidence and the separate
 human CubeMX/regeneration gate recorded in the roadmap.

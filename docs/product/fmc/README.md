@@ -89,7 +89,7 @@ This map reports documentation coverage, not firmware implementation status.
 | Pulse and signal acquisition | Conserving counter-backed pulses through bounded deltas | [Requirements](requirements.md) and `docs/specs/fmc/acquisition.md` | Focused Phase 7A | Accepted | Reviewed Phase 7A decisions; runtime/service contracts; legacy acquisition | Phase 7B1 bring-up |
 | Flow-rate calculation | Deriving active-unit rate from pulse and time windows | [Requirements](requirements.md) | Focused core | Accepted | `fmc_rate.h`; `fmc_units.h` | Acquisition or display slice |
 | Totalization | ACM/TTL accumulation, visible totals, and resets | [Requirements](requirements.md) | Focused core | Accepted | `fmc_model.h`; `fmc_volume.h`; `fmc_service.h` | Operational reset flow |
-| Presentation | Startup, live TTL/RATE and ACM/RATE, placeholders, and transverse POINT | [User interface](user_interface.md) and [Behavior](behavior.md) | Focused Phase 8 contract | Accepted | Reviewed Phase 6A and Phase 8 decisions; presentation and LCD contracts | Functional implementation slices |
+| Presentation | Startup, live TTL/RATE and ACM/RATE, placeholders, and user-menu POINT | [User interface](user_interface.md) and [Behavior](behavior.md) | Focused Phase 8 contract | Accepted | Reviewed Phase 6A and Phase 8 decisions; presentation and LCD contracts | Functional implementation slices |
 | Operator input | Semantic mechanical and external-button actions after hardware translation | [User interface](user_interface.md) and [Behavior](behavior.md) | Focused Phase 8 contract | Accepted | `fmc_input.h`; reviewed Phase 8 decisions | Functional implementation slices |
 | Navigation | Context-dependent visible consequences in the five-screen user menu | [User interface](user_interface.md) | Focused Phase 8 contract | Accepted | Reviewed Phase 8 decisions; legacy coverage register | Configuration navigation in Phase 10 |
 | Configuration and calibration | Editable measurement and product settings | [Requirements](requirements.md) | Surface | Candidate | Model contract; frozen legacy extraction; legacy inventory | Phase 10 |
@@ -124,7 +124,7 @@ Evidence:
 - `docs/roadmaps/fmc_refactoring.md`.
 
 The accepted Phase 8 contract adds live ACM/RATE, inert PRINT, LOG_DOWNLOAD,
-and DATE_TIME positions, complete bounded navigation, ACM reset, transverse
+and DATE_TIME positions, complete bounded navigation, ACM reset, user-menu
 POINT, external-button semantics, and backlight behavior. Exact content,
 timing, transitions, formatting, and deferred boundaries are owned by
 [User interface](user_interface.md) and [Behavior](behavior.md). Firmware
