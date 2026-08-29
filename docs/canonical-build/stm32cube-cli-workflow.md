@@ -83,12 +83,42 @@ cube-cmake --build --preset Debug
 
 Notas:
 - `Set-ExecutionPolicy -Scope Process Bypass` solo afecta la shell actual.
-- para usar una aplicación distinta del default, agregá
-  `-DFM_ACTIVE_APP=<app>` al comando de configuración.
+- la aplicación activa debe coincidir con el valor versionado de
+  `FM_ACTIVE_APP_DEFAULT` en el `CMakeLists.txt` raíz;
+- la salida de configuración informa `Active app: <app>` y debe revisarse antes
+  de aceptar el artefacto.
 
 Resultado esperado:
 - `build/Debug/fmc-320u-v2.elf`
 - `build/Debug/fmc-320u-v2.map`
+
+#### Selección temporal de otra aplicación
+
+El flujo canónico no selecciona aplicaciones mediante
+`-DFM_ACTIVE_APP=<app>`. El `CMakeLists.txt` raíz elimina deliberadamente ese
+valor del cache y usa `FM_ACTIVE_APP_DEFAULT` como selección versionada.
+
+Esta política evita que `build/Debug/CMakeCache.txt` conserve una selección
+explícita anterior y produzca un ELF de otra aplicación después de cambiar el
+default en el repositorio. El síntoma histórico era una configuración válida
+que seguía construyendo la aplicación seleccionada en una iteración previa.
+
+Para construir temporalmente otra aplicación, por ejemplo
+`tests/regression`:
+
+1. comprobar que el worktree permita identificar con claridad la edición;
+2. guardar el valor actual de `FM_ACTIVE_APP_DEFAULT`;
+3. editar solamente ese valor en el `CMakeLists.txt` raíz;
+4. ejecutar nuevamente la configuración y el build canónicos;
+5. confirmar en la salida `Active app: tests/regression`;
+6. realizar la validación requerida;
+7. restaurar exactamente el valor original de `FM_ACTIVE_APP_DEFAULT`;
+8. reconfigurar el build canónico y comprobar que no quede un diff accidental.
+
+Compilar `tests/regression` demuestra que el harness compila y enlaza. Un
+resultado de regresión `PASS` requiere además ejecutar ese firmware en el
+target y observar su resultado por UART; no debe inferirse solamente a partir
+del ELF.
 
 ### 1.3 Herramientas involucradas
 
@@ -408,7 +438,9 @@ Eso es intencional:
 
 ### 4.4 Qué esperar con el bringup de LCD
 
-Con `FM_ACTIVE_APP=bringups/lcd`, la UART debería mostrar:
+Con `FM_ACTIVE_APP_DEFAULT` temporalmente seleccionado como `bringups/lcd` y
+la salida de configuración confirmando `Active app: bringups/lcd`, la UART
+debería mostrar:
 
 ```text
 LCD_BRINGUP:START

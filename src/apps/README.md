@@ -74,6 +74,13 @@ Examples:
 - `set(FM_ACTIVE_APP_DEFAULT "bringups/frequency_observation")`
 - `set(FM_ACTIVE_APP_DEFAULT "tests/regression")`
 
-Do not select the normal app through a cached `-DFM_ACTIVE_APP=...` configure
-argument. Multi-app validation should use an isolated build directory or restore
-the canonical app selection before handing the workspace back.
+Do not select an app through a cached `-DFM_ACTIVE_APP=...` configure
+argument. The root `CMakeLists.txt` deliberately removes that cache entry so a
+selection from an earlier build cannot override the versioned default.
+
+To validate another app, make one bounded temporary edit to
+`FM_ACTIVE_APP_DEFAULT`, configure and build again, confirm the reported active
+app, then restore the original value and reconfigure before handoff. Concurrent
+multi-app validation requires an isolated worktree and build directory for each
+source selection; an isolated build directory alone does not select another
+app.
