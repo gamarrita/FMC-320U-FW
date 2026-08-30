@@ -3,9 +3,9 @@
  * @brief   App-level event payload for the product main owner loop.
  *
  * These events serialize producer contexts into `FM_MAIN_Main()`. They are not
- * product-domain runtime events: ThreadX, queues, BSP keyboard edges, key-hold
- * timeouts, and the provisional periodic refresh source remain in the app
- * composition layer.
+ * product-domain runtime events: ThreadX, queues, BSP keyboard transitions,
+ * key-hold/release timeouts, and the periodic refresh source remain in the
+ * app composition layer.
  */
 #ifndef FM_MAIN_EVENT_H
 #define FM_MAIN_EVENT_H
@@ -19,9 +19,11 @@
 typedef enum
 {
     FM_MAIN_EVENT_KEYBOARD = 0,
+    FM_MAIN_EVENT_BACKLIGHT_ACTIVITY,
     FM_MAIN_EVENT_PERIODIC_REFRESH,
     FM_MAIN_EVENT_KEY_HOLD_TIMEOUT,
     FM_MAIN_EVENT_PRESENTATION_TIMEOUT,
+    FM_MAIN_EVENT_EXT_BUTTON_RELEASE_TIMEOUT,
     FM_MAIN_EVENT_COUNT
 } fm_main_event_kind_t;
 
@@ -29,7 +31,7 @@ typedef struct
 {
     ULONG kind;
     ULONG key;
-    ULONG edge;
+    ULONG transition;
     ULONG flags;
 } fm_main_event_t;
 
@@ -38,18 +40,28 @@ typedef struct
  *
  * @param p_event Caller-owned event destination.
  * @param key Board keyboard key identity.
- * @param edge Board keyboard edge observed for that key.
+ * @param transition Board pressed/released transition for that key.
  */
 void FM_MAIN_EVENT_MakeKeyboard(fm_main_event_t *p_event,
                                 fm_board_keyboard_key_t key,
-                                fm_board_keyboard_edge_t edge);
+                                fm_board_keyboard_transition_t transition);
+
+/**
+ * @brief Populate one coalesced physical-button backlight activity event.
+ *
+ * This event is independent from semantic input acceptance. Product main may
+ * consume it even when the corresponding physical press is a menu no-op or is
+ * rejected by an input recognizer.
+ *
+ * @param p_event Caller-owned event destination.
+ */
+void FM_MAIN_EVENT_MakeBacklightActivity(fm_main_event_t *p_event);
 
 /**
  * @brief Populate an app-level periodic refresh event.
  *
- * Product main consumes this event to acquire and refresh live TTL/RATE.
- * Later slices may also update measurements without changing the
- * product-domain runtime contract.
+ * Product main consumes this event to acquire measurements and refresh the
+ * active user-menu state without changing the product-domain runtime contract.
  *
  * @param p_event Caller-owned event destination.
  */
@@ -74,6 +86,17 @@ void FM_MAIN_EVENT_MakeKeyHoldTimeout(fm_main_event_t *p_event);
  * @param p_event Caller-owned event destination.
  */
 void FM_MAIN_EVENT_MakePresentationTimeout(fm_main_event_t *p_event);
+
+/**
+ * @brief Populate one external-button stable-release timeout event.
+ *
+ * @param p_event Caller-owned event destination.
+ * @param key `FM_BOARD_KEYBOARD_KEY_EXT_1` or
+ *            `FM_BOARD_KEYBOARD_KEY_EXT_2`.
+ */
+void FM_MAIN_EVENT_MakeExtButtonReleaseTimeout(
+    fm_main_event_t *p_event,
+    fm_board_keyboard_key_t key);
 
 /**
  * @brief Publish one app-level event to a ThreadX queue without waiting.

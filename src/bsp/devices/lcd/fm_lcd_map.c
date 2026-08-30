@@ -426,8 +426,8 @@ static bool fm_lcd_map_get_indicator_addr_(fm_lcd_layout_indicator_t p_indicator
         *p_bit = 5U;
         return true;
     case FM_LCD_LAYOUT_INDICATOR_ACM_TOP:
-        *p_reg = 5U;
-        *p_bit = 3U;
+        *p_reg = 12U;
+        *p_bit = 4U;
         return true;
     case FM_LCD_LAYOUT_INDICATOR_TTL:
         *p_reg = 17U;
@@ -438,8 +438,8 @@ static bool fm_lcd_map_get_indicator_addr_(fm_lcd_layout_indicator_t p_indicator
         *p_bit = 1U;
         return true;
     case FM_LCD_LAYOUT_INDICATOR_ACM_BOTTOM:
-        *p_reg = 12U;
-        *p_bit = 4U;
+        *p_reg = 5U;
+        *p_bit = 3U;
         return true;
     case FM_LCD_LAYOUT_INDICATOR_H:
         *p_reg = 5U;

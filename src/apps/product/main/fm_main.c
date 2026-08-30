@@ -10,14 +10,16 @@
 #include "fm_board_keyboard.h"
 #include "fm_debug.h"
 #include "fm_main_acquisition.h"
+#include "fm_main_backlight.h"
 #include "fm_main_event.h"
-#include "fm_main_input_adapter.h"
+#include "fm_main_ext_button.h"
 #include "fm_main_input_recognizer.h"
 #include "fm_main_presentation_lcd.h"
+#include "fm_main_ui.h"
 #include "fm_port_frequency_time.h"
 #include "fm_port_pulse_counter.h"
 #include "fm_port_rtc.h"
-#include "fmc_presentation.h"
+#include "fmc_ui.h"
 #include "fmc_runtime.h"
 #include "fm_status.h"
 #include "tx_api.h"
@@ -26,13 +28,18 @@
 #define FM_MAIN_PERIODIC_REFRESH_TICKS         ((ULONG) TX_TIMER_TICKS_PER_SECOND)
 #define FM_MAIN_KEY_HOLD_TICKS                 ((ULONG) (3UL * TX_TIMER_TICKS_PER_SECOND))
 #define FM_MAIN_PRESENTATION_TICKS             ((ULONG) (3UL * TX_TIMER_TICKS_PER_SECOND))
+#define FM_MAIN_EXT_BUTTON_RELEASE_TICKS        ((ULONG) (TX_TIMER_TICKS_PER_SECOND / 10UL))
+#define FM_MAIN_BACKLIGHT_TICKS                 ((ULONG) (10UL * TX_TIMER_TICKS_PER_SECOND))
+#define FM_MAIN_EXT_BUTTON_COUNT                (2U)
 
 typedef struct
 {
     fmc_runtime_t runtime;
     fm_main_acquisition_t acquisition;
-    fmc_presentation_t presentation;
+    fmc_ui_t presentation;
     fm_main_input_recognizer_t input_recognizer;
+    fm_main_ext_button_t ext_buttons[FM_MAIN_EXT_BUTTON_COUNT];
+    ULONG ext_button_release_start_ticks[FM_MAIN_EXT_BUTTON_COUNT];
     ULONG key_hold_start_ticks;
     ULONG presentation_start_ticks;
 } fm_main_owner_state_t;
@@ -41,22 +48,28 @@ static TX_QUEUE fm_main_event_queue;
 static TX_TIMER fm_main_periodic_refresh_timer;
 static TX_TIMER fm_main_key_hold_timer;
 static TX_TIMER fm_main_presentation_timer;
+static TX_TIMER fm_main_ext_button_timers[FM_MAIN_EXT_BUTTON_COUNT];
+static TX_TIMER fm_main_backlight_timer;
+static fm_main_backlight_t fm_main_backlight;
 static ULONG fm_main_event_queue_storage[
     FM_MAIN_EVENT_QUEUE_DEPTH * FM_MAIN_EVENT_QUEUE_MESSAGE_WORDS];
 static volatile ULONG fm_main_event_queue_overflow_count;
 static volatile ULONG fm_main_event_queue_send_error_count;
+static volatile bool fm_main_ext_button_press_enabled[
+    FM_MAIN_EXT_BUTTON_COUNT];
+static volatile bool fm_main_backlight_activity_pending;
 
 /**
  * @brief Board keyboard callback that serializes a key edge into the owner queue.
  *
  * @param key Board-level key identity reported by the keyboard BSP.
- * @param edge Board-level edge reported by the keyboard BSP.
+ * @param transition Board-level pressed/released transition.
  *
  * @warning Runs in the producer context selected by the board keyboard module.
  *          It must not call the product runtime directly.
  */
 static void fm_main_keyboard_callback_(fm_board_keyboard_key_t key,
-                                       fm_board_keyboard_edge_t edge);
+                                       fm_board_keyboard_transition_t transition);
 
 /**
  * @brief Publish one app-level event into the private owner queue.
@@ -65,8 +78,29 @@ static void fm_main_keyboard_callback_(fm_board_keyboard_key_t key,
  * by the owner loop. This helper is bounded and never waits.
  *
  * @param p_event Event to copy into the owner queue.
+ *
+ * @return `true` when the event was queued.
+ * @return `false` when publication failed and was recorded for owner reporting.
  */
-static void fm_main_event_publish_(const fm_main_event_t *p_event);
+static bool fm_main_event_publish_(const fm_main_event_t *p_event);
+
+/**
+ * @brief Coalesce one physical-button press into owner-loop backlight activity.
+ *
+ * This producer path is independent from semantic input acceptance and never
+ * waits. Repeated raw press edges while an activity event is pending collapse
+ * into the same request.
+ */
+static void fm_main_backlight_activity_publish_(void);
+
+/** @brief Consume one coalesced physical-button backlight activity event. */
+static void fm_main_backlight_activity_handle_(void);
+
+/** @brief Commit and apply a fresh ten-second backlight interval. */
+static void fm_main_backlight_activation_request_(void);
+
+/** @brief Direct one-shot callback that turns off only the current interval. */
+static void fm_main_backlight_timer_callback_(ULONG input);
 
 /**
  * @brief Report producer-side queue publication errors from the owner context.
@@ -100,8 +134,9 @@ static void fm_main_event_handle_(fm_main_owner_state_t *p_owner,
 /**
  * @brief Handle one keyboard event in the runtime owner context.
  *
- * RISING starts a key hold and arms the long-press timer. FALLING emits SHORT
- * only when the hold did not already emit LONG.
+ * PRESSED starts a key hold and arms the long-press timer. RELEASED emits SHORT
+ * only when the hold did not already emit LONG. External buttons use their
+ * independent stable-release recognizers instead.
  *
  * @param p_owner Owner-loop state.
  * @param p_event Keyboard event received from the owner queue.
@@ -109,6 +144,39 @@ static void fm_main_event_handle_(fm_main_owner_state_t *p_owner,
 static void fm_main_keyboard_handle_event_(
     fm_main_owner_state_t *p_owner,
     const fm_main_event_t *p_event);
+
+static void fm_main_ext_button_handle_event_(
+    fm_main_owner_state_t *p_owner,
+    const fm_main_event_t *p_event);
+
+static void fm_main_ext_button_release_timer_callback_(ULONG input);
+
+static void fm_main_ext_button_release_timeout_handle_(
+    fm_main_owner_state_t *p_owner,
+    fm_board_keyboard_key_t key);
+
+static void fm_main_ext_button_output_apply_(
+    fm_main_owner_state_t *p_owner,
+    fm_board_keyboard_key_t key,
+    const fm_main_ext_button_output_t *p_output);
+
+static void fm_main_ext_button_timer_apply_(
+    fm_main_owner_state_t *p_owner,
+    fm_board_keyboard_key_t key,
+    fm_main_ext_button_timer_action_t action);
+
+static fm_main_ext_button_t *fm_main_ext_button_from_key_(
+    fm_main_owner_state_t *p_owner,
+    fm_board_keyboard_key_t key);
+
+static TX_TIMER *fm_main_ext_button_timer_from_key_(
+    fm_board_keyboard_key_t key);
+
+static bool fm_main_ext_button_index_from_key_(
+    fm_board_keyboard_key_t key,
+    uint8_t *p_index);
+
+static void fm_main_ext_buttons_init_(fm_main_owner_state_t *p_owner);
 
 /**
  * @brief ThreadX key-hold timer callback for long-press recognition.
@@ -133,8 +201,8 @@ static void fm_main_key_hold_timeout_handle_(fm_main_owner_state_t *p_owner);
 /**
  * @brief Apply one recognizer output in the owner loop.
  *
- * Executes requested timer changes first, then dispatches any generated runtime
- * input event.
+ * Executes requested timer changes first, then routes any generated semantic
+ * input directly to UI.
  *
  * @param p_owner Owner-loop state.
  * @param p_output Recognizer output to apply.
@@ -150,15 +218,9 @@ static void fm_main_input_recognizer_output_apply_(
  */
 static void fm_main_input_recognizer_status_report_(fm_status_t status);
 
-/**
- * @brief Dispatch one semantic runtime input and log its action.
- *
- * @param p_runtime Runtime owned by `FM_MAIN_Main()`.
- * @param p_event Runtime input event.
- */
-static void fm_main_runtime_dispatch_input_(
-    fmc_runtime_t *p_runtime,
-    const fmc_runtime_event_t *p_event);
+static void fm_main_semantic_input_handle_(
+    fm_main_owner_state_t *p_owner,
+    const fmc_input_event_t *p_input);
 
 /**
  * @brief Start or restart the one-shot long-press timer.
@@ -227,10 +289,6 @@ static void fm_main_presentation_timer_sync_(
  *
  * @return Runtime snapshot/getter status unchanged.
  */
-static fm_status_t fm_main_presentation_snapshot_make_(
-    const fmc_runtime_t *p_runtime,
-    fmc_presentation_snapshot_t *p_snapshot);
-
 /**
  * @brief Acknowledge a pending runtime presentation update.
  *
@@ -253,7 +311,7 @@ static void fm_main_presentation_update_acknowledge_(
  *        `ESC_SHORT`, or `REFRESH`.
  */
 static void fm_main_presentation_trace_(
-    fmc_presentation_state_t state,
+    fmc_ui_state_t state,
     const char *p_cause);
 
 /**
@@ -315,31 +373,147 @@ static void fm_main_require_tx_success_(UINT status, const char *p_msg);
 static void fm_main_require_status_ok_(fm_status_t status, const char *p_msg);
 
 static void fm_main_keyboard_callback_(fm_board_keyboard_key_t key,
-                                       fm_board_keyboard_edge_t edge)
+                                       fm_board_keyboard_transition_t transition)
 {
     fm_main_event_t event;
+    uint8_t index;
 
-    FM_MAIN_EVENT_MakeKeyboard(&event, key, edge);
-    fm_main_event_publish_(&event);
+    if (transition == FM_BOARD_KEYBOARD_TRANSITION_PRESSED)
+    {
+        fm_main_backlight_activity_publish_();
+    }
+
+    if (fm_main_ext_button_index_from_key_(key, &index))
+    {
+        if ((transition != FM_BOARD_KEYBOARD_TRANSITION_PRESSED) ||
+            !fm_main_ext_button_press_enabled[index])
+        {
+            return;
+        }
+
+        fm_main_ext_button_press_enabled[index] = false;
+        FM_MAIN_EVENT_MakeKeyboard(&event, key, transition);
+        if (!fm_main_event_publish_(&event))
+        {
+            fm_main_ext_button_press_enabled[index] = true;
+        }
+        return;
+    }
+
+    FM_MAIN_EVENT_MakeKeyboard(&event, key, transition);
+    (void) fm_main_event_publish_(&event);
 }
 
-static void fm_main_event_publish_(const fm_main_event_t *p_event)
+static bool fm_main_event_publish_(const fm_main_event_t *p_event)
 {
     fm_status_t status;
 
     status = FM_MAIN_EVENT_Publish(&fm_main_event_queue, p_event);
     if (status == FM_STATUS_OK)
     {
-        return;
+        return true;
     }
 
     if (status == FM_STATUS_ERANGE)
     {
         fm_main_counter_increment_(&fm_main_event_queue_overflow_count);
-        return;
+        return false;
     }
 
     fm_main_counter_increment_(&fm_main_event_queue_send_error_count);
+    return false;
+}
+
+static void fm_main_backlight_activity_publish_(void)
+{
+    fm_main_event_t event;
+
+    if (fm_main_backlight_activity_pending)
+    {
+        return;
+    }
+
+    fm_main_backlight_activity_pending = true;
+    FM_MAIN_EVENT_MakeBacklightActivity(&event);
+    (void) fm_main_event_publish_(&event);
+}
+
+static void fm_main_backlight_activity_handle_(void)
+{
+    bool activation_requested;
+    UINT interrupt_posture;
+
+    interrupt_posture = tx_interrupt_control(TX_INT_DISABLE);
+    activation_requested = fm_main_backlight_activity_pending;
+    if (activation_requested)
+    {
+        fm_main_backlight_activity_pending = false;
+    }
+    (void) tx_interrupt_control(interrupt_posture);
+
+    if (activation_requested)
+    {
+        fm_main_backlight_activation_request_();
+    }
+}
+
+static void fm_main_backlight_activation_request_(void)
+{
+    fm_main_backlight_output_t output;
+    fm_status_t project_status;
+    UINT interrupt_posture;
+    UINT status;
+
+    interrupt_posture = tx_interrupt_control(TX_INT_DISABLE);
+    project_status = FM_MAIN_BACKLIGHT_RequestActivation(
+        &fm_main_backlight,
+        (uint32_t) tx_time_get(),
+        &output);
+    (void) tx_interrupt_control(interrupt_posture);
+    fm_main_require_status_ok_(project_status,
+                               "FM_MAIN:BACKLIGHT_REQUEST");
+
+    if ((output.timer_action != FM_MAIN_BACKLIGHT_TIMER_RESTART) ||
+        !output.turn_on || output.turn_off ||
+        (output.timer_ticks == 0U))
+    {
+        FM_DEBUG_PanicMsg("FM_MAIN:BACKLIGHT_OUTPUT");
+    }
+
+    status = tx_timer_deactivate(&fm_main_backlight_timer);
+    fm_main_require_tx_success_(status, "FM_MAIN:BACKLIGHT_TIMER_STOP");
+
+    status = tx_timer_change(&fm_main_backlight_timer,
+                             (ULONG) output.timer_ticks,
+                             0U);
+    fm_main_require_tx_success_(status, "FM_MAIN:BACKLIGHT_TIMER_CHANGE");
+
+    status = tx_timer_activate(&fm_main_backlight_timer);
+    fm_main_require_tx_success_(status, "FM_MAIN:BACKLIGHT_TIMER_START");
+
+    FM_BOARD_BacklightOn();
+}
+
+static void fm_main_backlight_timer_callback_(ULONG input)
+{
+    fm_main_backlight_output_t output;
+    fm_status_t status;
+    UINT interrupt_posture;
+
+    (void) input;
+
+    interrupt_posture = tx_interrupt_control(TX_INT_DISABLE);
+    status = FM_MAIN_BACKLIGHT_HandleTimeout(
+        &fm_main_backlight,
+        (uint32_t) tx_time_get(),
+        &output);
+    if ((status == FM_STATUS_OK) && output.turn_off)
+    {
+        FM_BOARD_BacklightOff();
+    }
+    (void) tx_interrupt_control(interrupt_posture);
+
+    fm_main_require_status_ok_(status, "FM_MAIN:BACKLIGHT_TIMEOUT");
 }
 
 static void fm_main_event_report_publish_errors_(void)
@@ -394,6 +568,10 @@ static void fm_main_event_handle_(fm_main_owner_state_t *p_owner,
         fm_main_keyboard_handle_event_(p_owner, p_event);
         break;
 
+    case FM_MAIN_EVENT_BACKLIGHT_ACTIVITY:
+        fm_main_backlight_activity_handle_();
+        break;
+
     case FM_MAIN_EVENT_PERIODIC_REFRESH:
         fm_main_periodic_refresh_handle_(p_owner);
         break;
@@ -404,6 +582,12 @@ static void fm_main_event_handle_(fm_main_owner_state_t *p_owner,
 
     case FM_MAIN_EVENT_PRESENTATION_TIMEOUT:
         fm_main_presentation_timeout_handle_(p_owner);
+        break;
+
+    case FM_MAIN_EVENT_EXT_BUTTON_RELEASE_TIMEOUT:
+        fm_main_ext_button_release_timeout_handle_(
+            p_owner,
+            (fm_board_keyboard_key_t) p_event->key);
         break;
 
     case FM_MAIN_EVENT_COUNT:
@@ -430,13 +614,294 @@ static void fm_main_keyboard_handle_event_(
         return;
     }
 
-    status = FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
-        &p_owner->input_recognizer,
-        (fm_board_keyboard_key_t) p_event->key,
-        (fm_board_keyboard_edge_t) p_event->edge,
+    if (((fm_board_keyboard_key_t) p_event->key ==
+         FM_BOARD_KEYBOARD_KEY_EXT_1) ||
+        ((fm_board_keyboard_key_t) p_event->key ==
+         FM_BOARD_KEYBOARD_KEY_EXT_2))
+    {
+        fm_main_ext_button_handle_event_(p_owner, p_event);
+    }
+    else
+    {
+        status = FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
+            &p_owner->input_recognizer,
+            (fm_board_keyboard_key_t) p_event->key,
+            (fm_board_keyboard_transition_t) p_event->transition,
+            &output);
+        fm_main_input_recognizer_status_report_(status);
+        fm_main_input_recognizer_output_apply_(p_owner, &output);
+    }
+}
+
+static void fm_main_ext_button_handle_event_(
+    fm_main_owner_state_t *p_owner,
+    const fm_main_event_t *p_event)
+{
+    fm_main_ext_button_output_t output;
+    fm_main_ext_button_t *p_button;
+    fm_board_keyboard_key_t key;
+    fm_status_t status;
+
+    if ((p_owner == NULL) || (p_event == NULL))
+    {
+        return;
+    }
+
+    key = (fm_board_keyboard_key_t) p_event->key;
+    p_button = fm_main_ext_button_from_key_(p_owner, key);
+    if (p_button == NULL)
+    {
+        FM_DEBUG_ReportError(FM_DEBUG_ERR_BACKEND);
+        return;
+    }
+
+    if ((fm_board_keyboard_transition_t) p_event->transition !=
+        FM_BOARD_KEYBOARD_TRANSITION_PRESSED)
+    {
+        return;
+    }
+
+    status = FM_MAIN_EXT_BUTTON_HandlePress(p_button, &output);
+    fm_main_require_status_ok_(status, "FM_MAIN:EXT_BUTTON_EDGE");
+    fm_main_ext_button_output_apply_(p_owner, key, &output);
+}
+
+static void fm_main_ext_button_release_timer_callback_(ULONG input)
+{
+    fm_main_event_t event;
+    fm_board_keyboard_key_t key;
+
+    if (input == 0U)
+    {
+        key = FM_BOARD_KEYBOARD_KEY_EXT_1;
+    }
+    else if (input == 1U)
+    {
+        key = FM_BOARD_KEYBOARD_KEY_EXT_2;
+    }
+    else
+    {
+        return;
+    }
+
+    FM_MAIN_EVENT_MakeExtButtonReleaseTimeout(&event, key);
+    (void) fm_main_event_publish_(&event);
+}
+
+static void fm_main_ext_button_release_timeout_handle_(
+    fm_main_owner_state_t *p_owner,
+    fm_board_keyboard_key_t key)
+{
+    fm_main_ext_button_output_t output;
+    fm_main_ext_button_t *p_button;
+    bool pressed;
+    fm_status_t status;
+    UINT interrupt_posture;
+    uint8_t index;
+
+    if (p_owner == NULL)
+    {
+        return;
+    }
+
+    p_button = fm_main_ext_button_from_key_(p_owner, key);
+    if ((p_button == NULL) ||
+        !fm_main_ext_button_index_from_key_(key, &index) ||
+        !FM_BOARD_KeyboardIsPressed(key, &pressed))
+    {
+        FM_DEBUG_PanicMsg("FM_MAIN:EXT_BUTTON_SAMPLE");
+    }
+
+    if ((tx_time_get() - p_owner->ext_button_release_start_ticks[index]) <
+        FM_MAIN_EXT_BUTTON_RELEASE_TICKS)
+    {
+        return;
+    }
+
+    status = FM_MAIN_EXT_BUTTON_HandleSampleTimeout(
+        p_button,
+        pressed,
         &output);
-    fm_main_input_recognizer_status_report_(status);
-    fm_main_input_recognizer_output_apply_(p_owner, &output);
+    fm_main_require_status_ok_(status, "FM_MAIN:EXT_BUTTON_TIMEOUT");
+
+    if (p_button->armed)
+    {
+        interrupt_posture = tx_interrupt_control(TX_INT_DISABLE);
+        if (!FM_BOARD_KeyboardIsPressed(key, &pressed))
+        {
+            (void) tx_interrupt_control(interrupt_posture);
+            FM_DEBUG_PanicMsg("FM_MAIN:EXT_BUTTON_REARM_SAMPLE");
+        }
+
+        fm_main_ext_button_press_enabled[index] = !pressed;
+        (void) tx_interrupt_control(interrupt_posture);
+
+        if (pressed)
+        {
+            status = FM_MAIN_EXT_BUTTON_HandlePress(p_button, &output);
+            fm_main_require_status_ok_(status,
+                                       "FM_MAIN:EXT_BUTTON_REARM_PRESS");
+        }
+    }
+
+    fm_main_ext_button_output_apply_(p_owner, key, &output);
+}
+
+static void fm_main_ext_button_output_apply_(
+    fm_main_owner_state_t *p_owner,
+    fm_board_keyboard_key_t key,
+    const fm_main_ext_button_output_t *p_output)
+{
+    if ((p_owner == NULL) || (p_output == NULL))
+    {
+        return;
+    }
+
+    fm_main_ext_button_timer_apply_(p_owner, key, p_output->timer_action);
+
+    if (p_output->input_valid)
+    {
+        fm_main_semantic_input_handle_(p_owner, &p_output->input);
+    }
+}
+
+static void fm_main_ext_button_timer_apply_(
+    fm_main_owner_state_t *p_owner,
+    fm_board_keyboard_key_t key,
+    fm_main_ext_button_timer_action_t action)
+{
+    TX_TIMER *p_timer;
+    UINT status;
+    uint8_t index;
+
+    if (action == FM_MAIN_EXT_BUTTON_TIMER_NONE)
+    {
+        return;
+    }
+
+    p_timer = fm_main_ext_button_timer_from_key_(key);
+    if ((p_owner == NULL) || (p_timer == NULL) ||
+        !fm_main_ext_button_index_from_key_(key, &index))
+    {
+        FM_DEBUG_PanicMsg("FM_MAIN:EXT_BUTTON_TIMER_KEY");
+    }
+
+    status = tx_timer_deactivate(p_timer);
+    fm_main_require_tx_success_(status, "FM_MAIN:EXT_BUTTON_TIMER_STOP");
+
+    status = tx_timer_change(
+        p_timer,
+        FM_MAIN_EXT_BUTTON_RELEASE_TICKS,
+        0U);
+    fm_main_require_tx_success_(status, "FM_MAIN:EXT_BUTTON_TIMER_CHANGE");
+
+    p_owner->ext_button_release_start_ticks[index] = tx_time_get();
+
+    status = tx_timer_activate(p_timer);
+    fm_main_require_tx_success_(status, "FM_MAIN:EXT_BUTTON_TIMER_START");
+}
+
+static fm_main_ext_button_t *fm_main_ext_button_from_key_(
+    fm_main_owner_state_t *p_owner,
+    fm_board_keyboard_key_t key)
+{
+    if (p_owner == NULL)
+    {
+        return NULL;
+    }
+
+    if (key == FM_BOARD_KEYBOARD_KEY_EXT_1)
+    {
+        return &p_owner->ext_buttons[0];
+    }
+
+    if (key == FM_BOARD_KEYBOARD_KEY_EXT_2)
+    {
+        return &p_owner->ext_buttons[1];
+    }
+
+    return NULL;
+}
+
+static TX_TIMER *fm_main_ext_button_timer_from_key_(
+    fm_board_keyboard_key_t key)
+{
+    if (key == FM_BOARD_KEYBOARD_KEY_EXT_1)
+    {
+        return &fm_main_ext_button_timers[0];
+    }
+
+    if (key == FM_BOARD_KEYBOARD_KEY_EXT_2)
+    {
+        return &fm_main_ext_button_timers[1];
+    }
+
+    return NULL;
+}
+
+static bool fm_main_ext_button_index_from_key_(
+    fm_board_keyboard_key_t key,
+    uint8_t *p_index)
+{
+    if (p_index == NULL)
+    {
+        return false;
+    }
+
+    if (key == FM_BOARD_KEYBOARD_KEY_EXT_1)
+    {
+        *p_index = 0U;
+        return true;
+    }
+
+    if (key == FM_BOARD_KEYBOARD_KEY_EXT_2)
+    {
+        *p_index = 1U;
+        return true;
+    }
+
+    return false;
+}
+
+static void fm_main_ext_buttons_init_(fm_main_owner_state_t *p_owner)
+{
+    static const fm_board_keyboard_key_t board_keys[] =
+    {
+        FM_BOARD_KEYBOARD_KEY_EXT_1,
+        FM_BOARD_KEYBOARD_KEY_EXT_2
+    };
+    static const fmc_input_key_t input_keys[] =
+    {
+        FMC_INPUT_KEY_EXT_1,
+        FMC_INPUT_KEY_EXT_2
+    };
+    fm_main_ext_button_output_t output;
+    bool pressed;
+    fm_status_t status;
+    uint8_t index;
+
+    if (p_owner == NULL)
+    {
+        return;
+    }
+
+    for (index = 0U; index < FM_MAIN_EXT_BUTTON_COUNT; index++)
+    {
+        p_owner->ext_button_release_start_ticks[index] = 0U;
+        fm_main_ext_button_press_enabled[index] = false;
+        if (!FM_BOARD_KeyboardIsPressed(board_keys[index], &pressed))
+        {
+            FM_DEBUG_PanicMsg("FM_MAIN:EXT_BUTTON_INIT_SAMPLE");
+        }
+
+        status = FM_MAIN_EXT_BUTTON_Init(
+            &p_owner->ext_buttons[index],
+            input_keys[index],
+            pressed,
+            &output);
+        fm_main_require_status_ok_(status, "FM_MAIN:EXT_BUTTON_INIT");
+        fm_main_ext_button_output_apply_(p_owner, board_keys[index], &output);
+    }
 }
 
 static void fm_main_key_hold_timer_callback_(ULONG input)
@@ -446,7 +911,7 @@ static void fm_main_key_hold_timer_callback_(ULONG input)
     (void) input;
 
     FM_MAIN_EVENT_MakeKeyHoldTimeout(&event);
-    fm_main_event_publish_(&event);
+    (void) fm_main_event_publish_(&event);
 }
 
 static void fm_main_key_hold_timeout_handle_(fm_main_owner_state_t *p_owner)
@@ -496,41 +961,9 @@ static void fm_main_input_recognizer_output_apply_(
         break;
     }
 
-    if (p_output->runtime_event_valid)
+    if (p_output->input_valid)
     {
-        fmc_presentation_snapshot_t snapshot;
-        fmc_presentation_state_t previous_state;
-        fmc_presentation_state_t current_state;
-        fm_status_t status;
-
-        status = fm_main_presentation_snapshot_make_(&p_owner->runtime,
-                                                     &snapshot);
-        fm_main_require_status_ok_(status,
-                                   "FM_MAIN:PRESENTATION_SNAPSHOT");
-        previous_state = FMC_PRESENTATION_GetState(
-            &p_owner->presentation);
-        status = FMC_PRESENTATION_HandleInput(
-            &p_owner->presentation,
-            &p_output->runtime_event.data.input,
-            &snapshot);
-        fm_main_require_status_ok_(status, "FM_MAIN:PRESENTATION_INPUT");
-        current_state = FMC_PRESENTATION_GetState(
-            &p_owner->presentation);
-
-        if (current_state != previous_state)
-        {
-            fm_main_presentation_timer_sync_(p_owner);
-            fm_main_presentation_trace_(current_state, "ESC_SHORT");
-            if (current_state == FMC_PRESENTATION_STATE_TTL_RATE)
-            {
-                fm_main_presentation_update_acknowledge_(
-                    &p_owner->runtime);
-            }
-            return;
-        }
-
-        fm_main_runtime_dispatch_input_(&p_owner->runtime,
-                                        &p_output->runtime_event);
+        fm_main_semantic_input_handle_(p_owner, &p_output->input);
     }
 }
 
@@ -550,21 +983,36 @@ static void fm_main_input_recognizer_status_report_(fm_status_t status)
     fm_main_require_status_ok_(status, "FM_MAIN:INPUT_RECOGNIZER");
 }
 
-static void fm_main_runtime_dispatch_input_(
-    fmc_runtime_t *p_runtime,
-    const fmc_runtime_event_t *p_event)
+static void fm_main_semantic_input_handle_(
+    fm_main_owner_state_t *p_owner,
+    const fmc_input_event_t *p_input)
 {
+    fm_main_ui_result_t result;
     fm_status_t status;
 
-    if ((p_runtime == NULL) || (p_event == NULL))
+    if ((p_owner == NULL) || (p_input == NULL))
     {
         return;
     }
 
-    status = FMC_RUNTIME_Dispatch(p_runtime, p_event);
-    fm_main_require_status_ok_(status, "FM_MAIN:RUNTIME_DISPATCH");
+    status = FM_MAIN_UI_HandleInput(
+        &p_owner->runtime,
+        &p_owner->presentation,
+        p_input,
+        &result);
+    fm_main_require_status_ok_(status, "FM_MAIN:UI_INPUT");
 
-    if (p_event->data.input.action == FMC_INPUT_ACTION_LONG)
+    if (result.current_state != result.previous_state)
+    {
+        fm_main_presentation_timer_sync_(p_owner);
+        fm_main_presentation_trace_(result.current_state, "INPUT");
+    }
+    else if (result.acm_reset_executed)
+    {
+        fm_main_presentation_trace_(result.current_state, "RESET_ACM");
+    }
+
+    if (p_input->action == FMC_INPUT_ACTION_LONG)
     {
         (void) FM_DEBUG_UartStr("FM_MAIN:INPUT_LONG\n");
     }
@@ -627,14 +1075,14 @@ static void fm_main_presentation_timer_callback_(ULONG input)
     (void) input;
 
     FM_MAIN_EVENT_MakePresentationTimeout(&event);
-    fm_main_event_publish_(&event);
+    (void) fm_main_event_publish_(&event);
 }
 
 static void fm_main_presentation_timeout_handle_(
     fm_main_owner_state_t *p_owner)
 {
-    fmc_presentation_snapshot_t snapshot;
-    fmc_presentation_state_t state;
+    fmc_ui_snapshot_t snapshot;
+    fmc_ui_state_t state;
     ULONG elapsed_ticks;
     fm_status_t status;
 
@@ -643,9 +1091,9 @@ static void fm_main_presentation_timeout_handle_(
         return;
     }
 
-    state = FMC_PRESENTATION_GetState(&p_owner->presentation);
-    if ((state != FMC_PRESENTATION_STATE_ALL_SEGMENTS) &&
-        (state != FMC_PRESENTATION_STATE_FIRMWARE_VERSION))
+    state = FMC_UI_GetState(&p_owner->presentation);
+    if ((state != FMC_UI_STATE_ALL_SEGMENTS) &&
+        (state != FMC_UI_STATE_FIRMWARE_VERSION))
     {
         return;
     }
@@ -656,19 +1104,18 @@ static void fm_main_presentation_timeout_handle_(
         return;
     }
 
-    status = fm_main_presentation_snapshot_make_(&p_owner->runtime,
-                                                 &snapshot);
+    status = FM_MAIN_UI_MakeSnapshot(&p_owner->runtime, &snapshot);
     fm_main_require_status_ok_(status,
                                "FM_MAIN:PRESENTATION_SNAPSHOT");
-    status = FMC_PRESENTATION_Advance(&p_owner->presentation,
+    status = FMC_UI_Advance(&p_owner->presentation,
                                       &snapshot);
     fm_main_require_status_ok_(status, "FM_MAIN:PRESENTATION_TIMEOUT");
     fm_main_presentation_timer_sync_(p_owner);
     fm_main_presentation_trace_(
-        FMC_PRESENTATION_GetState(&p_owner->presentation),
+        FMC_UI_GetState(&p_owner->presentation),
         "TIMEOUT");
-    if (FMC_PRESENTATION_GetState(&p_owner->presentation) ==
-        FMC_PRESENTATION_STATE_TTL_RATE)
+    if (FMC_UI_GetState(&p_owner->presentation) ==
+        FMC_UI_STATE_TTL_RATE)
     {
         fm_main_presentation_update_acknowledge_(&p_owner->runtime);
     }
@@ -713,16 +1160,16 @@ static void fm_main_presentation_timer_cancel_(void)
 static void fm_main_presentation_timer_sync_(
     fm_main_owner_state_t *p_owner)
 {
-    fmc_presentation_state_t state;
+    fmc_ui_state_t state;
 
     if (p_owner == NULL)
     {
         return;
     }
 
-    state = FMC_PRESENTATION_GetState(&p_owner->presentation);
-    if ((state == FMC_PRESENTATION_STATE_ALL_SEGMENTS) ||
-        (state == FMC_PRESENTATION_STATE_FIRMWARE_VERSION))
+    state = FMC_UI_GetState(&p_owner->presentation);
+    if ((state == FMC_UI_STATE_ALL_SEGMENTS) ||
+        (state == FMC_UI_STATE_FIRMWARE_VERSION))
     {
         fm_main_presentation_timer_start_(p_owner);
         return;
@@ -731,58 +1178,17 @@ static void fm_main_presentation_timer_sync_(
     fm_main_presentation_timer_cancel_();
 }
 
-static fm_status_t fm_main_presentation_snapshot_make_(
-    const fmc_runtime_t *p_runtime,
-    fmc_presentation_snapshot_t *p_snapshot)
-{
-    fmc_service_snapshot_t service_snapshot;
-    fm_status_t status;
-
-    if ((p_runtime == NULL) || (p_snapshot == NULL))
-    {
-        return FM_STATUS_EINVAL;
-    }
-
-    status = FMC_RUNTIME_GetSnapshot(p_runtime, &service_snapshot);
-    if (status != FM_STATUS_OK)
-    {
-        return status;
-    }
-
-    status = FMC_RUNTIME_GetRateState(p_runtime, &p_snapshot->rate);
-    if (status != FM_STATUS_OK)
-    {
-        return status;
-    }
-
-    p_snapshot->ttl = service_snapshot.ttl_volume;
-    p_snapshot->volume_unit =
-        service_snapshot.model.measurement.active_volume_unit;
-    p_snapshot->rate_time_base =
-        service_snapshot.model.measurement.active_time_base;
-    p_snapshot->ttl_fractional_digits =
-        FMC_PRESENTATION_VALUE_FRACTIONAL_DIGITS;
-    p_snapshot->rate_fractional_digits =
-        FMC_PRESENTATION_VALUE_FRACTIONAL_DIGITS;
-
-    return FM_STATUS_OK;
-}
-
-static void fm_main_presentation_update_acknowledge_(
-    fmc_runtime_t *p_runtime)
+static void fm_main_presentation_update_acknowledge_(fmc_runtime_t* p_runtime)
 {
     fm_status_t status;
 
     status = FMC_RUNTIME_ClearPresentationUpdatePending(p_runtime);
-    fm_main_require_status_ok_(status,
-                               "FM_MAIN:PRESENTATION_ACK");
+    fm_main_require_status_ok_(status, "FM_MAIN:PRESENTATION_ACK");
 }
 
-static void fm_main_presentation_trace_(
-    fmc_presentation_state_t state,
-    const char *p_cause)
+static void fm_main_presentation_trace_(fmc_ui_state_t state, const char* p_cause)
 {
-    const char *p_state;
+    const char* p_state;
 
     if (!FM_DEBUG_MsgIsEnabled() || (p_cause == NULL))
     {
@@ -791,19 +1197,36 @@ static void fm_main_presentation_trace_(
 
     switch (state)
     {
-    case FMC_PRESENTATION_STATE_ALL_SEGMENTS:
+    case FMC_UI_STATE_ALL_SEGMENTS:
         p_state = "ALL";
         break;
 
-    case FMC_PRESENTATION_STATE_FIRMWARE_VERSION:
+    case FMC_UI_STATE_FIRMWARE_VERSION:
         p_state = "VER";
         break;
 
-    case FMC_PRESENTATION_STATE_TTL_RATE:
+    case FMC_UI_STATE_TTL_RATE:
         p_state = "TTL";
         break;
 
-    case FMC_PRESENTATION_STATE_NOT_STARTED:
+    case FMC_UI_STATE_ACM_RATE:
+        p_state = "ACM";
+        break;
+
+    case FMC_UI_STATE_PRINT:
+        p_state = "PR";
+        break;
+
+    case FMC_UI_STATE_LOG_DOWNLOAD:
+        p_state = "LD";
+        break;
+
+    case FMC_UI_STATE_DATE_TIME:
+        p_state = "DT";
+        break;
+
+    case FMC_UI_STATE_NOT_STARTED:
+    case FMC_UI_STATE_COUNT:
     default:
         p_state = "NONE";
         break;
@@ -823,7 +1246,7 @@ static void fm_main_periodic_refresh_timer_callback_(ULONG input)
     (void) input;
 
     FM_MAIN_EVENT_MakePeriodicRefresh(&event);
-    fm_main_event_publish_(&event);
+    (void) fm_main_event_publish_(&event);
 }
 
 static void fm_main_periodic_refresh_timer_start_(void)
@@ -838,9 +1261,9 @@ static void fm_main_periodic_refresh_handle_(
     fm_main_owner_state_t *p_owner)
 {
     frequency_observation_sample_t frequency_sample;
-    fmc_presentation_snapshot_t snapshot;
     fm_status_t status;
     uint16_t current_count;
+    uint64_t pulse_delta;
 
     if (p_owner == NULL)
     {
@@ -854,8 +1277,14 @@ static void fm_main_periodic_refresh_handle_(
     status = FM_MAIN_ACQUISITION_ProcessObservation(
         &p_owner->acquisition,
         current_count,
-        &p_owner->runtime);
+        &p_owner->runtime,
+        &pulse_delta);
     fm_main_require_status_ok_(status, "FM_MAIN:ACQUISITION");
+
+    status = FMC_UI_ObservePulseDelta(
+        &p_owner->presentation,
+        pulse_delta);
+    fm_main_require_status_ok_(status, "FM_MAIN:POINT_OBSERVATION");
 
     /*
      * Frequency owns an independent counter baseline. A pulse may arrive
@@ -875,18 +1304,16 @@ static void fm_main_periodic_refresh_handle_(
 
     fm_main_live_trace_(&p_owner->runtime);
 
-    if (FMC_PRESENTATION_GetState(&p_owner->presentation) ==
-        FMC_PRESENTATION_STATE_TTL_RATE)
+    if ((FMC_UI_GetState(&p_owner->presentation) >=
+         FMC_UI_STATE_TTL_RATE) &&
+        (FMC_UI_GetState(&p_owner->presentation) <=
+         FMC_UI_STATE_DATE_TIME))
     {
-        status = fm_main_presentation_snapshot_make_(&p_owner->runtime,
-                                                     &snapshot);
-        fm_main_require_status_ok_(status,
-                                   "FM_MAIN:PRESENTATION_SNAPSHOT");
-        status = FMC_PRESENTATION_Refresh(&p_owner->presentation,
-                                          &snapshot);
+        status = FM_MAIN_UI_Refresh(
+            &p_owner->runtime,
+            &p_owner->presentation);
         fm_main_require_status_ok_(status,
                                    "FM_MAIN:PRESENTATION_REFRESH");
-        fm_main_presentation_update_acknowledge_(&p_owner->runtime);
     }
 
     FM_DEBUG_LedRun(FM_DEBUG_LED_OFF);
@@ -976,6 +1403,7 @@ static void fm_main_require_status_ok_(fm_status_t status, const char *p_msg)
 
 void FM_MAIN_Init(void)
 {
+    fm_status_t project_status;
     UINT status;
 
     FM_BOARD_Init();
@@ -984,6 +1412,14 @@ void FM_MAIN_Init(void)
 
     fm_main_event_queue_overflow_count = 0U;
     fm_main_event_queue_send_error_count = 0U;
+    fm_main_ext_button_press_enabled[0] = false;
+    fm_main_ext_button_press_enabled[1] = false;
+    fm_main_backlight_activity_pending = false;
+
+    project_status = FM_MAIN_BACKLIGHT_Init(
+        &fm_main_backlight,
+        (uint32_t) FM_MAIN_BACKLIGHT_TICKS);
+    fm_main_require_status_ok_(project_status, "FM_MAIN:BACKLIGHT_INIT");
 
     status = tx_queue_create(&fm_main_event_queue,
                              (CHAR *) "FM_MAIN_EVENT",
@@ -994,7 +1430,9 @@ void FM_MAIN_Init(void)
 
     if ((FM_MAIN_PERIODIC_REFRESH_TICKS == 0U) ||
         (FM_MAIN_KEY_HOLD_TICKS == 0U) ||
-        (FM_MAIN_PRESENTATION_TICKS == 0U))
+        (FM_MAIN_PRESENTATION_TICKS == 0U) ||
+        (FM_MAIN_EXT_BUTTON_RELEASE_TICKS == 0U) ||
+        (FM_MAIN_BACKLIGHT_TICKS == 0U))
     {
         FM_DEBUG_PanicMsg("FM_MAIN:TIMER_TICKS_ZERO");
     }
@@ -1027,13 +1465,41 @@ void FM_MAIN_Init(void)
     fm_main_require_tx_success_(
         status,
         "FM_MAIN:PRESENTATION_TIMER_CREATE");
+
+    status = tx_timer_create(&fm_main_ext_button_timers[0],
+                             (CHAR *) "FM_MAIN_EXT_1_RELEASE",
+                             fm_main_ext_button_release_timer_callback_,
+                             0U,
+                             FM_MAIN_EXT_BUTTON_RELEASE_TICKS,
+                             0U,
+                             TX_NO_ACTIVATE);
+    fm_main_require_tx_success_(status, "FM_MAIN:EXT_1_TIMER_CREATE");
+
+    status = tx_timer_create(&fm_main_ext_button_timers[1],
+                             (CHAR *) "FM_MAIN_EXT_2_RELEASE",
+                             fm_main_ext_button_release_timer_callback_,
+                             1U,
+                             FM_MAIN_EXT_BUTTON_RELEASE_TICKS,
+                             0U,
+                             TX_NO_ACTIVATE);
+    fm_main_require_tx_success_(status, "FM_MAIN:EXT_2_TIMER_CREATE");
+
+    status = tx_timer_create(&fm_main_backlight_timer,
+                             (CHAR *) "FM_MAIN_BACKLIGHT",
+                             fm_main_backlight_timer_callback_,
+                             0U,
+                             FM_MAIN_BACKLIGHT_TICKS,
+                             0U,
+                             TX_NO_ACTIVATE);
+    fm_main_require_tx_success_(status,
+                                "FM_MAIN:BACKLIGHT_TIMER_CREATE");
 }
 
 void FM_MAIN_Main(void)
 {
     fm_main_owner_state_t owner;
     frequency_observation_sample_t frequency_baseline;
-    fmc_presentation_snapshot_t presentation_snapshot;
+    fmc_ui_snapshot_t presentation_snapshot;
     fm_main_event_t event;
     fm_status_t project_status;
     UINT status;
@@ -1076,12 +1542,12 @@ void FM_MAIN_Main(void)
     fm_main_require_status_ok_(project_status,
                                "FM_MAIN:LCD_INIT");
 
-    project_status = fm_main_presentation_snapshot_make_(
+    project_status = FM_MAIN_UI_MakeSnapshot(
         &owner.runtime,
         &presentation_snapshot);
     fm_main_require_status_ok_(project_status,
                                "FM_MAIN:PRESENTATION_SNAPSHOT");
-    project_status = FMC_PRESENTATION_Init(
+    project_status = FMC_UI_Init(
         &owner.presentation,
         &presentation_snapshot,
         FM_MAIN_PRESENTATION_LCD_Present,
@@ -1089,16 +1555,18 @@ void FM_MAIN_Main(void)
     fm_main_require_status_ok_(project_status,
                                "FM_MAIN:PRESENTATION_INIT");
 
-    project_status = FMC_PRESENTATION_Start(&owner.presentation);
+    project_status = FMC_UI_Start(&owner.presentation);
     fm_main_require_status_ok_(project_status,
                                "FM_MAIN:PRESENTATION_START");
+    fm_main_backlight_activation_request_();
     fm_main_presentation_timer_sync_(&owner);
     fm_main_presentation_trace_(
-        FMC_PRESENTATION_GetState(&owner.presentation),
+        FMC_UI_GetState(&owner.presentation),
         "START");
 
-    FM_BOARD_KeyboardSetCallback(fm_main_keyboard_callback_);
     FM_BOARD_KeyboardInit();
+    fm_main_ext_buttons_init_(&owner);
+    FM_BOARD_KeyboardSetCallback(fm_main_keyboard_callback_);
 
     fm_main_periodic_refresh_timer_start_();
     (void) FM_DEBUG_UartStr("FM_MAIN:READY\n");
@@ -1110,6 +1578,8 @@ void FM_MAIN_Main(void)
                                   TX_WAIT_FOREVER);
         fm_main_require_tx_success_(status, "FM_MAIN:EVENT_QUEUE_RX");
 
+        /* Recover a coalesced activity request even if its wake event was full. */
+        fm_main_backlight_activity_handle_();
         fm_main_event_report_publish_errors_();
         fm_main_event_handle_(&owner, &event);
         FM_DEBUG_Flush();

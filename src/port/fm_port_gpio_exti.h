@@ -32,7 +32,7 @@ typedef void (*fm_port_gpio_exti_callback_t)(
 /**
  * @brief Initialize the keyboard GPIO EXTI path.
  *
- * @details Mirrors the CubeMX configuration for the four keyboard pins and
+ * @details Mirrors the CubeMX configuration for the six keyboard pins and
  *          their NVIC channels without re-running the global generated GPIO
  *          initializer. Unrelated board outputs therefore retain their current
  *          state.

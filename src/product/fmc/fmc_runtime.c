@@ -18,7 +18,6 @@ static fm_status_t fmc_runtime_apply_frequency_result_(
     const frequency_observation_result_t *p_result);
 static fm_status_t fmc_runtime_reset_total_(fmc_runtime_t *p_runtime,
                                             fmc_model_total_t p_total);
-static bool fmc_runtime_input_is_valid_(const fmc_input_event_t *p_input);
 
 void FMC_RUNTIME_Init(fmc_runtime_t *p_runtime)
 {
@@ -32,9 +31,6 @@ void FMC_RUNTIME_Init(fmc_runtime_t *p_runtime)
     p_runtime->rate.quality = FREQUENCY_OBSERVATION_QUALITY_UNAVAILABLE;
     p_runtime->rate.value_present = false;
     p_runtime->presentation_update_pending = false;
-    p_runtime->last_input.key = FMC_INPUT_KEY_COUNT;
-    p_runtime->last_input.action = FMC_INPUT_ACTION_COUNT;
-    p_runtime->last_input_valid = false;
 }
 
 fm_status_t FMC_RUNTIME_Dispatch(fmc_runtime_t *p_runtime,
@@ -81,16 +77,6 @@ fm_status_t FMC_RUNTIME_Dispatch(fmc_runtime_t *p_runtime,
 
     case FMC_RUNTIME_EVENT_RESET_TTL:
         return fmc_runtime_reset_total_(p_runtime, FMC_MODEL_TOTAL_TTL);
-
-    case FMC_RUNTIME_EVENT_INPUT:
-        if (!fmc_runtime_input_is_valid_(&p_event->data.input))
-        {
-            return FM_STATUS_EINVAL;
-        }
-        p_runtime->last_input = p_event->data.input;
-        p_runtime->last_input_valid = true;
-        p_runtime->presentation_update_pending = true;
-        return FM_STATUS_OK;
 
     case FMC_RUNTIME_EVENT_PRESENTATION_INVALIDATE:
         p_runtime->presentation_update_pending = true;
@@ -212,30 +198,4 @@ static fm_status_t fmc_runtime_reset_total_(fmc_runtime_t *p_runtime,
     }
 
     return status;
-}
-
-static bool fmc_runtime_input_is_valid_(const fmc_input_event_t *p_input)
-{
-    if (p_input == NULL)
-    {
-        return false;
-    }
-
-    switch (p_input->key)
-    {
-    case FMC_INPUT_KEY_DOWN:
-    case FMC_INPUT_KEY_UP:
-    case FMC_INPUT_KEY_ENTER:
-    case FMC_INPUT_KEY_ESC:
-        return (p_input->action == FMC_INPUT_ACTION_SHORT) ||
-               (p_input->action == FMC_INPUT_ACTION_LONG);
-
-    case FMC_INPUT_KEY_EXT_1:
-    case FMC_INPUT_KEY_EXT_2:
-        return p_input->action == FMC_INPUT_ACTION_SHORT;
-
-    case FMC_INPUT_KEY_COUNT:
-    default:
-        return false;
-    }
 }

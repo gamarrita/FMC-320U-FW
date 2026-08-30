@@ -10,36 +10,38 @@ static bool fm_main_input_adapter_key_from_board_(
     fm_board_keyboard_key_t board_key,
     fmc_input_key_t *p_key);
 
-bool FM_MAIN_INPUT_ADAPTER_EventFromBoardKey(
+bool FM_MAIN_INPUT_ADAPTER_InputFromBoardKey(
     fm_board_keyboard_key_t board_key,
     fmc_input_action_t action,
-    fmc_runtime_event_t *p_event)
+    fmc_input_event_t *p_input)
 {
     fmc_input_key_t input_key;
 
-    if ((p_event == NULL) ||
+    if ((p_input == NULL) ||
         ((action != FMC_INPUT_ACTION_SHORT) &&
          (action != FMC_INPUT_ACTION_LONG)) ||
-        !fm_main_input_adapter_key_from_board_(board_key, &input_key))
+        !fm_main_input_adapter_key_from_board_(board_key, &input_key) ||
+        (((input_key == FMC_INPUT_KEY_EXT_1) ||
+          (input_key == FMC_INPUT_KEY_EXT_2)) &&
+         (action != FMC_INPUT_ACTION_SHORT)))
     {
         return false;
     }
 
-    p_event->kind = FMC_RUNTIME_EVENT_INPUT;
-    p_event->data.input.key = input_key;
-    p_event->data.input.action = action;
+    p_input->key = input_key;
+    p_input->action = action;
 
     return true;
 }
 
-bool FM_MAIN_INPUT_ADAPTER_ShortEventFromBoardKey(
+bool FM_MAIN_INPUT_ADAPTER_ShortInputFromBoardKey(
     fm_board_keyboard_key_t board_key,
-    fmc_runtime_event_t *p_event)
+    fmc_input_event_t *p_input)
 {
-    return FM_MAIN_INPUT_ADAPTER_EventFromBoardKey(
+    return FM_MAIN_INPUT_ADAPTER_InputFromBoardKey(
         board_key,
         FMC_INPUT_ACTION_SHORT,
-        p_event);
+        p_input);
 }
 
 /**
@@ -76,6 +78,14 @@ static bool fm_main_input_adapter_key_from_board_(
 
     case FM_BOARD_KEYBOARD_KEY_ESC:
         *p_key = FMC_INPUT_KEY_ESC;
+        return true;
+
+    case FM_BOARD_KEYBOARD_KEY_EXT_1:
+        *p_key = FMC_INPUT_KEY_EXT_1;
+        return true;
+
+    case FM_BOARD_KEYBOARD_KEY_EXT_2:
+        *p_key = FMC_INPUT_KEY_EXT_2;
         return true;
 
     case FM_BOARD_KEYBOARD_KEY_COUNT:

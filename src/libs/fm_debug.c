@@ -414,6 +414,8 @@ void FM_DEBUG_UartUint32(uint32_t num)
 
 void FM_DEBUG_ReportErrorWithParam(fm_debug_error_t err, int32_t param)
 {
+    int len;
+
     if ((err <= FM_DEBUG_ERR_NONE) || (err >= FM_DEBUG_ERR_COUNT))
     {
         return;
@@ -424,7 +426,23 @@ void FM_DEBUG_ReportErrorWithParam(fm_debug_error_t err, int32_t param)
     err_mask |= (1UL << (uint32_t) err);
     err_param[err] = param;
 
-    (void) enqueue_event((uint16_t) FM_DEBUG_EVT_ERROR, 0U, param, 0, NULL);
+    len = snprintf(flush_buffer,
+                   FM_DEBUG_FLUSH_TEXT_MAX,
+                   "[%lu] ERROR=%s CODE=%u PARAM=%ld\n",
+                   (unsigned long) timestamp_cycles(),
+                   err_str[err],
+                   (unsigned int) err,
+                   (long) param);
+    if (len > 0)
+    {
+        if ((uint32_t) len > FM_DEBUG_FLUSH_TEXT_MAX)
+        {
+            len = (int) FM_DEBUG_FLUSH_TEXT_MAX;
+        }
+
+        fm_debug_uart_transmit_(flush_buffer, (uint32_t) len);
+    }
+
     FM_DEBUG_LedError(FM_DEBUG_LED_ON);
 }
 

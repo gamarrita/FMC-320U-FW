@@ -52,6 +52,8 @@ void MemManage_Handler(void);
 void BusFault_Handler(void);
 void UsageFault_Handler(void);
 void DebugMon_Handler(void);
+void EXTI3_IRQHandler(void);
+void EXTI4_IRQHandler(void);
 void EXTI10_IRQHandler(void);
 void EXTI11_IRQHandler(void);
 void EXTI12_IRQHandler(void);

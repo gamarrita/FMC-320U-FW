@@ -98,7 +98,7 @@ set(FM_COMMON_SOURCES
     ${FM_SRC_DIR}/bsp/devices/lcd/fm_lcd_map.c
     ${FM_SRC_DIR}/bsp/devices/lcd/pcf8553/fm_pcf8553.c
     ${FM_SRC_DIR}/product/fmc/fmc_model.c
-    ${FM_SRC_DIR}/product/fmc/fmc_presentation.c
+    ${FM_SRC_DIR}/product/fmc/fmc_ui.c
     ${FM_SRC_DIR}/product/fmc/fmc_rate.c
     ${FM_SRC_DIR}/product/fmc/fmc_runtime.c
     ${FM_SRC_DIR}/product/fmc/fmc_service.c

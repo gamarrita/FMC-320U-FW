@@ -7,7 +7,7 @@
 #define FM_MAIN_PRESENTATION_LCD_H
 
 #include "fm_status.h"
-#include "fmc_presentation.h"
+#include "fmc_ui.h"
 
 /**
  * @brief Initialize the LCD used by the product presentation.
@@ -32,7 +32,7 @@ fm_status_t FM_MAIN_PRESENTATION_LCD_Init(void);
  * @return `FM_STATUS_ESTATE` for LCD state or I/O failures.
  */
 fm_status_t FM_MAIN_PRESENTATION_LCD_Present(
-    const fmc_presentation_frame_t *p_frame,
+    const fmc_ui_frame_t *p_frame,
     void *p_context);
 
 #endif /* FM_MAIN_PRESENTATION_LCD_H */

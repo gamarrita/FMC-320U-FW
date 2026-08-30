@@ -141,8 +141,9 @@ reactivation.
 - The state serves both as a visual check and an unambiguous startup signal.
 - Its nominal duration is 3 seconds, beginning after successful presentation.
 - SHORT ESC advances to firmware version exactly as timeout does.
-- Every other SHORT or LONG input is a no-op for startup navigation. A valid
-  physical press still applies the accepted backlight activity policy.
+- Every other SHORT or LONG input is a no-op for startup navigation. Any
+  physical press still applies the accepted backlight activity policy before
+  semantic filtering.
 
 Physical element identity and mapping remain owned by
 `docs/specs/lcd/lcd_true_source.yaml`.
@@ -158,8 +159,9 @@ Physical element identity and mapping remain owned by
 - The value is an unpublished Phase 6A dummy, not a released firmware version.
 - Its nominal duration is 3 seconds, beginning after successful presentation.
 - SHORT ESC advances to TTL/RATE exactly as timeout does.
-- Every other SHORT or LONG input is a no-op for startup navigation. A valid
-  physical press still applies the accepted backlight activity policy.
+- Every other SHORT or LONG input is a no-op for startup navigation. Any
+  physical press still applies the accepted backlight activity policy before
+  semantic filtering.
 
 Released version meaning, LCD encoding limits, and tag traceability belong to
 [Firmware Versioning](../../project/firmware_versioning.md).
@@ -172,15 +174,27 @@ Released version meaning, LCD encoding limits, and tag traceability belong to
 - Both values are non-negative, right-aligned, rounded to one decimal, and use
   blank unused positions.
 - Zero is valid and displays as `0.0`.
-- TTL uses liters and RATE initially uses liters per second.
-- The bounded presentation contract supports second and minute RATE time
-  bases and selects the corresponding `S` or `M` indicator. Second is the
-  initial live state; minute is retained as a technical capability and is not
-  yet operator-selectable.
-- The shared alphanumeric field shows `Lt` for both rows.
-- `TTL`, `RATE`, slash, and second indicators remain active, including during
-  visual overflow. All unrelated screen-specific indicators remain off; POINT
-  follows its transverse activity rule.
+- TTL and RATE share the active volume unit. The initial state uses liters.
+- Presentation supports every model RATE time base and selects exactly one of
+  the `S`, `M`, `H`, or `D` indicators. Second is the initial live state; the
+  other bases are technical capabilities and are not yet operator-selectable.
+- The shared alphanumeric field represents the active volume unit for both
+  rows according to this accepted table:
+
+  | Model value | Visible legend |
+  |---|---|
+  | `CUSTOM` | `--` |
+  | `L` | `Lt` |
+  | `M3` | `M3` |
+  | `GAL_US` | `GL` |
+  | `BBL_US` | `BR` |
+  | `KG` | `KG` |
+  | `EQUIV_M3` | `MC` |
+
+  No configured unit is silently represented as another unit.
+- `TTL`, `RATE`, slash, and the selected time-base indicator remain active,
+  including during visual overflow. All unrelated screen-specific indicators
+  remain off; POINT follows its transverse activity rule.
 - The initial controlled values are `1234.5` TTL and `12.3` RATE. They are valid
   provisional inputs, not absent or invalid states.
 - Values are shown immediately on entry and presented again once per second.
@@ -190,8 +204,10 @@ Released version meaning, LCD encoding limits, and tag traceability belong to
   before refreshing it.
 
 Presentation receives a coherent snapshot containing accepted TTL and RATE,
-unit, time base, and resolutions. It does not calculate totals, flow, or the
-RATE observation window.
+unit, time base, and resolutions. Configuration validity belongs to the
+configuration load/apply boundary; presentation translates the accepted model
+values exhaustively and does not calculate totals, flow, or the RATE
+observation window.
 
 When a rounded value does not fit, the row keeps the least significant digits
 that fit, including one fractional digit, and discards the most significant
@@ -201,8 +217,8 @@ digits visually. It does not display `E`, saturate, or trigger another action.
 RATE representation. Their distinct quality remains available to runtime and
 diagnostics, but the TTL/RATE screen does not distinguish them and does not
 show a retained non-valid RATE value as current. The seven numeric positions
-of the RATE row show `-------`. The normal `TTL`, `RATE`, `Lt`, slash, and
-second indicators remain active.
+of the RATE row show `-------`. The normal `TTL`, `RATE`, active-unit legend,
+slash, and selected time-base indicator remain active.
 
 Visible representation of internal formatting errors is deferred.
 
@@ -245,7 +261,7 @@ resolution in Phase 8. Those meanings belong to Phase 10.
 - The upper row shows ACM and the lower row shows RATE.
 - The upper-row `ACM` indicator is active. `TTL` and the lower-row `ACM`
   indicator are off.
-- RATE, slash, time-base indicator, shared `Lt` alpha field, numeric
+- RATE, slash, time-base indicator, shared active-unit alpha field, numeric
   formatting, visual overflow, and RATE-quality representation match
   TTL/RATE.
 - ACM uses the same active volume unit and visible resolution as TTL.
@@ -311,11 +327,12 @@ decisions for a later selected slice.
 ### Backlight
 
 **Accepted:** Successful presentation of the startup all-segments screen and
-every valid physical button press request backlight activation. The same
-ten-second inactivity interval is restarted by each request. The press still
-performs its normal semantic action; it is not consumed only to illuminate the
-display. Detailed timing and failure behavior are owned by
-[behavior.md](behavior.md).
+every physical mechanical or external-button press request backlight
+activation. The request is made before semantic filtering, so a rejected,
+disarmed, or otherwise ineffectual press still illuminates the display. Each
+handled request restarts the same ten-second inactivity interval. A semantic
+action, when one exists, is not consumed only to illuminate the display.
+Detailed timing and failure behavior are owned by [behavior.md](behavior.md).
 
 ## Deferred Interface Functions
 

@@ -10,10 +10,18 @@
 
 #include "devices/lcd/fm_lcd.h"
 
+typedef struct
+{
+    fm_lcd_layout_indicator_t indicator;
+    bool on;
+} fm_main_presentation_lcd_indicator_state_t;
+
 static fm_status_t fm_main_presentation_lcd_from_status_(
     fm_lcd_status_t p_status);
 static fm_status_t fm_main_presentation_lcd_require_(
     fm_lcd_status_t p_status);
+static fm_status_t fm_main_presentation_lcd_apply_indicators_(
+    const fmc_ui_frame_t *p_frame);
 static fm_status_t fm_main_presentation_lcd_set_indicator_(
     fm_lcd_layout_indicator_t p_indicator,
     bool p_on);
@@ -24,7 +32,7 @@ fm_status_t FM_MAIN_PRESENTATION_LCD_Init(void)
 }
 
 fm_status_t FM_MAIN_PRESENTATION_LCD_Present(
-    const fmc_presentation_frame_t *p_frame,
+    const fmc_ui_frame_t *p_frame,
     void *p_context)
 {
     fm_status_t status;
@@ -83,41 +91,7 @@ fm_status_t FM_MAIN_PRESENTATION_LCD_Present(
         return status;
     }
 
-    status = fm_main_presentation_lcd_set_indicator_(
-        FM_LCD_LAYOUT_INDICATOR_TTL,
-        p_frame->indicator_ttl);
-    if (status != FM_STATUS_OK)
-    {
-        return status;
-    }
-
-    status = fm_main_presentation_lcd_set_indicator_(
-        FM_LCD_LAYOUT_INDICATOR_RATE,
-        p_frame->indicator_rate);
-    if (status != FM_STATUS_OK)
-    {
-        return status;
-    }
-
-    status = fm_main_presentation_lcd_set_indicator_(
-        FM_LCD_LAYOUT_INDICATOR_SLASH,
-        p_frame->indicator_slash);
-    if (status != FM_STATUS_OK)
-    {
-        return status;
-    }
-
-    status = fm_main_presentation_lcd_set_indicator_(
-        FM_LCD_LAYOUT_INDICATOR_S,
-        p_frame->indicator_second);
-    if (status != FM_STATUS_OK)
-    {
-        return status;
-    }
-
-    status = fm_main_presentation_lcd_set_indicator_(
-        FM_LCD_LAYOUT_INDICATOR_M,
-        p_frame->indicator_minute);
+    status = fm_main_presentation_lcd_apply_indicators_(p_frame);
     if (status != FM_STATUS_OK)
     {
         return status;
@@ -148,6 +122,41 @@ static fm_status_t fm_main_presentation_lcd_require_(
     fm_lcd_status_t p_status)
 {
     return fm_main_presentation_lcd_from_status_(p_status);
+}
+
+static fm_status_t fm_main_presentation_lcd_apply_indicators_(
+    const fmc_ui_frame_t *p_frame)
+{
+    const fm_main_presentation_lcd_indicator_state_t indicators[] =
+    {
+        {FM_LCD_LAYOUT_INDICATOR_POINT, p_frame->indicator_point},
+        {FM_LCD_LAYOUT_INDICATOR_ACM_TOP, p_frame->indicator_acm_top},
+        {FM_LCD_LAYOUT_INDICATOR_ACM_BOTTOM, p_frame->indicator_acm_bottom},
+        {FM_LCD_LAYOUT_INDICATOR_TTL, p_frame->indicator_ttl},
+        {FM_LCD_LAYOUT_INDICATOR_RATE, p_frame->indicator_rate},
+        {FM_LCD_LAYOUT_INDICATOR_SLASH, p_frame->indicator_slash},
+        {FM_LCD_LAYOUT_INDICATOR_S, p_frame->indicator_second},
+        {FM_LCD_LAYOUT_INDICATOR_M, p_frame->indicator_minute},
+        {FM_LCD_LAYOUT_INDICATOR_H, p_frame->indicator_hour},
+        {FM_LCD_LAYOUT_INDICATOR_D, p_frame->indicator_day}
+    };
+    fm_status_t status;
+    uint8_t index;
+
+    for (index = 0U;
+         index < (uint8_t) (sizeof(indicators) / sizeof(indicators[0]));
+         index++)
+    {
+        status = fm_main_presentation_lcd_set_indicator_(
+            indicators[index].indicator,
+            indicators[index].on);
+        if (status != FM_STATUS_OK)
+        {
+            return status;
+        }
+    }
+
+    return FM_STATUS_OK;
 }
 
 static fm_status_t fm_main_presentation_lcd_set_indicator_(

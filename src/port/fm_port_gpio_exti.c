@@ -33,6 +33,7 @@ void FM_PORT_GPIO_EXTI_Init(void)
     GPIO_InitTypeDef gpio_init = { 0 };
 
     __HAL_RCC_GPIOE_CLK_ENABLE();
+    __HAL_RCC_GPIOD_CLK_ENABLE();
 
     gpio_init.Pin = KEY_DOWN_Pin |
                     KEY_UP_Pin |
@@ -41,6 +42,16 @@ void FM_PORT_GPIO_EXTI_Init(void)
     gpio_init.Mode = GPIO_MODE_IT_RISING_FALLING;
     gpio_init.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(KEY_DOWN_GPIO_Port, &gpio_init);
+
+    gpio_init.Pin = EXT_BUTTON_1_Pin | EXT_BUTTON_2_Pin;
+    gpio_init.Pull = GPIO_PULLUP;
+    HAL_GPIO_Init(EXT_BUTTON_1_GPIO_Port, &gpio_init);
+
+    HAL_NVIC_SetPriority(EXT_BUTTON_1_EXTI_IRQn, 5U, 0U);
+    HAL_NVIC_EnableIRQ(EXT_BUTTON_1_EXTI_IRQn);
+
+    HAL_NVIC_SetPriority(EXT_BUTTON_2_EXTI_IRQn, 5U, 0U);
+    HAL_NVIC_EnableIRQ(EXT_BUTTON_2_EXTI_IRQn);
 
     HAL_NVIC_SetPriority(KEY_DOWN_EXTI_IRQn, 5U, 0U);
     HAL_NVIC_EnableIRQ(KEY_DOWN_EXTI_IRQn);

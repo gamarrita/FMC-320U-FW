@@ -131,7 +131,7 @@ Objective:
 Dependencies:
 - reviewed current-product input requirements and implemented input contracts;
 - board key mapping in BSP;
-- runtime event contract.
+- serialized product-main owner boundary.
 
 Decision gates:
 - final location of app-specific composition code after a second consumer
@@ -146,8 +146,8 @@ Risks:
 Exit criteria:
 - product input types include mechanical keys, external buttons, SHORT, and
   LONG;
-- short/long recognition can produce runtime input without changing runtime
-  input interfaces;
+- recognizers produce hardware-neutral semantic input without changing the
+  product input interface or requiring measurement runtime to retain it;
 - pure tests prove key/action identity is preserved.
 
 ## Phase 5: ThreadX, ISR Delivery, Timers, And Low Power
@@ -419,8 +419,7 @@ Completion:
   conservation, recovery without reset, and silent PPK2 characterization were
   human-accepted;
 - no experimental ThreadX idle-port workaround remains in the Phase 7
-  implementation;
-- Phase 8 is the next roadmap phase.
+  implementation.
 
 Parallel technical follow-up `FREQ-1` — edge-coherent LPTIM3 measurement:
 - State: deferred, open, important, non-blocking, and not part of an active
@@ -556,8 +555,9 @@ Accepted product decisions:
   immediate presentation attempts;
 - POINT is a user-menu accepted-pulse-observation witness initialized off on
   TTL/RATE: nonzero delta toggles once and zero delta turns it off;
-- every valid physical press requests activation and, in normal operation,
-  restarts a fixed ten-second backlight interval without consuming the action;
+- every physical mechanical or external-button press requests activation
+  before semantic filtering and, in normal operation, restarts a fixed
+  ten-second backlight interval without consuming any resulting action;
 - EXT_1 and EXT_2 use a press-edge SHORT with independent stable-release
   rearm; they have no LONG or repeat behavior.
 
@@ -603,8 +603,10 @@ Accepted architecture decisions:
 - the existing `fm_board_keyboard` facade is extended for EXT_1 and EXT_2 and
   uses the existing EXTI route; no new external-button BSP is introduced;
 - `fm_main_ext_button` has no ThreadX, HAL, queue, backlight, UI, or runtime
-  dependency. Per button it owns armed/release-candidate decisions and returns
-  semantic SHORT plus timer start, restart, or cancel instructions;
+  dependency. Per button it owns armed/stable-release sampling decisions and
+  returns semantic SHORT plus timer start or restart instructions; product-main
+  admits only the first enabled external press and does not queue raw external
+  release/bounce edges;
 - product-main owns the two ThreadX debounce timers, performs required GPIO
   reads, and routes each timer callback as a serialized timeout event back to
   the helper;
@@ -683,10 +685,20 @@ Risks:
 | 8D: User-menu POINT and safe backlight | Complete periodic user-menu POINT application and add the last functional slice: safe startup/input backlight activation with committed ten-second expiry | 8C is accepted; PE0 generated configuration and board path are available | Focused tests and target evidence cover POINT observations on all five user screens, startup and input activation, deadline restart, stale expiry, fatal timer-contract handling, and no measurement/low-power regression |
 | 8E: Combined target validation | Validate the complete Phase 8 operator path on target | Required slices 8A through 8D are accepted | Canonical builds, regression, and target evidence cover five-screen order and bounds, exact PR/LD/DT/OFF placeholder glyphs including the inferred numeric F, EXT_1 cycle, both ACM reset paths and no-ops, bounce/hold and both boot-level input cases, POINT at zero/isolated/continuous flow, backlight startup/restart/expiry, and Run/Stop2 pulse conservation |
 
-Phase 8-0A and the documentation-only 8A contract consolidation are closed and
-human-accepted. `WORKING_CONTEXT.md` owns the current active status and now
-routes implementation through 8B. No CubeMX, protected, generated, or 8C
-integration change belongs to 8B.
+Completion:
+- Phase 8-0A and slices 8A through 8E are closed and human-accepted;
+- the bounded 8D presentation correction transfers every current semantic
+  indicator and preserves the physically confirmed `ACM_TOP`/`ACM_BOTTOM`
+  translation;
+- canonical builds and target regression pass, and the restored
+  `product/main` firmware programs, verifies, and reaches ready without panic;
+- the human-completed 8E target campaign confirms the complete five-screen
+  route and bounds, placeholder glyphs, EXT_1 cycle, both ACM reset paths and
+  no-ops, bounce and hold behavior, boot-level external-input cases, POINT at
+  zero and active flow, backlight restart and expiry, and Run/Stop2 pulse
+  conservation;
+- Phase 8 is complete; no later roadmap phase is active until a new workstream
+  is explicitly authorized.
 
 Human approval is required before:
 - beginning an implementation slice;

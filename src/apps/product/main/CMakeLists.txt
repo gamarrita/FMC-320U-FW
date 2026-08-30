@@ -1,10 +1,13 @@
 set(FM_APP_SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/app_entry.c
     ${CMAKE_CURRENT_LIST_DIR}/fm_main_acquisition.c
+    ${CMAKE_CURRENT_LIST_DIR}/fm_main_backlight.c
     ${CMAKE_CURRENT_LIST_DIR}/fm_main_event.c
+    ${CMAKE_CURRENT_LIST_DIR}/fm_main_ext_button.c
     ${CMAKE_CURRENT_LIST_DIR}/fm_main_input_adapter.c
     ${CMAKE_CURRENT_LIST_DIR}/fm_main_input_recognizer.c
     ${CMAKE_CURRENT_LIST_DIR}/fm_main_presentation_lcd.c
+    ${CMAKE_CURRENT_LIST_DIR}/fm_main_ui.c
     ${CMAKE_CURRENT_LIST_DIR}/fm_main.c
     PARENT_SCOPE
 )

@@ -55,7 +55,7 @@ sources, and non-LCD failure paths are not approved.
 
 Evidence:
 - reviewed Phase 6A product decision;
-- `src/product/fmc/fmc_presentation.h`;
+- `src/product/fmc/fmc_ui.h`;
 - `src/apps/product/main/fm_main.c`;
 - frozen legacy startup evidence.
 
@@ -215,19 +215,29 @@ arming generates SHORT and disarms the button again. External buttons do not
 generate LONG or repeat actions.
 
 **Accepted:** Successful presentation of the all-segments startup screen
-requests backlight activation. Every valid physical mechanical or
-external-button press makes the same request without consuming its semantic
-action, even when the active UI assigns that action no visible consequence.
-Each request first commits a valid ten-second one-shot expiry and then turns
-the backlight on. Periodic refresh, pulse observations, and internal UI changes
-do not extend the interval. A stale expiry cannot turn off a newer activation
-interval.
+requests backlight activation. Every physical mechanical or external-button
+`PRESSED` transition makes the same request before semantic filtering. This
+includes a press that is rejected by a recognizer, occurs while an external
+button is disarmed, or maps to a UI no-op. The activity request does not
+consume or alter any semantic action. Concurrent raw press activity may be
+coalesced while one request is pending because its effect is idempotent.
+
+Each handled request first commits a valid ten-second one-shot expiry, then
+restarts the timer, and only then turns the active-low output on. Periodic
+refresh, pulse observations, releases, and internal UI changes do not extend
+the interval. A stale expiry cannot turn off a newer activation interval.
 
 ## Configuration And Persistence
 
 **Candidate:** Configuration changes should be reviewed in an edit context,
 validated, applied to active measurement behavior, and persisted only according
 to an approved save policy.
+
+**Accepted:** Whenever configuration loading or application is implemented,
+configured units and other bounded values are validated at that boundary before
+they enter the active measurement model. Downstream presentation does not
+reapply configuration policy; it translates accepted values and reports only
+unknown enum values or content that its active screen cannot render.
 
 Evidence:
 - current model separation between canonical measurement state and derived

@@ -15,14 +15,17 @@
 #include "fm_debug.h"
 #include "frequency_observation.h"
 #include "fm_main_acquisition.h"
+#include "fm_main_backlight.h"
 #include "fm_main_event.h"
+#include "fm_main_ext_button.h"
 #include "fm_main_input_adapter.h"
 #include "fm_main_input_recognizer.h"
+#include "fm_main_ui.h"
 #include "devices/lcd/fm_lcd_map.h"
 #include "fm_port_time.h"
 #include "fmc_input.h"
 #include "fmc_model.h"
-#include "fmc_presentation.h"
+#include "fmc_ui.h"
 #include "fmc_rate.h"
 #include "fmc_runtime.h"
 #include "fmc_service.h"
@@ -31,8 +34,8 @@
 #include "main.h"
 #include "pulse_delta.h"
 
-#define FM_REGRESSION_TEST_IDLE_MS   1000U
-#define FM_REGRESSION_TEST_EPSILON   0.000001
+#define FM_REGRESSION_TEST_IDLE_MS 1000U
+#define FM_REGRESSION_TEST_EPSILON 0.000001
 
 typedef enum
 {
@@ -51,7 +54,6 @@ typedef enum
     FM_REGRESSION_TEST_CASE_RUNTIME_FREQUENCY_RESULT,
     FM_REGRESSION_TEST_CASE_MAIN_ACQUISITION,
     FM_REGRESSION_TEST_CASE_RUNTIME_EVENTS,
-    FM_REGRESSION_TEST_CASE_RUNTIME_INPUT_EVENTS,
     FM_REGRESSION_TEST_CASE_RUNTIME_ERROR_PATHS,
     FM_REGRESSION_TEST_CASE_SERVICE_STATE,
     FM_REGRESSION_TEST_CASE_SERVICE_ERROR_PATHS,
@@ -60,13 +62,21 @@ typedef enum
     FM_REGRESSION_TEST_CASE_DISPLAY_FORMAT_VALUES,
     FM_REGRESSION_TEST_CASE_DISPLAY_FORMAT_ERROR_PATHS,
     FM_REGRESSION_TEST_CASE_LCD_MAP_ALL_SEGMENTS,
+    FM_REGRESSION_TEST_CASE_LCD_MAP_UI_INDICATORS,
     FM_REGRESSION_TEST_CASE_LCD_MAP_LITERS_LEGEND,
     FM_REGRESSION_TEST_CASE_PRESENTATION_SEQUENCE,
     FM_REGRESSION_TEST_CASE_PRESENTATION_VALUES,
+    FM_REGRESSION_TEST_CASE_UI_UNITS_TIME_BASES,
+    FM_REGRESSION_TEST_CASE_UI_NAVIGATION,
+    FM_REGRESSION_TEST_CASE_UI_PLACEHOLDERS_POINT,
+    FM_REGRESSION_TEST_CASE_UI_REQUESTS_INVALID,
     FM_REGRESSION_TEST_CASE_PRESENTATION_FAILURE,
     FM_REGRESSION_TEST_CASE_KEYBOARD_MAPPING,
     FM_REGRESSION_TEST_CASE_MAIN_INPUT_ADAPTER,
     FM_REGRESSION_TEST_CASE_MAIN_INPUT_RECOGNIZER,
+    FM_REGRESSION_TEST_CASE_MAIN_EXT_BUTTON,
+    FM_REGRESSION_TEST_CASE_MAIN_BACKLIGHT,
+    FM_REGRESSION_TEST_CASE_MAIN_UI,
     FM_REGRESSION_TEST_CASE_MAIN_EVENT_QUEUE,
     FM_REGRESSION_TEST_CASE_COUNT
 } fm_regression_test_case_t;
@@ -98,14 +108,38 @@ typedef struct
 
 typedef struct
 {
-    fmc_presentation_frame_t frame;
+    fmc_ui_frame_t frame;
     fm_status_t next_status;
     uint32_t call_count;
 } fm_regression_presentation_sink_t;
 
+typedef struct
+{
+    fmc_ui_state_t initial_state;
+    fmc_input_key_t key;
+    fmc_input_action_t action;
+    fmc_ui_state_t expected_state;
+    fmc_ui_request_kind_t expected_request;
+    bool expects_presentation;
+} fm_regression_ui_input_case_t;
+
+typedef struct
+{
+    fmc_model_volume_unit_t unit;
+    const char* expected_legend;
+} fm_regression_ui_volume_unit_case_t;
+
+typedef struct
+{
+    fmc_model_time_base_t time_base;
+    bool expected_second;
+    bool expected_minute;
+    bool expected_hour;
+    bool expected_day;
+} fm_regression_ui_time_base_case_t;
+
 /* Private function declarations */
-static bool fm_regression_test_double_eq_(double p_actual,
-                                               double p_expected);
+static bool fm_regression_test_double_eq_(double p_actual, double p_expected);
 static bool fm_regression_test_init_defaults_(void);
 static bool fm_regression_test_totals_(void);
 static bool fm_regression_test_unit_validity_(void);
@@ -121,7 +155,6 @@ static bool fm_regression_test_observer_independence_(void);
 static bool fm_regression_test_runtime_frequency_result_(void);
 static bool fm_regression_test_main_acquisition_(void);
 static bool fm_regression_test_runtime_events_(void);
-static bool fm_regression_test_runtime_input_events_(void);
 static bool fm_regression_test_runtime_error_paths_(void);
 static bool fm_regression_test_service_state_(void);
 static bool fm_regression_test_service_error_paths_(void);
@@ -130,34 +163,34 @@ static bool fm_regression_test_volume_error_paths_(void);
 static bool fm_regression_test_display_format_values_(void);
 static bool fm_regression_test_display_format_error_paths_(void);
 static bool fm_regression_test_lcd_map_all_segments_(void);
+static bool fm_regression_test_lcd_map_ui_indicators_(void);
 static bool fm_regression_test_lcd_map_liters_legend_(void);
 static bool fm_regression_test_presentation_sequence_(void);
 static bool fm_regression_test_presentation_values_(void);
+static bool fm_regression_test_ui_units_time_bases_(void);
+static bool fm_regression_test_ui_navigation_(void);
+static bool fm_regression_test_ui_placeholders_point_(void);
+static bool fm_regression_test_ui_requests_invalid_(void);
 static bool fm_regression_test_presentation_failure_(void);
 static bool fm_regression_test_keyboard_mapping_(void);
 static bool fm_regression_test_main_input_adapter_(void);
 static bool fm_regression_test_main_input_recognizer_(void);
+static bool fm_regression_test_main_ext_button_(void);
+static bool fm_regression_test_main_backlight_(void);
+static bool fm_regression_test_main_ui_(void);
 static bool fm_regression_test_main_event_queue_(void);
 static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case);
-static void fm_regression_test_emit_case_(fm_regression_test_case_t p_case,
-                                               bool p_passed);
-static bool fm_regression_test_text_eq_(const char *p_actual,
-                                              const char *p_expected);
-static fm_status_t fm_regression_test_presentation_sink_(
-    const fmc_presentation_frame_t *p_frame,
-    void *p_context);
+static void fm_regression_test_emit_case_(fm_regression_test_case_t p_case, bool p_passed);
+static bool fm_regression_test_text_eq_(const char* p_actual, const char* p_expected);
+static fm_status_t fm_regression_test_presentation_sink_(const fmc_ui_frame_t* p_frame,
+                                                         void* p_context);
 static void fm_regression_test_make_presentation_snapshot_(
-    fmc_presentation_snapshot_t *p_snapshot,
-    double p_ttl,
-    double p_rate,
-    frequency_observation_quality_t p_quality,
-    bool p_value_present,
+    fmc_ui_snapshot_t* p_snapshot, double p_ttl, double p_rate,
+    frequency_observation_quality_t p_quality, bool p_value_present,
     fmc_model_time_base_t p_time_base);
 static bool fm_regression_test_dispatch_frequency_success_(
-    fmc_runtime_t *p_runtime,
-    const frequency_observation_result_t *p_result,
-    frequency_observation_quality_t p_expected_quality,
-    bool p_expected_value_present,
+    fmc_runtime_t* p_runtime, const frequency_observation_result_t* p_result,
+    frequency_observation_quality_t p_expected_quality, bool p_expected_value_present,
     double p_expected_value);
 
 /* Public function definitions */
@@ -232,12 +265,10 @@ static bool fm_regression_test_text_eq_(const char *p_actual,
     return (*p_actual == '\0') && (*p_expected == '\0');
 }
 
-static fm_status_t fm_regression_test_presentation_sink_(
-    const fmc_presentation_frame_t *p_frame,
-    void *p_context)
+static fm_status_t fm_regression_test_presentation_sink_(const fmc_ui_frame_t* p_frame,
+                                                         void* p_context)
 {
-    fm_regression_presentation_sink_t *sink =
-        (fm_regression_presentation_sink_t *) p_context;
+    fm_regression_presentation_sink_t* sink = (fm_regression_presentation_sink_t*)p_context;
 
     if ((p_frame == NULL) || (sink == NULL))
     {
@@ -251,11 +282,8 @@ static fm_status_t fm_regression_test_presentation_sink_(
 }
 
 static void fm_regression_test_make_presentation_snapshot_(
-    fmc_presentation_snapshot_t *p_snapshot,
-    double p_ttl,
-    double p_rate,
-    frequency_observation_quality_t p_quality,
-    bool p_value_present,
+    fmc_ui_snapshot_t* p_snapshot, double p_ttl, double p_rate,
+    frequency_observation_quality_t p_quality, bool p_value_present,
     fmc_model_time_base_t p_time_base)
 {
     if (p_snapshot == NULL)
@@ -263,16 +291,17 @@ static void fm_regression_test_make_presentation_snapshot_(
         return;
     }
 
+    p_snapshot->acm = p_ttl;
     p_snapshot->ttl = p_ttl;
     p_snapshot->rate.value = p_rate;
     p_snapshot->rate.quality = p_quality;
     p_snapshot->rate.value_present = p_value_present;
     p_snapshot->volume_unit = FMC_MODEL_VOLUME_UNIT_L;
     p_snapshot->rate_time_base = p_time_base;
-    p_snapshot->ttl_fractional_digits =
-        FMC_PRESENTATION_VALUE_FRACTIONAL_DIGITS;
+    p_snapshot->volume_fractional_digits =
+        FMC_UI_VALUE_FRACTIONAL_DIGITS;
     p_snapshot->rate_fractional_digits =
-        FMC_PRESENTATION_VALUE_FRACTIONAL_DIGITS;
+        FMC_UI_VALUE_FRACTIONAL_DIGITS;
 }
 
 /*
@@ -1526,13 +1555,16 @@ static bool fm_regression_test_main_acquisition_(void)
     fmc_runtime_rate_state_t rate_state;
     fmc_runtime_t runtime;
     fmc_service_snapshot_t snapshot;
+    uint64_t pulse_delta;
 
     FM_MAIN_ACQUISITION_Init(&acquisition);
     FMC_RUNTIME_Init(&runtime);
 
     if ((FM_MAIN_ACQUISITION_ProcessObservation(&acquisition,
                                                 12U,
-                                                &runtime) != FM_STATUS_OK) ||
+                                                &runtime,
+                                                &pulse_delta) != FM_STATUS_OK) ||
+        (pulse_delta != 12U) ||
         !FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
         (FMC_RUNTIME_GetSnapshot(&runtime, &snapshot) != FM_STATUS_OK) ||
         (snapshot.model.acm.pulses != 12U) ||
@@ -1545,7 +1577,9 @@ static bool fm_regression_test_main_acquisition_(void)
 
     if ((FM_MAIN_ACQUISITION_ProcessObservation(&acquisition,
                                                 12U,
-                                                &runtime) != FM_STATUS_OK) ||
+                                                &runtime,
+                                                &pulse_delta) != FM_STATUS_OK) ||
+        (pulse_delta != 0U) ||
         FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
         (FMC_RUNTIME_GetSnapshot(&runtime, &snapshot) != FM_STATUS_OK) ||
         (snapshot.model.acm.pulses != 12U) ||
@@ -1556,7 +1590,9 @@ static bool fm_regression_test_main_acquisition_(void)
 
     if ((FM_MAIN_ACQUISITION_ProcessObservation(&acquisition,
                                                 20U,
-                                                &runtime) != FM_STATUS_OK) ||
+                                                &runtime,
+                                                &pulse_delta) != FM_STATUS_OK) ||
+        (pulse_delta != 8U) ||
         (FMC_RUNTIME_GetSnapshot(&runtime, &snapshot) != FM_STATUS_OK) ||
         (snapshot.model.acm.pulses != 20U) ||
         (snapshot.model.ttl.pulses != 20U))
@@ -1568,10 +1604,14 @@ static bool fm_regression_test_main_acquisition_(void)
     FMC_RUNTIME_Init(&runtime);
     if ((FM_MAIN_ACQUISITION_ProcessObservation(&acquisition,
                                                 65530U,
-                                                &runtime) != FM_STATUS_OK) ||
+                                                &runtime,
+                                                &pulse_delta) != FM_STATUS_OK) ||
+        (pulse_delta != 65530U) ||
         (FM_MAIN_ACQUISITION_ProcessObservation(&acquisition,
                                                 9U,
-                                                &runtime) != FM_STATUS_OK) ||
+                                                &runtime,
+                                                &pulse_delta) != FM_STATUS_OK) ||
+        (pulse_delta != 15U) ||
         (FMC_RUNTIME_GetSnapshot(&runtime, &snapshot) != FM_STATUS_OK) ||
         (snapshot.model.acm.pulses != 65545U) ||
         (snapshot.model.ttl.pulses != 65545U))
@@ -1581,10 +1621,17 @@ static bool fm_regression_test_main_acquisition_(void)
 
     if ((FM_MAIN_ACQUISITION_ProcessObservation(NULL,
                                                 0U,
-                                                &runtime) !=
+                                                &runtime,
+                                                &pulse_delta) !=
          FM_STATUS_EINVAL) ||
         (FM_MAIN_ACQUISITION_ProcessObservation(&acquisition,
                                                 0U,
+                                                NULL,
+                                                &pulse_delta) !=
+         FM_STATUS_EINVAL) ||
+        (FM_MAIN_ACQUISITION_ProcessObservation(&acquisition,
+                                                0U,
+                                                &runtime,
                                                 NULL) !=
          FM_STATUS_EINVAL))
     {
@@ -1600,7 +1647,8 @@ static bool fm_regression_test_main_acquisition_(void)
     FMC_RUNTIME_Init(&runtime);
     if ((FM_MAIN_ACQUISITION_ProcessObservation(&acquisition,
                                                 12U,
-                                                &runtime) != FM_STATUS_OK) ||
+                                                &runtime,
+                                                &pulse_delta) != FM_STATUS_OK) ||
         (FMC_RUNTIME_ClearPresentationUpdatePending(&runtime) !=
          FM_STATUS_OK))
     {
@@ -1637,7 +1685,8 @@ static bool fm_regression_test_main_acquisition_(void)
 
     if ((FM_MAIN_ACQUISITION_ProcessObservation(&acquisition,
                                                 20U,
-                                                &runtime) != FM_STATUS_OK) ||
+                                                &runtime,
+                                                &pulse_delta) != FM_STATUS_OK) ||
         (FMC_RUNTIME_ClearPresentationUpdatePending(&runtime) !=
          FM_STATUS_OK))
     {
@@ -1681,7 +1730,8 @@ static bool fm_regression_test_main_acquisition_(void)
 
     return (FM_MAIN_ACQUISITION_ProcessObservation(&acquisition,
                                                    1U,
-                                                   &runtime) ==
+                                                   &runtime,
+                                                   &pulse_delta) ==
             FM_STATUS_ERANGE) &&
            (runtime.service.model.acm.pulses == UINT64_MAX) &&
            (runtime.service.model.ttl.pulses == 0U) &&
@@ -1785,100 +1835,6 @@ static bool fm_regression_test_runtime_events_(void)
 }
 
 /*
- * Verifies that semantic input identity reaches runtime without BSP/HAL types
- * and without changing service totals.
- */
-static bool fm_regression_test_runtime_input_events_(void)
-{
-    static const fmc_input_key_t mechanical_keys[] =
-    {
-        FMC_INPUT_KEY_DOWN,
-        FMC_INPUT_KEY_UP,
-        FMC_INPUT_KEY_ENTER,
-        FMC_INPUT_KEY_ESC
-    };
-    static const fmc_input_key_t external_keys[] =
-    {
-        FMC_INPUT_KEY_EXT_1,
-        FMC_INPUT_KEY_EXT_2
-    };
-    static const fmc_input_action_t actions[] =
-    {
-        FMC_INPUT_ACTION_SHORT,
-        FMC_INPUT_ACTION_LONG
-    };
-    fmc_runtime_t runtime;
-    fmc_runtime_event_t event;
-    uint8_t key_index;
-    uint8_t action_index;
-
-    FMC_RUNTIME_Init(&runtime);
-    runtime.service.model.acm.pulses = 11U;
-    runtime.service.model.ttl.pulses = 22U;
-
-    event.kind = FMC_RUNTIME_EVENT_INPUT;
-
-    for (key_index = 0U;
-         key_index < (uint8_t) (sizeof(mechanical_keys) /
-                                sizeof(mechanical_keys[0]));
-         key_index++)
-    {
-        for (action_index = 0U;
-             action_index < (uint8_t) (sizeof(actions) / sizeof(actions[0]));
-             action_index++)
-        {
-            if (FMC_RUNTIME_ClearPresentationUpdatePending(&runtime) !=
-                FM_STATUS_OK)
-            {
-                return false;
-            }
-
-            event.data.input.key = mechanical_keys[key_index];
-            event.data.input.action = actions[action_index];
-
-            if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_OK) ||
-                !FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
-                !runtime.last_input_valid ||
-                (runtime.last_input.key != mechanical_keys[key_index]) ||
-                (runtime.last_input.action != actions[action_index]) ||
-                (runtime.service.model.acm.pulses != 11U) ||
-                (runtime.service.model.ttl.pulses != 22U))
-            {
-                return false;
-            }
-        }
-    }
-
-    for (key_index = 0U;
-         key_index < (uint8_t) (sizeof(external_keys) /
-                                sizeof(external_keys[0]));
-         key_index++)
-    {
-        if (FMC_RUNTIME_ClearPresentationUpdatePending(&runtime) !=
-            FM_STATUS_OK)
-        {
-            return false;
-        }
-
-        event.data.input.key = external_keys[key_index];
-        event.data.input.action = FMC_INPUT_ACTION_SHORT;
-
-        if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_OK) ||
-            !FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
-            !runtime.last_input_valid ||
-            (runtime.last_input.key != external_keys[key_index]) ||
-            (runtime.last_input.action != FMC_INPUT_ACTION_SHORT) ||
-            (runtime.service.model.acm.pulses != 11U) ||
-            (runtime.service.model.ttl.pulses != 22U))
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-/*
  * Verifies that invalid runtime calls and service errors stay explicit and do
  * not create new presentation work.
  */
@@ -1921,57 +1877,7 @@ static bool fm_regression_test_runtime_error_paths_(void)
         return false;
     }
 
-    event.kind = FMC_RUNTIME_EVENT_INPUT;
-    event.data.input.key = FMC_INPUT_KEY_COUNT;
-    event.data.input.action = FMC_INPUT_ACTION_SHORT;
-    if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_EINVAL) ||
-        FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
-        runtime.last_input_valid)
-    {
-        return false;
-    }
-
-    event.data.input.key = FMC_INPUT_KEY_DOWN;
-    event.data.input.action = FMC_INPUT_ACTION_COUNT;
-    if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_EINVAL) ||
-        FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
-        runtime.last_input_valid)
-    {
-        return false;
-    }
-
-    event.data.input.key = (fmc_input_key_t) -1;
-    event.data.input.action = FMC_INPUT_ACTION_SHORT;
-    if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_EINVAL) ||
-        FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
-        runtime.last_input_valid)
-    {
-        return false;
-    }
-
-    event.data.input.key = FMC_INPUT_KEY_DOWN;
-    event.data.input.action = (fmc_input_action_t) -1;
-    if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_EINVAL) ||
-        FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
-        runtime.last_input_valid)
-    {
-        return false;
-    }
-
-    event.data.input.key = FMC_INPUT_KEY_EXT_1;
-    event.data.input.action = FMC_INPUT_ACTION_LONG;
-    if ((FMC_RUNTIME_Dispatch(&runtime, &event) != FM_STATUS_EINVAL) ||
-        FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
-        runtime.last_input_valid)
-    {
-        return false;
-    }
-
-    event.data.input.key = FMC_INPUT_KEY_EXT_2;
-    event.data.input.action = FMC_INPUT_ACTION_LONG;
-    return (FMC_RUNTIME_Dispatch(&runtime, &event) == FM_STATUS_EINVAL) &&
-           !FMC_RUNTIME_PresentationUpdateIsPending(&runtime) &&
-           !runtime.last_input_valid;
+    return true;
 }
 
 /*
@@ -2382,6 +2288,101 @@ static bool fm_regression_test_lcd_map_all_segments_(void)
 }
 
 /*
+ * Verifies each standalone indicator consumed by the Phase 8 semantic frame
+ * against the canonical controller RAM address and independent clear path.
+ */
+static bool fm_regression_test_lcd_map_ui_indicators_(void)
+{
+    static const struct
+    {
+        fm_lcd_layout_indicator_t indicator;
+        uint8_t reg;
+        uint8_t bit;
+    } cases[] =
+    {
+        {FM_LCD_LAYOUT_INDICATOR_POINT, 7U, 4U},
+        {FM_LCD_LAYOUT_INDICATOR_ACM_TOP, 12U, 4U},
+        {FM_LCD_LAYOUT_INDICATOR_ACM_BOTTOM, 5U, 3U},
+        {FM_LCD_LAYOUT_INDICATOR_TTL, 17U, 4U},
+        {FM_LCD_LAYOUT_INDICATOR_RATE, 17U, 5U},
+        {FM_LCD_LAYOUT_INDICATOR_SLASH, 10U, 1U},
+        {FM_LCD_LAYOUT_INDICATOR_S, 10U, 5U},
+        {FM_LCD_LAYOUT_INDICATOR_M, 9U, 7U},
+        {FM_LCD_LAYOUT_INDICATOR_H, 5U, 6U},
+        {FM_LCD_LAYOUT_INDICATOR_D, 9U, 5U}
+    };
+    uint8_t ram[FM_LCD_MAP_RAM_SIZE];
+    uint8_t case_index;
+    uint8_t ram_index;
+
+    if ((FM_LCD_MAP_SetIndicator(NULL,
+                                 FM_LCD_MAP_RAM_SIZE,
+                                 FM_LCD_LAYOUT_INDICATOR_POINT,
+                                 true) != FM_LCD_MAP_EINVAL) ||
+        (FM_LCD_MAP_SetIndicator(ram,
+                                 FM_LCD_MAP_RAM_SIZE - 1U,
+                                 FM_LCD_LAYOUT_INDICATOR_POINT,
+                                 true) != FM_LCD_MAP_ERANGE) ||
+        (FM_LCD_MAP_SetIndicator(
+             ram,
+             FM_LCD_MAP_RAM_SIZE,
+             (fm_lcd_layout_indicator_t) FM_LCD_LAYOUT_INDICATOR_COUNT,
+             true) != FM_LCD_MAP_ERANGE))
+    {
+        return false;
+    }
+
+    for (case_index = 0U;
+         case_index < (uint8_t) (sizeof(cases) / sizeof(cases[0]));
+         case_index++)
+    {
+        for (ram_index = 0U; ram_index < FM_LCD_MAP_RAM_SIZE; ram_index++)
+        {
+            ram[ram_index] = 0U;
+        }
+
+        if (FM_LCD_MAP_SetIndicator(ram,
+                                    FM_LCD_MAP_RAM_SIZE,
+                                    cases[case_index].indicator,
+                                    true) != FM_LCD_MAP_OK)
+        {
+            return false;
+        }
+
+        for (ram_index = 0U; ram_index < FM_LCD_MAP_RAM_SIZE; ram_index++)
+        {
+            const uint8_t expected =
+                (ram_index == cases[case_index].reg)
+                    ? (uint8_t) (1U << cases[case_index].bit)
+                    : 0U;
+
+            if (ram[ram_index] != expected)
+            {
+                return false;
+            }
+        }
+
+        if (FM_LCD_MAP_SetIndicator(ram,
+                                    FM_LCD_MAP_RAM_SIZE,
+                                    cases[case_index].indicator,
+                                    false) != FM_LCD_MAP_OK)
+        {
+            return false;
+        }
+
+        for (ram_index = 0U; ram_index < FM_LCD_MAP_RAM_SIZE; ram_index++)
+        {
+            if (ram[ram_index] != 0U)
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+/*
  * Verifies that the visible liters legend uses both alphanumeric positions:
  * `L` in the left position and a non-blank `t` in the right position.
  */
@@ -2415,7 +2416,7 @@ static bool fm_regression_test_lcd_map_liters_legend_(void)
 
     for (index = 0U; index < FM_LCD_MAP_RAM_SIZE; index++)
     {
-        if (liters[index] != (uint8_t) (left_l[index] | right_t[index]))
+        if (liters[index] != (uint8_t)(left_l[index] | right_t[index]))
         {
             return false;
         }
@@ -2433,128 +2434,92 @@ static bool fm_regression_test_lcd_map_liters_legend_(void)
  */
 static bool fm_regression_test_presentation_sequence_(void)
 {
-    fmc_presentation_t presentation;
-    fmc_presentation_snapshot_t snapshot;
+    fmc_ui_t presentation;
+    fmc_ui_snapshot_t snapshot;
     fm_regression_presentation_sink_t sink = {0};
     fmc_input_event_t input;
+    fmc_ui_request_t request;
     uint32_t calls_before_stable_advance;
 
     sink.next_status = FM_STATUS_OK;
-    fm_regression_test_make_presentation_snapshot_(
-        &snapshot,
-        0.0,
-        0.0,
-        FREQUENCY_OBSERVATION_QUALITY_UNAVAILABLE,
-        false,
-        FMC_MODEL_TIME_BASE_SECOND);
+    fm_regression_test_make_presentation_snapshot_(&snapshot, 0.0, 0.0,
+                                                   FREQUENCY_OBSERVATION_QUALITY_UNAVAILABLE, false,
+                                                   FMC_MODEL_TIME_BASE_SECOND);
 
-    if ((FMC_PRESENTATION_Init(&presentation,
-                               &snapshot,
-                               fm_regression_test_presentation_sink_,
-                               &sink) != FM_STATUS_OK) ||
-        (FMC_PRESENTATION_GetState(&presentation) !=
-         FMC_PRESENTATION_STATE_NOT_STARTED) ||
-        (FMC_PRESENTATION_Start(&presentation) != FM_STATUS_OK) ||
-        (FMC_PRESENTATION_GetState(&presentation) !=
-         FMC_PRESENTATION_STATE_ALL_SEGMENTS) ||
-        !sink.frame.all_segments)
+    if ((FMC_UI_Init(&presentation, &snapshot, fm_regression_test_presentation_sink_, &sink) !=
+         FM_STATUS_OK) ||
+        (FMC_UI_GetState(&presentation) != FMC_UI_STATE_NOT_STARTED) ||
+        (FMC_UI_Start(&presentation) != FM_STATUS_OK) ||
+        (FMC_UI_GetState(&presentation) != FMC_UI_STATE_ALL_SEGMENTS) || !sink.frame.all_segments)
     {
         return false;
     }
 
     input.key = FMC_INPUT_KEY_ESC;
     input.action = FMC_INPUT_ACTION_SHORT;
-    if ((FMC_PRESENTATION_HandleInput(&presentation,
-                                      &input,
-                                      &snapshot) !=
-         FM_STATUS_OK) ||
-        (FMC_PRESENTATION_GetState(&presentation) !=
-         FMC_PRESENTATION_STATE_FIRMWARE_VERSION) ||
-        sink.frame.all_segments ||
-        !fm_regression_test_text_eq_(sink.frame.top_text, "") ||
+    if ((FMC_UI_HandleInput(&presentation, &input, &snapshot, &request) != FM_STATUS_OK) ||
+        (request.kind != FMC_UI_REQUEST_NONE) ||
+        (FMC_UI_GetState(&presentation) != FMC_UI_STATE_FIRMWARE_VERSION) ||
+        sink.frame.all_segments || !fm_regression_test_text_eq_(sink.frame.top_text, "") ||
         !fm_regression_test_text_eq_(sink.frame.bottom_text, "00.01.00") ||
-        !fm_regression_test_text_eq_(sink.frame.alpha_text, "B0") ||
-        sink.frame.indicator_ttl ||
-        sink.frame.indicator_rate ||
-        sink.frame.indicator_slash ||
-        sink.frame.indicator_second ||
-        sink.frame.indicator_minute)
+        !fm_regression_test_text_eq_(sink.frame.alpha_text, "B0") || sink.frame.indicator_ttl ||
+        sink.frame.indicator_rate || sink.frame.indicator_slash || sink.frame.indicator_second ||
+        sink.frame.indicator_minute || sink.frame.indicator_hour || sink.frame.indicator_day)
     {
         return false;
     }
 
-    fm_regression_test_make_presentation_snapshot_(
-        &snapshot,
-        42.5,
-        100.0,
-        FREQUENCY_OBSERVATION_QUALITY_VALID,
-        true,
-        FMC_MODEL_TIME_BASE_SECOND);
-    if ((FMC_PRESENTATION_Advance(&presentation,
-                                  &snapshot) != FM_STATUS_OK) ||
-        (FMC_PRESENTATION_GetState(&presentation) !=
-         FMC_PRESENTATION_STATE_TTL_RATE) ||
+    fm_regression_test_make_presentation_snapshot_(&snapshot, 42.5, 100.0,
+                                                   FREQUENCY_OBSERVATION_QUALITY_VALID, true,
+                                                   FMC_MODEL_TIME_BASE_SECOND);
+    if ((FMC_UI_Advance(&presentation, &snapshot) != FM_STATUS_OK) ||
+        (FMC_UI_GetState(&presentation) != FMC_UI_STATE_TTL_RATE) ||
         !fm_regression_test_text_eq_(sink.frame.top_text, "     42.5") ||
         !fm_regression_test_text_eq_(sink.frame.bottom_text, "   100.0") ||
-        !fm_regression_test_text_eq_(sink.frame.alpha_text, "Lt") ||
-        !sink.frame.indicator_ttl ||
-        !sink.frame.indicator_rate ||
-        !sink.frame.indicator_slash ||
-        !sink.frame.indicator_second ||
-        sink.frame.indicator_minute)
+        !fm_regression_test_text_eq_(sink.frame.alpha_text, "Lt") || !sink.frame.indicator_ttl ||
+        !sink.frame.indicator_rate || !sink.frame.indicator_slash || !sink.frame.indicator_second ||
+        sink.frame.indicator_minute || sink.frame.indicator_hour || sink.frame.indicator_day)
     {
         return false;
     }
 
     calls_before_stable_advance = sink.call_count;
 
-    return (FMC_PRESENTATION_Advance(&presentation,
-                                     &snapshot) == FM_STATUS_OK) &&
+    return (FMC_UI_Advance(&presentation, &snapshot) == FM_STATUS_OK) &&
            (sink.call_count == calls_before_stable_advance);
 }
 
 /*
- * Verifies numeric live values, both bounded time indicators, visual overflow,
+ * Verifies numeric live values, bounded time indicators, visual overflow,
  * and the common RATE representation for every admitted nonvalid quality.
  */
 static bool fm_regression_test_presentation_values_(void)
 {
-    fmc_presentation_t presentation;
-    fmc_presentation_snapshot_t snapshot;
+    fmc_ui_t presentation;
+    fmc_ui_snapshot_t snapshot;
     fm_regression_presentation_sink_t sink = {0};
 
     sink.next_status = FM_STATUS_OK;
-    fm_regression_test_make_presentation_snapshot_(
-        &snapshot,
-        1234.5,
-        12.3,
-        FREQUENCY_OBSERVATION_QUALITY_VALID,
-        true,
-        FMC_MODEL_TIME_BASE_SECOND);
+    fm_regression_test_make_presentation_snapshot_(&snapshot, 1234.5, 12.3,
+                                                   FREQUENCY_OBSERVATION_QUALITY_VALID, true,
+                                                   FMC_MODEL_TIME_BASE_SECOND);
 
-    if ((FMC_PRESENTATION_Init(&presentation,
-                               &snapshot,
-                               fm_regression_test_presentation_sink_,
-                               &sink) != FM_STATUS_OK) ||
-        (FMC_PRESENTATION_Start(&presentation) != FM_STATUS_OK) ||
-        (FMC_PRESENTATION_Advance(&presentation,
-                                  &snapshot) != FM_STATUS_OK) ||
-        (FMC_PRESENTATION_Advance(&presentation,
-                                  &snapshot) != FM_STATUS_OK))
+    if ((FMC_UI_Init(&presentation, &snapshot, fm_regression_test_presentation_sink_, &sink) !=
+         FM_STATUS_OK) ||
+        (FMC_UI_Start(&presentation) != FM_STATUS_OK) ||
+        (FMC_UI_Advance(&presentation, &snapshot) != FM_STATUS_OK) ||
+        (FMC_UI_Advance(&presentation, &snapshot) != FM_STATUS_OK))
     {
         return false;
     }
 
     snapshot.ttl = 1.26;
     snapshot.rate.value = 0.0;
-    if ((FMC_PRESENTATION_Refresh(&presentation, &snapshot) !=
-         FM_STATUS_OK) ||
+    if ((FMC_UI_Refresh(&presentation, &snapshot) != FM_STATUS_OK) ||
         !fm_regression_test_text_eq_(sink.frame.top_text, "      1.3") ||
         !fm_regression_test_text_eq_(sink.frame.bottom_text, "     0.0") ||
-        sink.frame.ttl_overflow ||
-        sink.frame.rate_overflow ||
-        !sink.frame.indicator_second ||
-        sink.frame.indicator_minute)
+        sink.frame.volume_overflow || sink.frame.rate_overflow || !sink.frame.indicator_second ||
+        sink.frame.indicator_minute || sink.frame.indicator_hour || sink.frame.indicator_day)
     {
         return false;
     }
@@ -2562,41 +2527,31 @@ static bool fm_regression_test_presentation_values_(void)
     snapshot.ttl = 123456789.14;
     snapshot.rate.value = 9876543.26;
     snapshot.rate_time_base = FMC_MODEL_TIME_BASE_MINUTE;
-    if ((FMC_PRESENTATION_Refresh(&presentation, &snapshot) !=
-         FM_STATUS_OK) ||
+    if ((FMC_UI_Refresh(&presentation, &snapshot) != FM_STATUS_OK) ||
         !fm_regression_test_text_eq_(sink.frame.top_text, "3456789.1") ||
         !fm_regression_test_text_eq_(sink.frame.bottom_text, "876543.3") ||
-        !sink.frame.ttl_overflow ||
-        !sink.frame.rate_overflow ||
-        !sink.frame.indicator_ttl ||
-        !sink.frame.indicator_rate ||
-        !sink.frame.indicator_slash ||
-        sink.frame.indicator_second ||
-        !sink.frame.indicator_minute)
+        !sink.frame.volume_overflow || !sink.frame.rate_overflow || !sink.frame.indicator_ttl ||
+        !sink.frame.indicator_rate || !sink.frame.indicator_slash || sink.frame.indicator_second ||
+        !sink.frame.indicator_minute || sink.frame.indicator_hour || sink.frame.indicator_day)
     {
         return false;
     }
 
     snapshot.ttl = 15.0;
-    snapshot.rate.quality =
-        FREQUENCY_OBSERVATION_QUALITY_UNAVAILABLE;
-    snapshot.rate.value_present = false;
-    if ((FMC_PRESENTATION_Refresh(&presentation, &snapshot) !=
-         FM_STATUS_OK) ||
+    snapshot.rate.quality = FREQUENCY_OBSERVATION_QUALITY_UNAVAILABLE;
+    snapshot.rate.value_present = true;
+    if ((FMC_UI_Refresh(&presentation, &snapshot) != FM_STATUS_OK) ||
         !fm_regression_test_text_eq_(sink.frame.bottom_text, "-------") ||
-        !sink.frame.indicator_ttl ||
-        !sink.frame.indicator_rate ||
-        !sink.frame.indicator_slash ||
-        sink.frame.indicator_second ||
-        !sink.frame.indicator_minute)
+        !sink.frame.indicator_ttl || !sink.frame.indicator_rate || !sink.frame.indicator_slash ||
+        sink.frame.indicator_second || !sink.frame.indicator_minute || sink.frame.indicator_hour ||
+        sink.frame.indicator_day)
     {
         return false;
     }
 
     snapshot.rate.quality = FREQUENCY_OBSERVATION_QUALITY_STALE;
     snapshot.rate.value_present = true;
-    if ((FMC_PRESENTATION_Refresh(&presentation, &snapshot) !=
-         FM_STATUS_OK) ||
+    if ((FMC_UI_Refresh(&presentation, &snapshot) != FM_STATUS_OK) ||
         !fm_regression_test_text_eq_(sink.frame.bottom_text, "-------"))
     {
         return false;
@@ -2605,9 +2560,538 @@ static bool fm_regression_test_presentation_values_(void)
     snapshot.rate.quality = FREQUENCY_OBSERVATION_QUALITY_INVALID;
     snapshot.rate.value_present = false;
 
-    return (FMC_PRESENTATION_Refresh(&presentation, &snapshot) ==
-            FM_STATUS_OK) &&
+    return (FMC_UI_Refresh(&presentation, &snapshot) == FM_STATUS_OK) &&
            fm_regression_test_text_eq_(sink.frame.bottom_text, "-------");
+}
+
+/*
+ * Verifies the complete model-to-frame mapping for active volume units and
+ * RATE time bases. Each accepted time base must select exactly one indicator.
+ */
+static bool fm_regression_test_ui_units_time_bases_(void)
+{
+    static const fm_regression_ui_volume_unit_case_t volume_cases[] = {
+        {FMC_MODEL_VOLUME_UNIT_CUSTOM, "--"},
+        {FMC_MODEL_VOLUME_UNIT_L, "Lt"},
+        {FMC_MODEL_VOLUME_UNIT_M3, "M3"},
+        {FMC_MODEL_VOLUME_UNIT_GAL_US, "GL"},
+        {FMC_MODEL_VOLUME_UNIT_BBL_US, "BR"},
+        {FMC_MODEL_VOLUME_UNIT_KG, "KG"},
+        {FMC_MODEL_VOLUME_UNIT_EQUIV_M3, "MC"}};
+    static const fm_regression_ui_time_base_case_t time_base_cases[] = {
+        {FMC_MODEL_TIME_BASE_SECOND, true, false, false, false},
+        {FMC_MODEL_TIME_BASE_MINUTE, false, true, false, false},
+        {FMC_MODEL_TIME_BASE_HOUR, false, false, true, false},
+        {FMC_MODEL_TIME_BASE_DAY, false, false, false, true}};
+    fmc_ui_t ui;
+    fmc_ui_snapshot_t snapshot;
+    fm_regression_presentation_sink_t sink = {0};
+    uint8_t index;
+
+    sink.next_status = FM_STATUS_OK;
+    fm_regression_test_make_presentation_snapshot_(&snapshot, 12.3, 4.5,
+                                                   FREQUENCY_OBSERVATION_QUALITY_VALID, true,
+                                                   FMC_MODEL_TIME_BASE_SECOND);
+
+    if ((FMC_UI_Init(&ui, &snapshot, fm_regression_test_presentation_sink_, &sink) !=
+         FM_STATUS_OK) ||
+        (FMC_UI_Start(&ui) != FM_STATUS_OK) || (FMC_UI_Advance(&ui, &snapshot) != FM_STATUS_OK) ||
+        (FMC_UI_Advance(&ui, &snapshot) != FM_STATUS_OK))
+    {
+        return false;
+    }
+
+    for (index = 0U; index < (uint8_t)(sizeof(volume_cases) / sizeof(volume_cases[0])); index++)
+    {
+        snapshot.volume_unit = volume_cases[index].unit;
+        if ((FMC_UI_Refresh(&ui, &snapshot) != FM_STATUS_OK) ||
+            !fm_regression_test_text_eq_(sink.frame.alpha_text,
+                                         volume_cases[index].expected_legend) ||
+            !sink.frame.indicator_second || sink.frame.indicator_minute ||
+            sink.frame.indicator_hour || sink.frame.indicator_day)
+        {
+            return false;
+        }
+    }
+
+    snapshot.volume_unit = FMC_MODEL_VOLUME_UNIT_L;
+    for (index = 0U;
+         index < (uint8_t)(sizeof(time_base_cases) / sizeof(time_base_cases[0])); index++)
+    {
+        snapshot.rate_time_base = time_base_cases[index].time_base;
+        if ((FMC_UI_Refresh(&ui, &snapshot) != FM_STATUS_OK) ||
+            (sink.frame.indicator_second != time_base_cases[index].expected_second) ||
+            (sink.frame.indicator_minute != time_base_cases[index].expected_minute) ||
+            (sink.frame.indicator_hour != time_base_cases[index].expected_hour) ||
+            (sink.frame.indicator_day != time_base_cases[index].expected_day))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/*
+ * Covers every cell in the accepted Phase 8 startup and user-menu transition
+ * table, including bounded navigation, EXT_1 wrapping, requests, and no-ops.
+ */
+static bool fm_regression_test_ui_navigation_(void)
+{
+    static const fm_regression_ui_input_case_t cases[] = {
+        {FMC_UI_STATE_ALL_SEGMENTS, FMC_INPUT_KEY_DOWN, FMC_INPUT_ACTION_SHORT,
+         FMC_UI_STATE_ALL_SEGMENTS, FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_ALL_SEGMENTS, FMC_INPUT_KEY_UP, FMC_INPUT_ACTION_SHORT,
+         FMC_UI_STATE_ALL_SEGMENTS, FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_ALL_SEGMENTS, FMC_INPUT_KEY_ENTER, FMC_INPUT_ACTION_SHORT,
+         FMC_UI_STATE_ALL_SEGMENTS, FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_ALL_SEGMENTS, FMC_INPUT_KEY_ESC, FMC_INPUT_ACTION_SHORT,
+         FMC_UI_STATE_FIRMWARE_VERSION, FMC_UI_REQUEST_NONE, true},
+        {FMC_UI_STATE_ALL_SEGMENTS, FMC_INPUT_KEY_EXT_1, FMC_INPUT_ACTION_SHORT,
+         FMC_UI_STATE_ALL_SEGMENTS, FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_ALL_SEGMENTS, FMC_INPUT_KEY_EXT_2, FMC_INPUT_ACTION_SHORT,
+         FMC_UI_STATE_ALL_SEGMENTS, FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_ALL_SEGMENTS, FMC_INPUT_KEY_ENTER, FMC_INPUT_ACTION_LONG,
+         FMC_UI_STATE_ALL_SEGMENTS, FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_ALL_SEGMENTS, FMC_INPUT_KEY_ESC, FMC_INPUT_ACTION_LONG,
+         FMC_UI_STATE_ALL_SEGMENTS, FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_FIRMWARE_VERSION, FMC_INPUT_KEY_DOWN, FMC_INPUT_ACTION_SHORT,
+         FMC_UI_STATE_FIRMWARE_VERSION, FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_FIRMWARE_VERSION, FMC_INPUT_KEY_UP, FMC_INPUT_ACTION_SHORT,
+         FMC_UI_STATE_FIRMWARE_VERSION, FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_FIRMWARE_VERSION, FMC_INPUT_KEY_ENTER, FMC_INPUT_ACTION_SHORT,
+         FMC_UI_STATE_FIRMWARE_VERSION, FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_FIRMWARE_VERSION, FMC_INPUT_KEY_ESC, FMC_INPUT_ACTION_SHORT,
+         FMC_UI_STATE_TTL_RATE, FMC_UI_REQUEST_NONE, true},
+        {FMC_UI_STATE_FIRMWARE_VERSION, FMC_INPUT_KEY_EXT_1, FMC_INPUT_ACTION_SHORT,
+         FMC_UI_STATE_FIRMWARE_VERSION, FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_FIRMWARE_VERSION, FMC_INPUT_KEY_EXT_2, FMC_INPUT_ACTION_SHORT,
+         FMC_UI_STATE_FIRMWARE_VERSION, FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_FIRMWARE_VERSION, FMC_INPUT_KEY_ENTER, FMC_INPUT_ACTION_LONG,
+         FMC_UI_STATE_FIRMWARE_VERSION, FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_FIRMWARE_VERSION, FMC_INPUT_KEY_ESC, FMC_INPUT_ACTION_LONG,
+         FMC_UI_STATE_FIRMWARE_VERSION, FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_TTL_RATE, FMC_INPUT_KEY_DOWN, FMC_INPUT_ACTION_SHORT, FMC_UI_STATE_ACM_RATE,
+         FMC_UI_REQUEST_NONE, true},
+        {FMC_UI_STATE_TTL_RATE, FMC_INPUT_KEY_UP, FMC_INPUT_ACTION_SHORT, FMC_UI_STATE_TTL_RATE,
+         FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_TTL_RATE, FMC_INPUT_KEY_ENTER, FMC_INPUT_ACTION_SHORT, FMC_UI_STATE_TTL_RATE,
+         FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_TTL_RATE, FMC_INPUT_KEY_ESC, FMC_INPUT_ACTION_SHORT, FMC_UI_STATE_TTL_RATE,
+         FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_TTL_RATE, FMC_INPUT_KEY_EXT_1, FMC_INPUT_ACTION_SHORT, FMC_UI_STATE_ACM_RATE,
+         FMC_UI_REQUEST_NONE, true},
+        {FMC_UI_STATE_TTL_RATE, FMC_INPUT_KEY_EXT_2, FMC_INPUT_ACTION_SHORT, FMC_UI_STATE_TTL_RATE,
+         FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_TTL_RATE, FMC_INPUT_KEY_ENTER, FMC_INPUT_ACTION_LONG, FMC_UI_STATE_TTL_RATE,
+         FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_TTL_RATE, FMC_INPUT_KEY_ESC, FMC_INPUT_ACTION_LONG, FMC_UI_STATE_TTL_RATE,
+         FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_ACM_RATE, FMC_INPUT_KEY_DOWN, FMC_INPUT_ACTION_SHORT, FMC_UI_STATE_PRINT,
+         FMC_UI_REQUEST_NONE, true},
+        {FMC_UI_STATE_ACM_RATE, FMC_INPUT_KEY_UP, FMC_INPUT_ACTION_SHORT, FMC_UI_STATE_TTL_RATE,
+         FMC_UI_REQUEST_NONE, true},
+        {FMC_UI_STATE_ACM_RATE, FMC_INPUT_KEY_ENTER, FMC_INPUT_ACTION_SHORT, FMC_UI_STATE_ACM_RATE,
+         FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_ACM_RATE, FMC_INPUT_KEY_ESC, FMC_INPUT_ACTION_SHORT, FMC_UI_STATE_ACM_RATE,
+         FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_ACM_RATE, FMC_INPUT_KEY_EXT_1, FMC_INPUT_ACTION_SHORT, FMC_UI_STATE_PRINT,
+         FMC_UI_REQUEST_NONE, true},
+        {FMC_UI_STATE_ACM_RATE, FMC_INPUT_KEY_EXT_2, FMC_INPUT_ACTION_SHORT, FMC_UI_STATE_ACM_RATE,
+         FMC_UI_REQUEST_RESET_ACM, false},
+        {FMC_UI_STATE_ACM_RATE, FMC_INPUT_KEY_ENTER, FMC_INPUT_ACTION_LONG, FMC_UI_STATE_ACM_RATE,
+         FMC_UI_REQUEST_RESET_ACM, false},
+        {FMC_UI_STATE_ACM_RATE, FMC_INPUT_KEY_ESC, FMC_INPUT_ACTION_LONG, FMC_UI_STATE_ACM_RATE,
+         FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_PRINT, FMC_INPUT_KEY_DOWN, FMC_INPUT_ACTION_SHORT, FMC_UI_STATE_LOG_DOWNLOAD,
+         FMC_UI_REQUEST_NONE, true},
+        {FMC_UI_STATE_PRINT, FMC_INPUT_KEY_UP, FMC_INPUT_ACTION_SHORT, FMC_UI_STATE_ACM_RATE,
+         FMC_UI_REQUEST_NONE, true},
+        {FMC_UI_STATE_PRINT, FMC_INPUT_KEY_ENTER, FMC_INPUT_ACTION_SHORT, FMC_UI_STATE_PRINT,
+         FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_PRINT, FMC_INPUT_KEY_ESC, FMC_INPUT_ACTION_SHORT, FMC_UI_STATE_PRINT,
+         FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_PRINT, FMC_INPUT_KEY_EXT_1, FMC_INPUT_ACTION_SHORT, FMC_UI_STATE_LOG_DOWNLOAD,
+         FMC_UI_REQUEST_NONE, true},
+        {FMC_UI_STATE_PRINT, FMC_INPUT_KEY_EXT_2, FMC_INPUT_ACTION_SHORT, FMC_UI_STATE_PRINT,
+         FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_PRINT, FMC_INPUT_KEY_ENTER, FMC_INPUT_ACTION_LONG, FMC_UI_STATE_PRINT,
+         FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_PRINT, FMC_INPUT_KEY_ESC, FMC_INPUT_ACTION_LONG, FMC_UI_STATE_PRINT,
+         FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_LOG_DOWNLOAD, FMC_INPUT_KEY_DOWN, FMC_INPUT_ACTION_SHORT,
+         FMC_UI_STATE_DATE_TIME, FMC_UI_REQUEST_NONE, true},
+        {FMC_UI_STATE_LOG_DOWNLOAD, FMC_INPUT_KEY_UP, FMC_INPUT_ACTION_SHORT, FMC_UI_STATE_PRINT,
+         FMC_UI_REQUEST_NONE, true},
+        {FMC_UI_STATE_LOG_DOWNLOAD, FMC_INPUT_KEY_ENTER, FMC_INPUT_ACTION_SHORT,
+         FMC_UI_STATE_LOG_DOWNLOAD, FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_LOG_DOWNLOAD, FMC_INPUT_KEY_ESC, FMC_INPUT_ACTION_SHORT,
+         FMC_UI_STATE_LOG_DOWNLOAD, FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_LOG_DOWNLOAD, FMC_INPUT_KEY_EXT_1, FMC_INPUT_ACTION_SHORT,
+         FMC_UI_STATE_DATE_TIME, FMC_UI_REQUEST_NONE, true},
+        {FMC_UI_STATE_LOG_DOWNLOAD, FMC_INPUT_KEY_EXT_2, FMC_INPUT_ACTION_SHORT,
+         FMC_UI_STATE_LOG_DOWNLOAD, FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_LOG_DOWNLOAD, FMC_INPUT_KEY_ENTER, FMC_INPUT_ACTION_LONG,
+         FMC_UI_STATE_LOG_DOWNLOAD, FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_LOG_DOWNLOAD, FMC_INPUT_KEY_ESC, FMC_INPUT_ACTION_LONG,
+         FMC_UI_STATE_LOG_DOWNLOAD, FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_DATE_TIME, FMC_INPUT_KEY_DOWN, FMC_INPUT_ACTION_SHORT, FMC_UI_STATE_DATE_TIME,
+         FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_DATE_TIME, FMC_INPUT_KEY_UP, FMC_INPUT_ACTION_SHORT,
+         FMC_UI_STATE_LOG_DOWNLOAD, FMC_UI_REQUEST_NONE, true},
+        {FMC_UI_STATE_DATE_TIME, FMC_INPUT_KEY_ENTER, FMC_INPUT_ACTION_SHORT,
+         FMC_UI_STATE_DATE_TIME, FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_DATE_TIME, FMC_INPUT_KEY_ESC, FMC_INPUT_ACTION_SHORT, FMC_UI_STATE_DATE_TIME,
+         FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_DATE_TIME, FMC_INPUT_KEY_EXT_1, FMC_INPUT_ACTION_SHORT, FMC_UI_STATE_TTL_RATE,
+         FMC_UI_REQUEST_NONE, true},
+        {FMC_UI_STATE_DATE_TIME, FMC_INPUT_KEY_EXT_2, FMC_INPUT_ACTION_SHORT,
+         FMC_UI_STATE_DATE_TIME, FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_DATE_TIME, FMC_INPUT_KEY_ENTER, FMC_INPUT_ACTION_LONG, FMC_UI_STATE_DATE_TIME,
+         FMC_UI_REQUEST_NONE, false},
+        {FMC_UI_STATE_DATE_TIME, FMC_INPUT_KEY_ESC, FMC_INPUT_ACTION_LONG, FMC_UI_STATE_DATE_TIME,
+         FMC_UI_REQUEST_NONE, false}};
+    fmc_ui_snapshot_t snapshot;
+    uint8_t index;
+
+    fm_regression_test_make_presentation_snapshot_(&snapshot, 12.3, 4.5,
+                                                   FREQUENCY_OBSERVATION_QUALITY_VALID, true,
+                                                   FMC_MODEL_TIME_BASE_SECOND);
+
+    for (index = 0U; index < (uint8_t)(sizeof(cases) / sizeof(cases[0])); index++)
+    {
+        fm_regression_presentation_sink_t sink = {0};
+        fmc_ui_request_t request;
+        fmc_input_event_t input;
+        fmc_ui_t ui;
+
+        sink.next_status = FM_STATUS_OK;
+        if (FMC_UI_Init(&ui, &snapshot, fm_regression_test_presentation_sink_, &sink) !=
+            FM_STATUS_OK)
+        {
+            return false;
+        }
+
+        ui.state = cases[index].initial_state;
+        input.key = cases[index].key;
+        input.action = cases[index].action;
+        request.kind = FMC_UI_REQUEST_COUNT;
+
+        if ((FMC_UI_HandleInput(&ui, &input, &snapshot, &request) != FM_STATUS_OK) ||
+            (FMC_UI_GetState(&ui) != cases[index].expected_state) ||
+            (request.kind != cases[index].expected_request) ||
+            (sink.call_count != (cases[index].expects_presentation ? 1U : 0U)))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/*
+ * Verifies live ACM composition, inert placeholder frames, immediate entry,
+ * periodic refresh, EXT_1 wrapping, and user-menu POINT observation rules.
+ */
+static bool fm_regression_test_ui_placeholders_point_(void)
+{
+    static const fmc_ui_state_t point_states[] = {
+        FMC_UI_STATE_TTL_RATE,
+        FMC_UI_STATE_ACM_RATE,
+        FMC_UI_STATE_PRINT,
+        FMC_UI_STATE_LOG_DOWNLOAD,
+        FMC_UI_STATE_DATE_TIME};
+    fmc_ui_t ui;
+    fmc_ui_snapshot_t snapshot;
+    fmc_ui_snapshot_t irrelevant_snapshot;
+    fm_regression_presentation_sink_t sink = {0};
+    fmc_ui_request_t request;
+    fmc_input_event_t input;
+    uint32_t calls_before;
+    uint8_t index;
+
+    sink.next_status = FM_STATUS_OK;
+    fm_regression_test_make_presentation_snapshot_(&snapshot, 1234.5, 12.3,
+                                                   FREQUENCY_OBSERVATION_QUALITY_VALID, true,
+                                                   FMC_MODEL_TIME_BASE_SECOND);
+    snapshot.acm = 45.6;
+
+    if ((FMC_UI_Init(&ui, &snapshot, fm_regression_test_presentation_sink_, &sink) !=
+         FM_STATUS_OK) ||
+        (FMC_UI_ObservePulseDelta(&ui, 1U) != FM_STATUS_OK) ||
+        (FMC_UI_Start(&ui) != FM_STATUS_OK) || (FMC_UI_Advance(&ui, &snapshot) != FM_STATUS_OK) ||
+        (FMC_UI_Advance(&ui, &snapshot) != FM_STATUS_OK) || sink.frame.indicator_point)
+    {
+        return false;
+    }
+
+    input.key = FMC_INPUT_KEY_DOWN;
+    input.action = FMC_INPUT_ACTION_SHORT;
+    if ((FMC_UI_HandleInput(&ui, &input, &snapshot, &request) != FM_STATUS_OK) ||
+        (FMC_UI_GetState(&ui) != FMC_UI_STATE_ACM_RATE) ||
+        !fm_regression_test_text_eq_(sink.frame.top_text, "     45.6") ||
+        !fm_regression_test_text_eq_(sink.frame.bottom_text, "    12.3") ||
+        !fm_regression_test_text_eq_(sink.frame.alpha_text, "Lt") ||
+        !sink.frame.indicator_acm_top || sink.frame.indicator_acm_bottom ||
+        sink.frame.indicator_ttl || !sink.frame.indicator_rate || !sink.frame.indicator_slash ||
+        !sink.frame.indicator_second || sink.frame.indicator_minute || sink.frame.indicator_hour ||
+        sink.frame.indicator_day || sink.frame.indicator_point)
+    {
+        return false;
+    }
+
+    calls_before = sink.call_count;
+    if ((FMC_UI_ObservePulseDelta(&ui, 7U) != FM_STATUS_OK) || (sink.call_count != calls_before) ||
+        (FMC_UI_Refresh(&ui, &snapshot) != FM_STATUS_OK) || !sink.frame.indicator_point)
+    {
+        return false;
+    }
+
+    input.key = FMC_INPUT_KEY_DOWN;
+    if ((FMC_UI_HandleInput(&ui, &input, &snapshot, &request) != FM_STATUS_OK) ||
+        (FMC_UI_GetState(&ui) != FMC_UI_STATE_PRINT) ||
+        !fm_regression_test_text_eq_(sink.frame.top_text, "") ||
+        !fm_regression_test_text_eq_(sink.frame.bottom_text, "    OFF") ||
+        !fm_regression_test_text_eq_(sink.frame.alpha_text, "PR") || !sink.frame.indicator_point ||
+        sink.frame.indicator_acm_top || sink.frame.indicator_acm_bottom ||
+        sink.frame.indicator_ttl || sink.frame.indicator_rate || sink.frame.indicator_slash ||
+        sink.frame.indicator_second || sink.frame.indicator_minute || sink.frame.indicator_hour ||
+        sink.frame.indicator_day)
+    {
+        return false;
+    }
+
+    irrelevant_snapshot = snapshot;
+    irrelevant_snapshot.acm = -1.0;
+    irrelevant_snapshot.ttl = -1.0;
+    irrelevant_snapshot.rate.quality = (frequency_observation_quality_t)UINT8_MAX;
+    irrelevant_snapshot.volume_unit = (fmc_model_volume_unit_t)UINT8_MAX;
+    irrelevant_snapshot.rate_time_base = (fmc_model_time_base_t)UINT8_MAX;
+    irrelevant_snapshot.volume_fractional_digits = UINT8_MAX;
+    irrelevant_snapshot.rate_fractional_digits = UINT8_MAX;
+    calls_before = sink.call_count;
+    if ((FMC_UI_Refresh(&ui, &irrelevant_snapshot) != FM_STATUS_OK) ||
+        (sink.call_count != (calls_before + 1U)) ||
+        !fm_regression_test_text_eq_(sink.frame.alpha_text, "PR") ||
+        !fm_regression_test_text_eq_(sink.frame.bottom_text, "    OFF"))
+    {
+        return false;
+    }
+
+    input.key = FMC_INPUT_KEY_EXT_1;
+    if ((FMC_UI_HandleInput(&ui, &input, &snapshot, &request) != FM_STATUS_OK) ||
+        (FMC_UI_GetState(&ui) != FMC_UI_STATE_LOG_DOWNLOAD) ||
+        !fm_regression_test_text_eq_(sink.frame.bottom_text, "    OFF") ||
+        !fm_regression_test_text_eq_(sink.frame.alpha_text, "LD") || !sink.frame.indicator_point ||
+        (FMC_UI_HandleInput(&ui, &input, &snapshot, &request) != FM_STATUS_OK) ||
+        (FMC_UI_GetState(&ui) != FMC_UI_STATE_DATE_TIME) ||
+        !fm_regression_test_text_eq_(sink.frame.bottom_text, "    OFF") ||
+        !fm_regression_test_text_eq_(sink.frame.alpha_text, "DT") || !sink.frame.indicator_point)
+    {
+        return false;
+    }
+
+    calls_before = sink.call_count;
+    if ((FMC_UI_ObservePulseDelta(&ui, 1U) != FM_STATUS_OK) || (sink.call_count != calls_before) ||
+        (FMC_UI_Refresh(&ui, &snapshot) != FM_STATUS_OK) || sink.frame.indicator_point ||
+        (FMC_UI_ObservePulseDelta(&ui, 0U) != FM_STATUS_OK) ||
+        (FMC_UI_Refresh(&ui, &snapshot) != FM_STATUS_OK) || sink.frame.indicator_point ||
+        (FMC_UI_HandleInput(&ui, &input, &snapshot, &request) != FM_STATUS_OK) ||
+        (FMC_UI_GetState(&ui) != FMC_UI_STATE_TTL_RATE) || sink.frame.indicator_point)
+    {
+        return false;
+    }
+
+    /* Exercise each accepted pulse-observation consequence on every user view. */
+    for (index = 0U;
+         index < (uint8_t)(sizeof(point_states) / sizeof(point_states[0]));
+         index++)
+    {
+        ui.state = point_states[index];
+        ui.point_on = true;
+        calls_before = sink.call_count;
+
+        if ((FMC_UI_ObservePulseDelta(&ui, 0U) != FM_STATUS_OK) ||
+            (sink.call_count != calls_before) ||
+            (FMC_UI_Refresh(&ui, &snapshot) != FM_STATUS_OK) ||
+            sink.frame.indicator_point)
+        {
+            return false;
+        }
+
+        calls_before = sink.call_count;
+        if ((FMC_UI_ObservePulseDelta(&ui, 1U) != FM_STATUS_OK) ||
+            (sink.call_count != calls_before) ||
+            (FMC_UI_Refresh(&ui, &snapshot) != FM_STATUS_OK) ||
+            !sink.frame.indicator_point)
+        {
+            return false;
+        }
+
+        calls_before = sink.call_count;
+        if ((FMC_UI_ObservePulseDelta(&ui, UINT64_MAX) != FM_STATUS_OK) ||
+            (sink.call_count != calls_before) ||
+            (FMC_UI_Refresh(&ui, &snapshot) != FM_STATUS_OK) ||
+            sink.frame.indicator_point)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/*
+ * Verifies invalid arguments, request initialization, invalid semantic input,
+ * invalid state, and failed navigation without state or snapshot commitment.
+ */
+static bool fm_regression_test_ui_requests_invalid_(void)
+{
+    fmc_ui_t ui;
+    fmc_ui_t startup_ui;
+    fmc_ui_snapshot_t snapshot;
+    fmc_ui_snapshot_t invalid_snapshot;
+    fm_regression_presentation_sink_t sink = {0};
+    fm_regression_presentation_sink_t startup_sink = {0};
+    fmc_ui_request_t request;
+    fmc_input_event_t input;
+    uint32_t calls_before;
+
+    sink.next_status = FM_STATUS_OK;
+    startup_sink.next_status = FM_STATUS_OK;
+    fm_regression_test_make_presentation_snapshot_(&snapshot, 10.0, 2.0,
+                                                   FREQUENCY_OBSERVATION_QUALITY_VALID, true,
+                                                   FMC_MODEL_TIME_BASE_SECOND);
+    invalid_snapshot = snapshot;
+    invalid_snapshot.ttl = -1.0;
+    invalid_snapshot.volume_unit = (fmc_model_volume_unit_t)UINT8_MAX;
+    invalid_snapshot.rate_time_base = (fmc_model_time_base_t)UINT8_MAX;
+    invalid_snapshot.volume_fractional_digits = UINT8_MAX;
+    invalid_snapshot.rate_fractional_digits = UINT8_MAX;
+    input.key = FMC_INPUT_KEY_DOWN;
+    input.action = FMC_INPUT_ACTION_SHORT;
+
+    if ((FMC_UI_Init(&startup_ui, &invalid_snapshot, fm_regression_test_presentation_sink_,
+                     &startup_sink) != FM_STATUS_OK) ||
+        (FMC_UI_Start(&startup_ui) != FM_STATUS_OK) ||
+        (FMC_UI_Advance(&startup_ui, &invalid_snapshot) != FM_STATUS_OK) ||
+        (FMC_UI_Advance(&startup_ui, &invalid_snapshot) != FM_STATUS_EINVAL) ||
+        (FMC_UI_GetState(&startup_ui) != FMC_UI_STATE_FIRMWARE_VERSION) ||
+        (startup_sink.call_count != 2U) ||
+        (FMC_UI_Init(&ui, &snapshot, fm_regression_test_presentation_sink_, &sink) !=
+         FM_STATUS_OK) ||
+        (FMC_UI_Init(&ui, NULL, fm_regression_test_presentation_sink_, &sink) !=
+         FM_STATUS_EINVAL) ||
+        (FMC_UI_GetState(NULL) != FMC_UI_STATE_NOT_STARTED) ||
+        (FMC_UI_ObservePulseDelta(NULL, 1U) != FM_STATUS_EINVAL) ||
+        (FMC_UI_HandleInput(&ui, &input, &snapshot, NULL) != FM_STATUS_EINVAL))
+    {
+        return false;
+    }
+
+    request.kind = FMC_UI_REQUEST_COUNT;
+    if ((FMC_UI_HandleInput(NULL, &input, &snapshot, &request) != FM_STATUS_EINVAL) ||
+        (request.kind != FMC_UI_REQUEST_NONE))
+    {
+        return false;
+    }
+
+    request.kind = FMC_UI_REQUEST_COUNT;
+    if ((FMC_UI_HandleInput(&ui, NULL, &snapshot, &request) != FM_STATUS_EINVAL) ||
+        (request.kind != FMC_UI_REQUEST_NONE))
+    {
+        return false;
+    }
+
+    input.key = FMC_INPUT_KEY_COUNT;
+    if (FMC_UI_HandleInput(&ui, &input, &snapshot, &request) != FM_STATUS_EINVAL)
+    {
+        return false;
+    }
+
+    input.key = FMC_INPUT_KEY_DOWN;
+    input.action = FMC_INPUT_ACTION_COUNT;
+    if (FMC_UI_HandleInput(&ui, &input, &snapshot, &request) != FM_STATUS_EINVAL)
+    {
+        return false;
+    }
+
+    input.key = FMC_INPUT_KEY_EXT_1;
+    input.action = FMC_INPUT_ACTION_LONG;
+    if (FMC_UI_HandleInput(&ui, &input, &snapshot, &request) != FM_STATUS_EINVAL)
+    {
+        return false;
+    }
+
+    input.key = FMC_INPUT_KEY_DOWN;
+    input.action = FMC_INPUT_ACTION_SHORT;
+    if ((FMC_UI_HandleInput(&ui, &input, &snapshot, &request) != FM_STATUS_ESTATE) ||
+        (FMC_UI_Start(&ui) != FM_STATUS_OK) ||
+        (FMC_UI_Refresh(&ui, &snapshot) != FM_STATUS_ESTATE) ||
+        (FMC_UI_Advance(&ui, &snapshot) != FM_STATUS_OK) ||
+        (FMC_UI_Advance(&ui, &snapshot) != FM_STATUS_OK))
+    {
+        return false;
+    }
+
+    calls_before = sink.call_count;
+    invalid_snapshot = snapshot;
+    invalid_snapshot.ttl = -1.0;
+    if ((FMC_UI_Refresh(&ui, &invalid_snapshot) != FM_STATUS_EINVAL) ||
+        (sink.call_count != calls_before) || (FMC_UI_GetState(&ui) != FMC_UI_STATE_TTL_RATE))
+    {
+        return false;
+    }
+
+    invalid_snapshot = snapshot;
+    invalid_snapshot.volume_unit = (fmc_model_volume_unit_t)UINT8_MAX;
+    if ((FMC_UI_Refresh(&ui, &invalid_snapshot) != FM_STATUS_EINVAL) ||
+        (sink.call_count != calls_before))
+    {
+        return false;
+    }
+
+    invalid_snapshot = snapshot;
+    invalid_snapshot.rate_time_base = (fmc_model_time_base_t)UINT8_MAX;
+    if ((FMC_UI_Refresh(&ui, &invalid_snapshot) != FM_STATUS_EINVAL) ||
+        (sink.call_count != calls_before))
+    {
+        return false;
+    }
+
+    invalid_snapshot = snapshot;
+    invalid_snapshot.rate.quality = (frequency_observation_quality_t)UINT8_MAX;
+    if ((FMC_UI_Refresh(&ui, &invalid_snapshot) != FM_STATUS_EINVAL) ||
+        (sink.call_count != calls_before))
+    {
+        return false;
+    }
+
+    invalid_snapshot = snapshot;
+    invalid_snapshot.volume_fractional_digits = 2U;
+    if ((FMC_UI_Refresh(&ui, &invalid_snapshot) != FM_STATUS_EINVAL) ||
+        (sink.call_count != calls_before))
+    {
+        return false;
+    }
+
+    sink.next_status = FM_STATUS_ESTATE;
+    snapshot.ttl = 99.0;
+    if ((FMC_UI_HandleInput(&ui, &input, &snapshot, &request) != FM_STATUS_ESTATE) ||
+        (FMC_UI_GetState(&ui) != FMC_UI_STATE_TTL_RATE) || (ui.snapshot.ttl == snapshot.ttl) ||
+        (request.kind != FMC_UI_REQUEST_NONE))
+    {
+        return false;
+    }
+
+    ui.state = FMC_UI_STATE_COUNT;
+    if ((FMC_UI_HandleInput(&ui, &input, &snapshot, &request) != FM_STATUS_ESTATE) ||
+        (FMC_UI_ObservePulseDelta(&ui, 1U) != FM_STATUS_ESTATE))
+    {
+        return false;
+    }
+
+    return true;
 }
 
 /*
@@ -2616,8 +3100,8 @@ static bool fm_regression_test_presentation_values_(void)
  */
 static bool fm_regression_test_presentation_failure_(void)
 {
-    fmc_presentation_t presentation;
-    fmc_presentation_snapshot_t snapshot;
+    fmc_ui_t presentation;
+    fmc_ui_snapshot_t snapshot;
     fm_regression_presentation_sink_t sink = {0};
     fmc_runtime_event_t event;
     fmc_runtime_t runtime;
@@ -2631,47 +3115,46 @@ static bool fm_regression_test_presentation_failure_(void)
         true,
         FMC_MODEL_TIME_BASE_SECOND);
 
-    if ((FMC_PRESENTATION_Init(&presentation,
+    if ((FMC_UI_Init(&presentation,
                                &snapshot,
                                fm_regression_test_presentation_sink_,
                                &sink) != FM_STATUS_OK) ||
-        (FMC_PRESENTATION_Start(&presentation) != FM_STATUS_ESTATE) ||
-        (FMC_PRESENTATION_GetState(&presentation) !=
-         FMC_PRESENTATION_STATE_NOT_STARTED))
+        (FMC_UI_Start(&presentation) != FM_STATUS_ESTATE) ||
+        (FMC_UI_GetState(&presentation) !=
+         FMC_UI_STATE_NOT_STARTED))
     {
         return false;
     }
 
     sink.next_status = FM_STATUS_OK;
-    if ((FMC_PRESENTATION_Start(&presentation) != FM_STATUS_OK) ||
-        (FMC_PRESENTATION_GetState(&presentation) !=
-         FMC_PRESENTATION_STATE_ALL_SEGMENTS))
+    if ((FMC_UI_Start(&presentation) != FM_STATUS_OK) ||
+        (FMC_UI_GetState(&presentation) !=
+         FMC_UI_STATE_ALL_SEGMENTS))
     {
         return false;
     }
 
     sink.next_status = FM_STATUS_ESTATE;
-    if ((FMC_PRESENTATION_Advance(&presentation,
+    if ((FMC_UI_Advance(&presentation,
                                   &snapshot) != FM_STATUS_ESTATE) ||
-        (FMC_PRESENTATION_GetState(&presentation) !=
-         FMC_PRESENTATION_STATE_ALL_SEGMENTS))
+        (FMC_UI_GetState(&presentation) !=
+         FMC_UI_STATE_ALL_SEGMENTS))
     {
         return false;
     }
 
     sink.next_status = FM_STATUS_OK;
-    if ((FMC_PRESENTATION_Advance(&presentation,
+    if ((FMC_UI_Advance(&presentation,
                                   &snapshot) != FM_STATUS_OK) ||
-        (FMC_PRESENTATION_GetState(&presentation) !=
-         FMC_PRESENTATION_STATE_FIRMWARE_VERSION))
+        (FMC_UI_GetState(&presentation) !=
+         FMC_UI_STATE_FIRMWARE_VERSION))
     {
         return false;
     }
 
-    snapshot.rate.quality =
-        FREQUENCY_OBSERVATION_QUALITY_UNAVAILABLE;
-    snapshot.rate.value_present = true;
-    if (FMC_PRESENTATION_Advance(&presentation,
+    snapshot.rate.quality = FREQUENCY_OBSERVATION_QUALITY_VALID;
+    snapshot.rate.value_present = false;
+    if (FMC_UI_Advance(&presentation,
                                  &snapshot) != FM_STATUS_EINVAL)
     {
         return false;
@@ -2679,7 +3162,7 @@ static bool fm_regression_test_presentation_failure_(void)
 
     snapshot.rate.value_present = false;
     snapshot.rate.quality = (frequency_observation_quality_t) 99;
-    if (FMC_PRESENTATION_Advance(&presentation,
+    if (FMC_UI_Advance(&presentation,
                                  &snapshot) != FM_STATUS_EINVAL)
     {
         return false;
@@ -2696,7 +3179,7 @@ static bool fm_regression_test_presentation_failure_(void)
         FREQUENCY_OBSERVATION_QUALITY_VALID,
         true,
         FMC_MODEL_TIME_BASE_SECOND);
-    if (FMC_PRESENTATION_Advance(&presentation,
+    if (FMC_UI_Advance(&presentation,
                                  &snapshot) != FM_STATUS_OK)
     {
         return false;
@@ -2712,7 +3195,7 @@ static bool fm_regression_test_presentation_failure_(void)
     }
 
     sink.next_status = FM_STATUS_ESTATE;
-    if ((FMC_PRESENTATION_Refresh(&presentation, &snapshot) !=
+    if ((FMC_UI_Refresh(&presentation, &snapshot) !=
          FM_STATUS_ESTATE) ||
         !FMC_RUNTIME_PresentationUpdateIsPending(&runtime))
     {
@@ -2721,7 +3204,7 @@ static bool fm_regression_test_presentation_failure_(void)
 
     sink.next_status = FM_STATUS_OK;
 
-    return (FMC_PRESENTATION_Refresh(&presentation, &snapshot) ==
+    return (FMC_UI_Refresh(&presentation, &snapshot) ==
             FM_STATUS_OK) &&
            FMC_RUNTIME_PresentationUpdateIsPending(&runtime) &&
            (FMC_RUNTIME_ClearPresentationUpdatePending(&runtime) ==
@@ -2740,7 +3223,9 @@ static bool fm_regression_test_keyboard_mapping_(void)
         { KEY_DOWN_Pin, FM_BOARD_KEYBOARD_KEY_DOWN },
         { KEY_UP_Pin, FM_BOARD_KEYBOARD_KEY_UP },
         { KEY_ENTER_Pin, FM_BOARD_KEYBOARD_KEY_ENTER },
-        { KEY_ESC_Pin, FM_BOARD_KEYBOARD_KEY_ESC }
+        { KEY_ESC_Pin, FM_BOARD_KEYBOARD_KEY_ESC },
+        { EXT_BUTTON_1_Pin, FM_BOARD_KEYBOARD_KEY_EXT_1 },
+        { EXT_BUTTON_2_Pin, FM_BOARD_KEYBOARD_KEY_EXT_2 }
     };
     fm_board_keyboard_key_t key;
     uint8_t index;
@@ -2765,8 +3250,7 @@ static bool fm_regression_test_keyboard_mapping_(void)
 }
 
 /*
- * Verifies the product app adapter from board keyboard identity to provisional
- * runtime SHORT input events.
+ * Verifies direct board-key translation into semantic product input.
  */
 static bool fm_regression_test_main_input_adapter_(void)
 {
@@ -2775,85 +3259,86 @@ static bool fm_regression_test_main_input_adapter_(void)
         { FM_BOARD_KEYBOARD_KEY_DOWN, FMC_INPUT_KEY_DOWN },
         { FM_BOARD_KEYBOARD_KEY_UP, FMC_INPUT_KEY_UP },
         { FM_BOARD_KEYBOARD_KEY_ENTER, FMC_INPUT_KEY_ENTER },
-        { FM_BOARD_KEYBOARD_KEY_ESC, FMC_INPUT_KEY_ESC }
+        { FM_BOARD_KEYBOARD_KEY_ESC, FMC_INPUT_KEY_ESC },
+        { FM_BOARD_KEYBOARD_KEY_EXT_1, FMC_INPUT_KEY_EXT_1 },
+        { FM_BOARD_KEYBOARD_KEY_EXT_2, FMC_INPUT_KEY_EXT_2 }
     };
-    fmc_runtime_event_t event;
+    fmc_input_event_t input;
     uint8_t index;
 
     for (index = 0U;
          index < (uint8_t) (sizeof(cases) / sizeof(cases[0]));
          index++)
     {
-        event.kind = FMC_RUNTIME_EVENT_NONE;
-        event.data.input.key = FMC_INPUT_KEY_COUNT;
-        event.data.input.action = FMC_INPUT_ACTION_COUNT;
+        input.key = FMC_INPUT_KEY_COUNT;
+        input.action = FMC_INPUT_ACTION_COUNT;
 
-        if (!FM_MAIN_INPUT_ADAPTER_ShortEventFromBoardKey(
+        if (!FM_MAIN_INPUT_ADAPTER_ShortInputFromBoardKey(
                 cases[index].board_key,
-                &event) ||
-            (event.kind != FMC_RUNTIME_EVENT_INPUT) ||
-            (event.data.input.key != cases[index].expected_input_key) ||
-            (event.data.input.action != FMC_INPUT_ACTION_SHORT))
+                &input) ||
+            (input.key != cases[index].expected_input_key) ||
+            (input.action != FMC_INPUT_ACTION_SHORT))
         {
             return false;
         }
     }
 
-    event.kind = FMC_RUNTIME_EVENT_NONE;
-    event.data.input.key = FMC_INPUT_KEY_DOWN;
-    event.data.input.action = FMC_INPUT_ACTION_SHORT;
+    input.key = FMC_INPUT_KEY_DOWN;
+    input.action = FMC_INPUT_ACTION_SHORT;
 
-    if (FM_MAIN_INPUT_ADAPTER_ShortEventFromBoardKey(
+    if (FM_MAIN_INPUT_ADAPTER_ShortInputFromBoardKey(
             FM_BOARD_KEYBOARD_KEY_COUNT,
-            &event) ||
-        (event.kind != FMC_RUNTIME_EVENT_NONE) ||
-        (event.data.input.key != FMC_INPUT_KEY_DOWN) ||
-        (event.data.input.action != FMC_INPUT_ACTION_SHORT))
+            &input) ||
+        (input.key != FMC_INPUT_KEY_DOWN) ||
+        (input.action != FMC_INPUT_ACTION_SHORT))
     {
         return false;
     }
 
-    if (FM_MAIN_INPUT_ADAPTER_ShortEventFromBoardKey(
+    if (FM_MAIN_INPUT_ADAPTER_ShortInputFromBoardKey(
             (fm_board_keyboard_key_t) -1,
-            &event) ||
-        (event.kind != FMC_RUNTIME_EVENT_NONE) ||
-        (event.data.input.key != FMC_INPUT_KEY_DOWN) ||
-        (event.data.input.action != FMC_INPUT_ACTION_SHORT))
+            &input) ||
+        (input.key != FMC_INPUT_KEY_DOWN) ||
+        (input.action != FMC_INPUT_ACTION_SHORT))
     {
         return false;
     }
 
-    event.kind = FMC_RUNTIME_EVENT_NONE;
-    event.data.input.key = FMC_INPUT_KEY_COUNT;
-    event.data.input.action = FMC_INPUT_ACTION_COUNT;
+    input.key = FMC_INPUT_KEY_COUNT;
+    input.action = FMC_INPUT_ACTION_COUNT;
 
-    if (!FM_MAIN_INPUT_ADAPTER_EventFromBoardKey(
+    if (!FM_MAIN_INPUT_ADAPTER_InputFromBoardKey(
             FM_BOARD_KEYBOARD_KEY_ESC,
             FMC_INPUT_ACTION_LONG,
-            &event) ||
-        (event.kind != FMC_RUNTIME_EVENT_INPUT) ||
-        (event.data.input.key != FMC_INPUT_KEY_ESC) ||
-        (event.data.input.action != FMC_INPUT_ACTION_LONG))
+            &input) ||
+        (input.key != FMC_INPUT_KEY_ESC) ||
+        (input.action != FMC_INPUT_ACTION_LONG))
     {
         return false;
     }
 
-    event.kind = FMC_RUNTIME_EVENT_NONE;
-    event.data.input.key = FMC_INPUT_KEY_ESC;
-    event.data.input.action = FMC_INPUT_ACTION_LONG;
+    input.key = FMC_INPUT_KEY_ESC;
+    input.action = FMC_INPUT_ACTION_LONG;
 
-    if (FM_MAIN_INPUT_ADAPTER_EventFromBoardKey(
+    if (FM_MAIN_INPUT_ADAPTER_InputFromBoardKey(
             FM_BOARD_KEYBOARD_KEY_ESC,
             FMC_INPUT_ACTION_COUNT,
-            &event) ||
-        (event.kind != FMC_RUNTIME_EVENT_NONE) ||
-        (event.data.input.key != FMC_INPUT_KEY_ESC) ||
-        (event.data.input.action != FMC_INPUT_ACTION_LONG))
+            &input) ||
+        (input.key != FMC_INPUT_KEY_ESC) ||
+        (input.action != FMC_INPUT_ACTION_LONG))
     {
         return false;
     }
 
-    return !FM_MAIN_INPUT_ADAPTER_ShortEventFromBoardKey(
+    if (FM_MAIN_INPUT_ADAPTER_InputFromBoardKey(
+            FM_BOARD_KEYBOARD_KEY_EXT_1,
+            FMC_INPUT_ACTION_LONG,
+            &input))
+    {
+        return false;
+    }
+
+    return !FM_MAIN_INPUT_ADAPTER_ShortInputFromBoardKey(
         FM_BOARD_KEYBOARD_KEY_DOWN,
         NULL);
 }
@@ -2861,8 +3346,8 @@ static bool fm_regression_test_main_input_adapter_(void)
 /*
  * Verifies the product/main mechanical-key recognizer contract.
  *
- * RISING starts the hold, timeout emits one LONG, and FALLING emits SHORT only
- * when the hold did not already emit LONG.
+ * PRESSED starts the hold, timeout emits one LONG, and RELEASED emits SHORT
+ * only when the hold did not already emit LONG.
  */
 static bool fm_regression_test_main_input_recognizer_(void)
 {
@@ -2874,17 +3359,17 @@ static bool fm_regression_test_main_input_recognizer_(void)
     if ((FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
              NULL,
              FM_BOARD_KEYBOARD_KEY_DOWN,
-             FM_BOARD_KEYBOARD_EDGE_RISING,
+             FM_BOARD_KEYBOARD_TRANSITION_PRESSED,
              &output) != FM_STATUS_EINVAL) ||
         (FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
              &recognizer,
              FM_BOARD_KEYBOARD_KEY_COUNT,
-             FM_BOARD_KEYBOARD_EDGE_RISING,
+             FM_BOARD_KEYBOARD_TRANSITION_PRESSED,
              &output) != FM_STATUS_EINVAL) ||
         (FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
              &recognizer,
              FM_BOARD_KEYBOARD_KEY_DOWN,
-             (fm_board_keyboard_edge_t) 99,
+             (fm_board_keyboard_transition_t) 99,
              &output) != FM_STATUS_EINVAL) ||
         (FM_MAIN_INPUT_RECOGNIZER_HandleHoldTimeout(
              NULL,
@@ -2896,10 +3381,10 @@ static bool fm_regression_test_main_input_recognizer_(void)
     if ((FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
              &recognizer,
              FM_BOARD_KEYBOARD_KEY_DOWN,
-             FM_BOARD_KEYBOARD_EDGE_FALLING,
+             FM_BOARD_KEYBOARD_TRANSITION_RELEASED,
              &output) != FM_STATUS_ESTATE) ||
         (output.timer_action != FM_MAIN_INPUT_RECOGNIZER_TIMER_NONE) ||
-        output.runtime_event_valid)
+        output.input_valid)
     {
         return false;
     }
@@ -2907,10 +3392,10 @@ static bool fm_regression_test_main_input_recognizer_(void)
     if ((FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
              &recognizer,
              FM_BOARD_KEYBOARD_KEY_DOWN,
-             FM_BOARD_KEYBOARD_EDGE_RISING,
+             FM_BOARD_KEYBOARD_TRANSITION_PRESSED,
              &output) != FM_STATUS_OK) ||
         (output.timer_action != FM_MAIN_INPUT_RECOGNIZER_TIMER_START) ||
-        output.runtime_event_valid)
+        output.input_valid)
     {
         return false;
     }
@@ -2918,13 +3403,12 @@ static bool fm_regression_test_main_input_recognizer_(void)
     if ((FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
              &recognizer,
              FM_BOARD_KEYBOARD_KEY_DOWN,
-             FM_BOARD_KEYBOARD_EDGE_FALLING,
+             FM_BOARD_KEYBOARD_TRANSITION_RELEASED,
              &output) != FM_STATUS_OK) ||
         (output.timer_action != FM_MAIN_INPUT_RECOGNIZER_TIMER_CANCEL) ||
-        !output.runtime_event_valid ||
-        (output.runtime_event.kind != FMC_RUNTIME_EVENT_INPUT) ||
-        (output.runtime_event.data.input.key != FMC_INPUT_KEY_DOWN) ||
-        (output.runtime_event.data.input.action != FMC_INPUT_ACTION_SHORT))
+        !output.input_valid ||
+        (output.input.key != FMC_INPUT_KEY_DOWN) ||
+        (output.input.action != FMC_INPUT_ACTION_SHORT))
     {
         return false;
     }
@@ -2932,10 +3416,10 @@ static bool fm_regression_test_main_input_recognizer_(void)
     if ((FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
              &recognizer,
              FM_BOARD_KEYBOARD_KEY_UP,
-             FM_BOARD_KEYBOARD_EDGE_RISING,
+             FM_BOARD_KEYBOARD_TRANSITION_PRESSED,
              &output) != FM_STATUS_OK) ||
         (output.timer_action != FM_MAIN_INPUT_RECOGNIZER_TIMER_START) ||
-        output.runtime_event_valid)
+        output.input_valid)
     {
         return false;
     }
@@ -2944,10 +3428,9 @@ static bool fm_regression_test_main_input_recognizer_(void)
              &recognizer,
              &output) != FM_STATUS_OK) ||
         (output.timer_action != FM_MAIN_INPUT_RECOGNIZER_TIMER_NONE) ||
-        !output.runtime_event_valid ||
-        (output.runtime_event.kind != FMC_RUNTIME_EVENT_INPUT) ||
-        (output.runtime_event.data.input.key != FMC_INPUT_KEY_UP) ||
-        (output.runtime_event.data.input.action != FMC_INPUT_ACTION_LONG))
+        !output.input_valid ||
+        (output.input.key != FMC_INPUT_KEY_UP) ||
+        (output.input.action != FMC_INPUT_ACTION_LONG))
     {
         return false;
     }
@@ -2955,10 +3438,10 @@ static bool fm_regression_test_main_input_recognizer_(void)
     if ((FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
              &recognizer,
              FM_BOARD_KEYBOARD_KEY_UP,
-             FM_BOARD_KEYBOARD_EDGE_FALLING,
+             FM_BOARD_KEYBOARD_TRANSITION_RELEASED,
              &output) != FM_STATUS_OK) ||
         (output.timer_action != FM_MAIN_INPUT_RECOGNIZER_TIMER_CANCEL) ||
-        output.runtime_event_valid)
+        output.input_valid)
     {
         return false;
     }
@@ -2966,7 +3449,7 @@ static bool fm_regression_test_main_input_recognizer_(void)
     if ((FM_MAIN_INPUT_RECOGNIZER_HandleHoldTimeout(
              &recognizer,
              &output) != FM_STATUS_ESTATE) ||
-        output.runtime_event_valid)
+        output.input_valid)
     {
         return false;
     }
@@ -2974,15 +3457,15 @@ static bool fm_regression_test_main_input_recognizer_(void)
     if ((FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
              &recognizer,
              FM_BOARD_KEYBOARD_KEY_DOWN,
-             FM_BOARD_KEYBOARD_EDGE_RISING,
+             FM_BOARD_KEYBOARD_TRANSITION_PRESSED,
              &output) != FM_STATUS_OK) ||
         (FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
              &recognizer,
              FM_BOARD_KEYBOARD_KEY_ENTER,
-             FM_BOARD_KEYBOARD_EDGE_RISING,
+             FM_BOARD_KEYBOARD_TRANSITION_PRESSED,
              &output) != FM_STATUS_ESTATE) ||
         (output.timer_action != FM_MAIN_INPUT_RECOGNIZER_TIMER_START) ||
-        output.runtime_event_valid)
+        output.input_valid)
     {
         return false;
     }
@@ -2990,10 +3473,345 @@ static bool fm_regression_test_main_input_recognizer_(void)
     return (FM_MAIN_INPUT_RECOGNIZER_HandleHoldTimeout(
                 &recognizer,
                 &output) == FM_STATUS_OK) &&
-           output.runtime_event_valid &&
-           (output.runtime_event.kind == FMC_RUNTIME_EVENT_INPUT) &&
-           (output.runtime_event.data.input.key == FMC_INPUT_KEY_ENTER) &&
-           (output.runtime_event.data.input.action == FMC_INPUT_ACTION_LONG);
+           output.input_valid &&
+           (output.input.key == FMC_INPUT_KEY_ENTER) &&
+           (output.input.action == FMC_INPUT_ACTION_LONG);
+}
+
+/*
+ * Verifies independent external-button arming, press-edge SHORT emission,
+ * stable-release sampling, and both released-at-boot and held-at-boot cases.
+ */
+static bool fm_regression_test_main_ext_button_(void)
+{
+    fm_main_ext_button_t ext_1;
+    fm_main_ext_button_t ext_2;
+    fm_main_ext_button_output_t output;
+
+    if ((FM_MAIN_EXT_BUTTON_Init(NULL, FMC_INPUT_KEY_EXT_1, false,
+                                 &output) != FM_STATUS_EINVAL) ||
+        (FM_MAIN_EXT_BUTTON_Init(&ext_1, FMC_INPUT_KEY_DOWN, false,
+                                 &output) != FM_STATUS_EINVAL) ||
+        (FM_MAIN_EXT_BUTTON_Init(&ext_1, FMC_INPUT_KEY_EXT_1, false,
+                                 NULL) != FM_STATUS_EINVAL) ||
+        (FM_MAIN_EXT_BUTTON_HandleSampleTimeout(NULL, false,
+                                                &output) != FM_STATUS_EINVAL))
+    {
+        return false;
+    }
+
+    if ((FM_MAIN_EXT_BUTTON_Init(&ext_1, FMC_INPUT_KEY_EXT_1, false,
+                                 &output) != FM_STATUS_OK) ||
+        (output.timer_action != FM_MAIN_EXT_BUTTON_TIMER_START) ||
+        output.input_valid || ext_1.armed || !ext_1.released_sample_seen ||
+        (FM_MAIN_EXT_BUTTON_HandleSampleTimeout(&ext_1, false,
+                                                &output) != FM_STATUS_OK) ||
+        (output.timer_action != FM_MAIN_EXT_BUTTON_TIMER_NONE) ||
+        !ext_1.armed || ext_1.released_sample_seen ||
+        (FM_MAIN_EXT_BUTTON_HandleSampleTimeout(&ext_1, false,
+                                                &output) != FM_STATUS_OK) ||
+        (output.timer_action != FM_MAIN_EXT_BUTTON_TIMER_NONE) ||
+        !ext_1.armed)
+    {
+        return false;
+    }
+
+    if ((FM_MAIN_EXT_BUTTON_HandlePress(&ext_1, &output) != FM_STATUS_OK) ||
+        (output.timer_action != FM_MAIN_EXT_BUTTON_TIMER_RESTART) ||
+        !output.input_valid ||
+        (output.input.key != FMC_INPUT_KEY_EXT_1) ||
+        (output.input.action != FMC_INPUT_ACTION_SHORT) || ext_1.armed ||
+        ext_1.released_sample_seen ||
+        (FM_MAIN_EXT_BUTTON_HandlePress(&ext_1, &output) != FM_STATUS_OK) ||
+        output.input_valid ||
+        (output.timer_action != FM_MAIN_EXT_BUTTON_TIMER_RESTART))
+    {
+        return false;
+    }
+
+    if ((FM_MAIN_EXT_BUTTON_HandleSampleTimeout(&ext_1, true,
+                                                &output) != FM_STATUS_OK) ||
+        (output.timer_action != FM_MAIN_EXT_BUTTON_TIMER_RESTART) ||
+        ext_1.armed || ext_1.released_sample_seen ||
+        (FM_MAIN_EXT_BUTTON_HandleSampleTimeout(&ext_1, false,
+                                                &output) != FM_STATUS_OK) ||
+        (output.timer_action != FM_MAIN_EXT_BUTTON_TIMER_RESTART) ||
+        ext_1.armed || !ext_1.released_sample_seen ||
+        (FM_MAIN_EXT_BUTTON_HandleSampleTimeout(&ext_1, true,
+                                                &output) != FM_STATUS_OK) ||
+        (output.timer_action != FM_MAIN_EXT_BUTTON_TIMER_RESTART) ||
+        ext_1.armed || ext_1.released_sample_seen)
+    {
+        return false;
+    }
+
+    if ((FM_MAIN_EXT_BUTTON_HandleSampleTimeout(&ext_1, false,
+                                                &output) != FM_STATUS_OK) ||
+        (output.timer_action != FM_MAIN_EXT_BUTTON_TIMER_RESTART) ||
+        ext_1.armed || !ext_1.released_sample_seen ||
+        (FM_MAIN_EXT_BUTTON_HandleSampleTimeout(&ext_1, false,
+                                                &output) != FM_STATUS_OK) ||
+        (output.timer_action != FM_MAIN_EXT_BUTTON_TIMER_NONE) ||
+        !ext_1.armed || ext_1.released_sample_seen)
+    {
+        return false;
+    }
+
+    if ((FM_MAIN_EXT_BUTTON_Init(&ext_2, FMC_INPUT_KEY_EXT_2, true,
+                                 &output) != FM_STATUS_OK) ||
+        (output.timer_action != FM_MAIN_EXT_BUTTON_TIMER_START) ||
+        ext_2.armed || ext_2.released_sample_seen ||
+        (FM_MAIN_EXT_BUTTON_HandleSampleTimeout(&ext_2, true,
+                                                &output) != FM_STATUS_OK) ||
+        (output.timer_action != FM_MAIN_EXT_BUTTON_TIMER_RESTART) ||
+        ext_2.armed || ext_2.released_sample_seen ||
+        (FM_MAIN_EXT_BUTTON_HandleSampleTimeout(&ext_2, false,
+                                                &output) != FM_STATUS_OK) ||
+        (output.timer_action != FM_MAIN_EXT_BUTTON_TIMER_RESTART) ||
+        ext_2.armed || !ext_2.released_sample_seen ||
+        (FM_MAIN_EXT_BUTTON_HandleSampleTimeout(&ext_2, false,
+                                                &output) != FM_STATUS_OK) ||
+        (output.timer_action != FM_MAIN_EXT_BUTTON_TIMER_NONE) ||
+        !ext_2.armed || !ext_1.armed)
+    {
+        return false;
+    }
+
+    return (FM_MAIN_EXT_BUTTON_HandlePress(&ext_2, &output) == FM_STATUS_OK) &&
+           output.input_valid &&
+           (output.input.key == FMC_INPUT_KEY_EXT_2) &&
+           (output.input.action == FMC_INPUT_ACTION_SHORT) &&
+           !ext_2.armed &&
+           (output.timer_action == FM_MAIN_EXT_BUTTON_TIMER_RESTART);
+}
+
+/*
+ * Verifies safely-off initialization, committed activation, full-interval
+ * restart, stale-timeout containment, single expiry, and tick wraparound.
+ */
+static bool fm_regression_test_main_backlight_(void)
+{
+    fm_main_backlight_t backlight;
+    fm_main_backlight_output_t output = {
+        FM_MAIN_BACKLIGHT_TIMER_RESTART,
+        1U,
+        1U,
+        true,
+        true};
+
+    if ((FM_MAIN_BACKLIGHT_Init(NULL, 10U) != FM_STATUS_EINVAL) ||
+        (FM_MAIN_BACKLIGHT_Init(&backlight, 0U) != FM_STATUS_EINVAL) ||
+        (FM_MAIN_BACKLIGHT_Init(&backlight, UINT32_MAX) !=
+         FM_STATUS_EINVAL) ||
+        (FM_MAIN_BACKLIGHT_RequestActivation(NULL, 0U, &output) !=
+         FM_STATUS_EINVAL) ||
+        (output.timer_action != FM_MAIN_BACKLIGHT_TIMER_NONE) ||
+        (output.timer_ticks != 0U) || (output.generation != 0U) ||
+        output.turn_on || output.turn_off)
+    {
+        return false;
+    }
+
+    if ((FM_MAIN_BACKLIGHT_Init(&backlight, 10U) != FM_STATUS_OK) ||
+        (backlight.duration_ticks != 10U) ||
+        (backlight.deadline_ticks != 0U) || (backlight.generation != 0U) ||
+        backlight.active ||
+        (FM_MAIN_BACKLIGHT_HandleTimeout(&backlight, 0U, &output) !=
+         FM_STATUS_OK) ||
+        (output.timer_action != FM_MAIN_BACKLIGHT_TIMER_NONE) ||
+        output.turn_on || output.turn_off ||
+        (FM_MAIN_BACKLIGHT_RequestActivation(&backlight, 100U, &output) !=
+         FM_STATUS_OK) ||
+        !backlight.active || (backlight.deadline_ticks != 110U) ||
+        (backlight.generation != 1U) ||
+        (output.timer_action != FM_MAIN_BACKLIGHT_TIMER_RESTART) ||
+        (output.timer_ticks != 10U) || (output.generation != 1U) ||
+        !output.turn_on || output.turn_off)
+    {
+        return false;
+    }
+
+    if ((FM_MAIN_BACKLIGHT_HandleTimeout(&backlight, 109U, &output) !=
+         FM_STATUS_OK) ||
+        !backlight.active || output.turn_on || output.turn_off ||
+        (FM_MAIN_BACKLIGHT_RequestActivation(&backlight, 105U, &output) !=
+         FM_STATUS_OK) ||
+        !backlight.active || (backlight.deadline_ticks != 115U) ||
+        (backlight.generation != 2U) ||
+        (output.timer_action != FM_MAIN_BACKLIGHT_TIMER_RESTART) ||
+        (output.generation != 2U) || !output.turn_on || output.turn_off ||
+        (FM_MAIN_BACKLIGHT_HandleTimeout(&backlight, 110U, &output) !=
+         FM_STATUS_OK) ||
+        !backlight.active || output.turn_on || output.turn_off ||
+        (output.generation != 2U) ||
+        (FM_MAIN_BACKLIGHT_HandleTimeout(&backlight, 115U, &output) !=
+         FM_STATUS_OK) ||
+        backlight.active || output.turn_on || !output.turn_off ||
+        (FM_MAIN_BACKLIGHT_HandleTimeout(&backlight, 116U, &output) !=
+         FM_STATUS_OK) ||
+        output.turn_on || output.turn_off)
+    {
+        return false;
+    }
+
+    if ((FM_MAIN_BACKLIGHT_Init(&backlight, 10U) != FM_STATUS_OK) ||
+        (FM_MAIN_BACKLIGHT_RequestActivation(&backlight,
+                                             UINT32_MAX - 4U,
+                                             &output) != FM_STATUS_OK) ||
+        (backlight.deadline_ticks != 5U) || !backlight.active ||
+        (FM_MAIN_BACKLIGHT_HandleTimeout(&backlight,
+                                         UINT32_MAX,
+                                         &output) != FM_STATUS_OK) ||
+        !backlight.active || output.turn_off ||
+        (FM_MAIN_BACKLIGHT_HandleTimeout(&backlight, 5U, &output) !=
+         FM_STATUS_OK) ||
+        backlight.active || !output.turn_off ||
+        (FM_MAIN_BACKLIGHT_RequestActivation(&backlight, 0U, NULL) !=
+         FM_STATUS_EINVAL))
+    {
+        return false;
+    }
+
+    backlight.duration_ticks = 0U;
+    output.timer_action = FM_MAIN_BACKLIGHT_TIMER_RESTART;
+    output.turn_on = true;
+    output.turn_off = true;
+
+    return (FM_MAIN_BACKLIGHT_HandleTimeout(&backlight, 0U, &output) ==
+            FM_STATUS_EINVAL) &&
+           (output.timer_action == FM_MAIN_BACKLIGHT_TIMER_NONE) &&
+           !output.turn_on && !output.turn_off;
+}
+
+/*
+ * Verifies direct semantic-input routing, fresh snapshots for all user views,
+ * and one post-request ACM reset/presentation without changing TTL.
+ */
+static bool fm_regression_test_main_ui_(void)
+{
+    fm_regression_presentation_sink_t sink = {0};
+    fm_main_ui_result_t result;
+    frequency_observation_result_t frequency_result = {0};
+    fmc_runtime_event_t runtime_event;
+    fmc_ui_snapshot_t snapshot;
+    fmc_input_event_t input;
+    fmc_runtime_t runtime;
+    fmc_ui_t ui;
+    uint32_t calls_before;
+
+    sink.next_status = FM_STATUS_OK;
+    FMC_RUNTIME_Init(&runtime);
+
+    runtime_event.kind = FMC_RUNTIME_EVENT_PULSE_DELTA;
+    runtime_event.data.pulse_delta = 1000U;
+    if (FMC_RUNTIME_Dispatch(&runtime, &runtime_event) != FM_STATUS_OK)
+    {
+        return false;
+    }
+
+    frequency_result.quality = FREQUENCY_OBSERVATION_QUALITY_VALID;
+    frequency_result.pulse_delta = 10U;
+    frequency_result.elapsed_us = 1000000U;
+    runtime_event.kind = FMC_RUNTIME_EVENT_FREQUENCY_RESULT;
+    runtime_event.data.frequency_result = frequency_result;
+
+    if ((FMC_RUNTIME_Dispatch(&runtime, &runtime_event) != FM_STATUS_OK) ||
+        (FM_MAIN_UI_MakeSnapshot(&runtime, &snapshot) != FM_STATUS_OK) ||
+        (FMC_UI_Init(&ui, &snapshot, fm_regression_test_presentation_sink_,
+                     &sink) != FM_STATUS_OK) ||
+        (FMC_UI_Start(&ui) != FM_STATUS_OK) ||
+        (FMC_UI_Advance(&ui, &snapshot) != FM_STATUS_OK) ||
+        (FMC_UI_Advance(&ui, &snapshot) != FM_STATUS_OK))
+    {
+        return false;
+    }
+
+    input.key = FMC_INPUT_KEY_DOWN;
+    input.action = FMC_INPUT_ACTION_SHORT;
+    calls_before = sink.call_count;
+    if ((FM_MAIN_UI_HandleInput(&runtime, &ui, &input, &result) !=
+         FM_STATUS_OK) ||
+        (result.previous_state != FMC_UI_STATE_TTL_RATE) ||
+        (result.current_state != FMC_UI_STATE_ACM_RATE) ||
+        !result.presentation_performed || result.acm_reset_executed ||
+        (sink.call_count != (calls_before + 1U)) ||
+        (runtime.service.model.acm.pulses != 1000U) ||
+        (runtime.service.model.ttl.pulses != 1000U))
+    {
+        return false;
+    }
+
+    input.key = FMC_INPUT_KEY_ENTER;
+    input.action = FMC_INPUT_ACTION_LONG;
+    calls_before = sink.call_count;
+    if ((FM_MAIN_UI_HandleInput(&runtime, &ui, &input, &result) !=
+         FM_STATUS_OK) ||
+        !result.acm_reset_executed || !result.presentation_performed ||
+        (result.current_state != FMC_UI_STATE_ACM_RATE) ||
+        (sink.call_count != (calls_before + 1U)) ||
+        (runtime.service.model.acm.pulses != 0U) ||
+        (runtime.service.model.ttl.pulses != 1000U) ||
+        FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
+        !fm_regression_test_text_eq_(sink.frame.top_text, "      0.0"))
+    {
+        return false;
+    }
+
+    runtime_event.kind = FMC_RUNTIME_EVENT_PULSE_DELTA;
+    runtime_event.data.pulse_delta = 7U;
+    input.key = FMC_INPUT_KEY_EXT_2;
+    input.action = FMC_INPUT_ACTION_SHORT;
+    calls_before = sink.call_count;
+    if ((FMC_RUNTIME_Dispatch(&runtime, &runtime_event) != FM_STATUS_OK) ||
+        (FM_MAIN_UI_HandleInput(&runtime, &ui, &input, &result) !=
+         FM_STATUS_OK) ||
+        !result.acm_reset_executed ||
+        (sink.call_count != (calls_before + 1U)) ||
+        (runtime.service.model.acm.pulses != 0U) ||
+        (runtime.service.model.ttl.pulses != 1007U))
+    {
+        return false;
+    }
+
+    input.key = FMC_INPUT_KEY_DOWN;
+    input.action = FMC_INPUT_ACTION_SHORT;
+    if ((FM_MAIN_UI_HandleInput(&runtime, &ui, &input, &result) !=
+         FM_STATUS_OK) ||
+        (result.current_state != FMC_UI_STATE_PRINT))
+    {
+        return false;
+    }
+
+    runtime_event.kind = FMC_RUNTIME_EVENT_PULSE_DELTA;
+    runtime_event.data.pulse_delta = 5U;
+    calls_before = sink.call_count;
+    if ((FMC_RUNTIME_Dispatch(&runtime, &runtime_event) != FM_STATUS_OK) ||
+        !FMC_RUNTIME_PresentationUpdateIsPending(&runtime) ||
+        (FM_MAIN_UI_Refresh(&runtime, &ui) != FM_STATUS_OK) ||
+        (sink.call_count != (calls_before + 1U)) ||
+        FMC_RUNTIME_PresentationUpdateIsPending(&runtime))
+    {
+        return false;
+    }
+
+    input.key = FMC_INPUT_KEY_EXT_1;
+    if ((FM_MAIN_UI_HandleInput(&runtime, &ui, &input, &result) !=
+         FM_STATUS_OK) ||
+        (result.current_state != FMC_UI_STATE_LOG_DOWNLOAD) ||
+        (FM_MAIN_UI_HandleInput(&runtime, &ui, &input, &result) !=
+         FM_STATUS_OK) ||
+        (result.current_state != FMC_UI_STATE_DATE_TIME) ||
+        (FM_MAIN_UI_HandleInput(&runtime, &ui, &input, &result) !=
+         FM_STATUS_OK) ||
+        (result.current_state != FMC_UI_STATE_TTL_RATE))
+    {
+        return false;
+    }
+
+    return (FM_MAIN_UI_MakeSnapshot(NULL, &snapshot) == FM_STATUS_EINVAL) &&
+           (FM_MAIN_UI_Refresh(NULL, &ui) == FM_STATUS_EINVAL) &&
+           (FM_MAIN_UI_HandleInput(&runtime, &ui, NULL, &result) ==
+            FM_STATUS_EINVAL);
 }
 
 /*
@@ -3034,9 +3852,20 @@ static bool fm_regression_test_main_event_queue_(void)
         goto done;
     }
 
+    FM_MAIN_EVENT_MakeBacklightActivity(&event);
+    if ((FM_MAIN_EVENT_Publish(&queue, &event) != FM_STATUS_OK) ||
+        (tx_queue_receive(&queue, &received, TX_NO_WAIT) != TX_SUCCESS) ||
+        ((fm_main_event_kind_t) received.kind !=
+         FM_MAIN_EVENT_BACKLIGHT_ACTIVITY) ||
+        (received.key != 0U) || (received.transition != 0U) ||
+        (received.flags != 0U))
+    {
+        goto done;
+    }
+
     FM_MAIN_EVENT_MakeKeyboard(&event,
                                FM_BOARD_KEYBOARD_KEY_DOWN,
-                               FM_BOARD_KEYBOARD_EDGE_FALLING);
+                               FM_BOARD_KEYBOARD_TRANSITION_RELEASED);
     if (FM_MAIN_EVENT_Publish(&queue, &event) != FM_STATUS_OK)
     {
         goto done;
@@ -3052,8 +3881,8 @@ static bool fm_regression_test_main_event_queue_(void)
         ((fm_main_event_kind_t) received.kind != FM_MAIN_EVENT_KEYBOARD) ||
         ((fm_board_keyboard_key_t) received.key !=
          FM_BOARD_KEYBOARD_KEY_DOWN) ||
-        ((fm_board_keyboard_edge_t) received.edge !=
-         FM_BOARD_KEYBOARD_EDGE_FALLING))
+        ((fm_board_keyboard_transition_t) received.transition !=
+         FM_BOARD_KEYBOARD_TRANSITION_RELEASED))
     {
         goto done;
     }
@@ -3083,9 +3912,22 @@ static bool fm_regression_test_main_event_queue_(void)
         goto done;
     }
 
+    FM_MAIN_EVENT_MakeExtButtonReleaseTimeout(
+        &event,
+        FM_BOARD_KEYBOARD_KEY_EXT_1);
+    if ((FM_MAIN_EVENT_Publish(&queue, &event) != FM_STATUS_OK) ||
+        (tx_queue_receive(&queue, &received, TX_NO_WAIT) != TX_SUCCESS) ||
+        ((fm_main_event_kind_t) received.kind !=
+         FM_MAIN_EVENT_EXT_BUTTON_RELEASE_TIMEOUT) ||
+        ((fm_board_keyboard_key_t) received.key !=
+         FM_BOARD_KEYBOARD_KEY_EXT_1))
+    {
+        goto done;
+    }
+
     FM_MAIN_EVENT_MakeKeyboard(&event,
                                FM_BOARD_KEYBOARD_KEY_UP,
-                               FM_BOARD_KEYBOARD_EDGE_FALLING);
+                               FM_BOARD_KEYBOARD_TRANSITION_RELEASED);
     if ((FM_MAIN_EVENT_Publish(&queue, &event) != FM_STATUS_OK) ||
         (FM_MAIN_EVENT_Publish(&queue, &event) != FM_STATUS_OK) ||
         (FM_MAIN_EVENT_Publish(&queue, &event) != FM_STATUS_ERANGE))
@@ -3182,9 +4024,6 @@ static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case)
     case FM_REGRESSION_TEST_CASE_RUNTIME_EVENTS:
         return fm_regression_test_runtime_events_();
 
-    case FM_REGRESSION_TEST_CASE_RUNTIME_INPUT_EVENTS:
-        return fm_regression_test_runtime_input_events_();
-
     case FM_REGRESSION_TEST_CASE_RUNTIME_ERROR_PATHS:
         return fm_regression_test_runtime_error_paths_();
 
@@ -3209,6 +4048,9 @@ static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case)
     case FM_REGRESSION_TEST_CASE_LCD_MAP_ALL_SEGMENTS:
         return fm_regression_test_lcd_map_all_segments_();
 
+    case FM_REGRESSION_TEST_CASE_LCD_MAP_UI_INDICATORS:
+        return fm_regression_test_lcd_map_ui_indicators_();
+
     case FM_REGRESSION_TEST_CASE_LCD_MAP_LITERS_LEGEND:
         return fm_regression_test_lcd_map_liters_legend_();
 
@@ -3217,6 +4059,18 @@ static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case)
 
     case FM_REGRESSION_TEST_CASE_PRESENTATION_VALUES:
         return fm_regression_test_presentation_values_();
+
+    case FM_REGRESSION_TEST_CASE_UI_UNITS_TIME_BASES:
+        return fm_regression_test_ui_units_time_bases_();
+
+    case FM_REGRESSION_TEST_CASE_UI_NAVIGATION:
+        return fm_regression_test_ui_navigation_();
+
+    case FM_REGRESSION_TEST_CASE_UI_PLACEHOLDERS_POINT:
+        return fm_regression_test_ui_placeholders_point_();
+
+    case FM_REGRESSION_TEST_CASE_UI_REQUESTS_INVALID:
+        return fm_regression_test_ui_requests_invalid_();
 
     case FM_REGRESSION_TEST_CASE_PRESENTATION_FAILURE:
         return fm_regression_test_presentation_failure_();
@@ -3230,6 +4084,15 @@ static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case)
     case FM_REGRESSION_TEST_CASE_MAIN_INPUT_RECOGNIZER:
         return fm_regression_test_main_input_recognizer_();
 
+    case FM_REGRESSION_TEST_CASE_MAIN_EXT_BUTTON:
+        return fm_regression_test_main_ext_button_();
+
+    case FM_REGRESSION_TEST_CASE_MAIN_BACKLIGHT:
+        return fm_regression_test_main_backlight_();
+
+    case FM_REGRESSION_TEST_CASE_MAIN_UI:
+        return fm_regression_test_main_ui_();
+
     case FM_REGRESSION_TEST_CASE_MAIN_EVENT_QUEUE:
         return fm_regression_test_main_event_queue_();
 
@@ -3238,153 +4101,177 @@ static bool fm_regression_test_run_case_(fm_regression_test_case_t p_case)
     }
 }
 
-static void fm_regression_test_emit_case_(fm_regression_test_case_t p_case,
-                                               bool p_passed)
+static void fm_regression_test_emit_case_(fm_regression_test_case_t p_case, bool p_passed)
 {
     switch (p_case)
     {
     case FM_REGRESSION_TEST_CASE_INIT_DEFAULTS:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:INIT_DEFAULTS:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:INIT_DEFAULTS:");
         break;
 
     case FM_REGRESSION_TEST_CASE_TOTALS:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:TOTALS:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:TOTALS:");
         break;
 
     case FM_REGRESSION_TEST_CASE_UNIT_VALIDITY:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:UNIT_VALIDITY:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:UNIT_VALIDITY:");
         break;
 
     case FM_REGRESSION_TEST_CASE_UNIT_KIND:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:UNIT_KIND:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:UNIT_KIND:");
         break;
 
     case FM_REGRESSION_TEST_CASE_LITERS_PER_UNIT:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:LITERS_PER_UNIT:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:LITERS_PER_UNIT:");
         break;
 
     case FM_REGRESSION_TEST_CASE_PULSES_PER_ACTIVE_UNIT:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:PULSES_PER_ACTIVE_UNIT:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:PULSES_PER_ACTIVE_UNIT:");
         break;
 
     case FM_REGRESSION_TEST_CASE_ERROR_PATHS:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:ERROR_PATHS:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:ERROR_PATHS:");
         break;
 
     case FM_REGRESSION_TEST_CASE_RATE_WINDOWS:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:RATE_WINDOWS:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:RATE_WINDOWS:");
         break;
 
     case FM_REGRESSION_TEST_CASE_RATE_ERROR_PATHS:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:RATE_ERROR_PATHS:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:RATE_ERROR_PATHS:");
         break;
 
     case FM_REGRESSION_TEST_CASE_PULSE_DELTA_VECTORS:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:PULSE_DELTA_VECTORS:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:PULSE_DELTA_VECTORS:");
         break;
 
     case FM_REGRESSION_TEST_CASE_FREQUENCY_OBSERVATION_VECTORS:
-        (void) FM_DEBUG_UartStr(
-            "REGRESSION_TEST:FREQUENCY_OBSERVATION_VECTORS:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:FREQUENCY_OBSERVATION_VECTORS:");
         break;
 
     case FM_REGRESSION_TEST_CASE_OBSERVER_INDEPENDENCE:
-        (void) FM_DEBUG_UartStr(
-            "REGRESSION_TEST:OBSERVER_INDEPENDENCE:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:OBSERVER_INDEPENDENCE:");
         break;
 
     case FM_REGRESSION_TEST_CASE_RUNTIME_FREQUENCY_RESULT:
-        (void) FM_DEBUG_UartStr(
-            "REGRESSION_TEST:RUNTIME_FREQUENCY_RESULT:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:RUNTIME_FREQUENCY_RESULT:");
         break;
 
     case FM_REGRESSION_TEST_CASE_MAIN_ACQUISITION:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:MAIN_ACQUISITION:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:MAIN_ACQUISITION:");
         break;
 
     case FM_REGRESSION_TEST_CASE_RUNTIME_EVENTS:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:RUNTIME_EVENTS:");
-        break;
-
-    case FM_REGRESSION_TEST_CASE_RUNTIME_INPUT_EVENTS:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:RUNTIME_INPUT_EVENTS:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:RUNTIME_EVENTS:");
         break;
 
     case FM_REGRESSION_TEST_CASE_RUNTIME_ERROR_PATHS:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:RUNTIME_ERROR_PATHS:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:RUNTIME_ERROR_PATHS:");
         break;
 
     case FM_REGRESSION_TEST_CASE_SERVICE_STATE:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:SERVICE_STATE:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:SERVICE_STATE:");
         break;
 
     case FM_REGRESSION_TEST_CASE_SERVICE_ERROR_PATHS:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:SERVICE_ERROR_PATHS:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:SERVICE_ERROR_PATHS:");
         break;
 
     case FM_REGRESSION_TEST_CASE_VOLUME_VALUES:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:VOLUME_VALUES:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:VOLUME_VALUES:");
         break;
 
     case FM_REGRESSION_TEST_CASE_VOLUME_ERROR_PATHS:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:VOLUME_ERROR_PATHS:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:VOLUME_ERROR_PATHS:");
         break;
 
     case FM_REGRESSION_TEST_CASE_DISPLAY_FORMAT_VALUES:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:DISPLAY_FORMAT_VALUES:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:DISPLAY_FORMAT_VALUES:");
         break;
 
     case FM_REGRESSION_TEST_CASE_DISPLAY_FORMAT_ERROR_PATHS:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:DISPLAY_FORMAT_ERROR_PATHS:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:DISPLAY_FORMAT_ERROR_PATHS:");
         break;
 
     case FM_REGRESSION_TEST_CASE_LCD_MAP_ALL_SEGMENTS:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:LCD_MAP_ALL_SEGMENTS:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:LCD_MAP_ALL_SEGMENTS:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_LCD_MAP_UI_INDICATORS:
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:LCD_MAP_UI_INDICATORS:");
         break;
 
     case FM_REGRESSION_TEST_CASE_LCD_MAP_LITERS_LEGEND:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:LCD_MAP_LITERS_LEGEND:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:LCD_MAP_LITERS_LEGEND:");
         break;
 
     case FM_REGRESSION_TEST_CASE_PRESENTATION_SEQUENCE:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:PRESENTATION_SEQUENCE:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:PRESENTATION_SEQUENCE:");
         break;
 
     case FM_REGRESSION_TEST_CASE_PRESENTATION_VALUES:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:PRESENTATION_VALUES:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:PRESENTATION_VALUES:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_UI_UNITS_TIME_BASES:
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:UI_UNITS_TIME_BASES:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_UI_NAVIGATION:
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:UI_NAVIGATION:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_UI_PLACEHOLDERS_POINT:
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:UI_PLACEHOLDERS_POINT:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_UI_REQUESTS_INVALID:
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:UI_REQUESTS_INVALID:");
         break;
 
     case FM_REGRESSION_TEST_CASE_PRESENTATION_FAILURE:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:PRESENTATION_FAILURE:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:PRESENTATION_FAILURE:");
         break;
 
     case FM_REGRESSION_TEST_CASE_KEYBOARD_MAPPING:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:KEYBOARD_MAPPING:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:KEYBOARD_MAPPING:");
         break;
 
     case FM_REGRESSION_TEST_CASE_MAIN_INPUT_ADAPTER:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:MAIN_INPUT_ADAPTER:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:MAIN_INPUT_ADAPTER:");
         break;
 
     case FM_REGRESSION_TEST_CASE_MAIN_INPUT_RECOGNIZER:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:MAIN_INPUT_RECOGNIZER:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:MAIN_INPUT_RECOGNIZER:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_MAIN_EXT_BUTTON:
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:MAIN_EXT_BUTTON:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_MAIN_BACKLIGHT:
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:MAIN_BACKLIGHT:");
+        break;
+
+    case FM_REGRESSION_TEST_CASE_MAIN_UI:
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:MAIN_UI:");
         break;
 
     case FM_REGRESSION_TEST_CASE_MAIN_EVENT_QUEUE:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:MAIN_EVENT_QUEUE:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:MAIN_EVENT_QUEUE:");
         break;
 
     default:
-        (void) FM_DEBUG_UartStr("REGRESSION_TEST:UNKNOWN:");
+        (void)FM_DEBUG_UartStr("REGRESSION_TEST:UNKNOWN:");
         break;
     }
 
     if (p_passed)
     {
-        (void) FM_DEBUG_UartStr("PASS\n");
+        (void)FM_DEBUG_UartStr("PASS\n");
     }
     else
     {
-        (void) FM_DEBUG_UartStr("FAIL\n");
+        (void)FM_DEBUG_UartStr("FAIL\n");
     }
 }

@@ -736,7 +736,8 @@ standalone_symbol_mapping:
       com_seg:
         com: 1
         seg: 3
-      validation_note: "Visually confirmed on hardware during lcd_ll_bringup"
+      visible_position: "bottom"
+      validation_note: "RAM address confirmed during lcd_ll_bringup; bottom position confirmed on product hardware"
     TTL:
       reg: 17
       bit: 4
@@ -756,6 +757,8 @@ standalone_symbol_mapping:
       com_seg:
         com: 2
         seg: 20
+      visible_position: "top"
+      validation_note: "Top position confirmed from the two-indicator glass and legacy ACM/RATE use after the ACM_1 bottom observation"
     S:
       reg: 10
       bit: 5
@@ -949,7 +952,7 @@ character_encoding:
     remarks:
       - "Encoding above reflects currently proven behavior, not IEC or ANSI naming"
       - "Geometric labels follow the artwork convention, not the most common calculator convention"
-      - "The F glyph is an inferred composition required by the Phase 8 OFF placeholder; it remains pending visual hardware validation in Phase 8E"
+      - "The F glyph was introduced as an inferred composition for the Phase 8 OFF placeholder and visually confirmed during the accepted Phase 8E target campaign"
   digit_14seg:
     status: "operational"
     note: "Legacy firmware demonstrates successful rendering of many alphanumeric characters"

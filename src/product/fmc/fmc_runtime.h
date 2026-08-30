@@ -4,7 +4,7 @@
  *
  * `fmc_runtime` owns one `fmc_service_t` instance and applies product-level
  * events to it. It is the boundary a future main loop, scheduler, or RTOS
- * thread can drive without exposing HAL, LCD, keyboard, timer, or queue types
+ * thread can drive without exposing HAL, LCD, timer, or queue types
  * to the FMC domain.
  *
  * The runtime currently controls:
@@ -22,7 +22,7 @@
  * - functions are not internally synchronized
  * - callers must serialize access to the same runtime instance
  * - public functions are not designed to be called directly from ISR context;
- *   an ISR should publish input through a serialized adapter before dispatch
+ *   an ISR should publish work through a serialized adapter before dispatch
  */
 #ifndef FMC_RUNTIME_H
 #define FMC_RUNTIME_H
@@ -31,16 +31,14 @@
 #include <stdint.h>
 
 #include "frequency_observation.h"
-#include "fmc_input.h"
 #include "fmc_service.h"
 #include "fm_status.h"
 
 /**
- * @brief Product-level events accepted by the minimal runtime boundary.
+ * @brief Measurement/runtime events accepted by the minimal runtime boundary.
  *
- * Events describe observable product requests, not their hardware source. For
- * example, presentation can be invalidated by a key action, an edit operation,
- * or a periodic tick.
+ * Events describe measurement and totalization changes, not hardware input or
+ * menu navigation. Presentation invalidation remains an explicit owner signal.
  */
 typedef enum
 {
@@ -59,8 +57,6 @@ typedef enum
     FMC_RUNTIME_EVENT_RESET_ACM,
     /** Reset the TTL total after the caller has authorized the operation. */
     FMC_RUNTIME_EVENT_RESET_TTL,
-    /** Deliver one already recognized semantic product input event. */
-    FMC_RUNTIME_EVENT_INPUT,
     /** Mark the current presentation view as no longer up to date. */
     FMC_RUNTIME_EVENT_PRESENTATION_INVALIDATE
 } fmc_runtime_event_kind_t;
@@ -71,7 +67,6 @@ typedef enum
  * The active payload is selected by `kind`:
  * - `data.pulse_delta` for `FMC_RUNTIME_EVENT_PULSE_DELTA`
  * - `data.frequency_result` for `FMC_RUNTIME_EVENT_FREQUENCY_RESULT`
- * - `data.input` for `FMC_RUNTIME_EVENT_INPUT`
  *
  * Payload fields for other event kinds are ignored.
  */
@@ -82,7 +77,6 @@ typedef struct
     {
         uint64_t pulse_delta;
         frequency_observation_result_t frequency_result;
-        fmc_input_event_t input;
     } data;
 } fmc_runtime_event_t;
 
@@ -111,25 +105,19 @@ typedef struct
  * seed configuration deliberately. Normal consumers should prefer dispatch,
  * snapshot, and presentation-update APIs rather than editing nested state
  * directly.
- *
- * `last_input` is valid only when `last_input_valid` is `true`. It preserves
- * the most recent accepted semantic input for the current minimal runtime
- * slice; it is not a queue and does not implement menu navigation.
  */
 typedef struct
 {
     fmc_service_t service;
     fmc_runtime_rate_state_t rate;
-    fmc_input_event_t last_input;
     bool presentation_update_pending;
-    bool last_input_valid;
 } fmc_runtime_t;
 
 /**
  * @brief Initialize one runtime instance and its owned FMC service.
  *
  * Existing runtime state is overwritten and any pending presentation update is
- * cleared. No semantic input is considered accepted after initialization.
+ * cleared.
  *
  * @param p_runtime Runtime object owned by the caller. `NULL` is ignored.
  */
@@ -144,10 +132,6 @@ void FMC_RUNTIME_Init(fmc_runtime_t *p_runtime);
  * A zero pulse delta is a successful no-op: totals and presentation-pending
  * state remain unchanged. A presentation-invalidate event only sets that
  * pending flag.
- *
- * A valid input event preserves key/action identity in `last_input` and marks
- * presentation update as pending. The current slice does not map input to menu
- * navigation, backlight, wake, reset, or edit behavior.
  *
  * A frequency-result event consumes its by-value
  * `frequency_observation_result_t` payload. `VALID` invokes pure RATE
@@ -168,8 +152,8 @@ void FMC_RUNTIME_Init(fmc_runtime_t *p_runtime);
  *        call and may be stack allocated by the caller.
  *
  * @return `FM_STATUS_OK` on success.
- * @return `FM_STATUS_EINVAL` when any pointer is `NULL`, the event kind is
- *         invalid, or an input key/action combination is invalid.
+ * @return `FM_STATUS_EINVAL` when any pointer is `NULL` or the event kind is
+ *         invalid.
  * @return `FM_STATUS_ERANGE` when the owned service reports a range error,
  *         such as pulse-counter overflow, or RATE calculation reports invalid
  *         numeric input.

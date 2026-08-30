@@ -8,7 +8,7 @@
 
 void FM_MAIN_EVENT_MakeKeyboard(fm_main_event_t *p_event,
                                 fm_board_keyboard_key_t key,
-                                fm_board_keyboard_edge_t edge)
+                                fm_board_keyboard_transition_t transition)
 {
     if (p_event == NULL)
     {
@@ -17,7 +17,20 @@ void FM_MAIN_EVENT_MakeKeyboard(fm_main_event_t *p_event,
 
     p_event->kind = (ULONG) FM_MAIN_EVENT_KEYBOARD;
     p_event->key = (ULONG) key;
-    p_event->edge = (ULONG) edge;
+    p_event->transition = (ULONG) transition;
+    p_event->flags = 0U;
+}
+
+void FM_MAIN_EVENT_MakeBacklightActivity(fm_main_event_t *p_event)
+{
+    if (p_event == NULL)
+    {
+        return;
+    }
+
+    p_event->kind = (ULONG) FM_MAIN_EVENT_BACKLIGHT_ACTIVITY;
+    p_event->key = 0U;
+    p_event->transition = 0U;
     p_event->flags = 0U;
 }
 
@@ -30,7 +43,7 @@ void FM_MAIN_EVENT_MakePeriodicRefresh(fm_main_event_t *p_event)
 
     p_event->kind = (ULONG) FM_MAIN_EVENT_PERIODIC_REFRESH;
     p_event->key = 0U;
-    p_event->edge = 0U;
+    p_event->transition = 0U;
     p_event->flags = 0U;
 }
 
@@ -43,7 +56,7 @@ void FM_MAIN_EVENT_MakeKeyHoldTimeout(fm_main_event_t *p_event)
 
     p_event->kind = (ULONG) FM_MAIN_EVENT_KEY_HOLD_TIMEOUT;
     p_event->key = 0U;
-    p_event->edge = 0U;
+    p_event->transition = 0U;
     p_event->flags = 0U;
 }
 
@@ -56,7 +69,22 @@ void FM_MAIN_EVENT_MakePresentationTimeout(fm_main_event_t *p_event)
 
     p_event->kind = (ULONG) FM_MAIN_EVENT_PRESENTATION_TIMEOUT;
     p_event->key = 0U;
-    p_event->edge = 0U;
+    p_event->transition = 0U;
+    p_event->flags = 0U;
+}
+
+void FM_MAIN_EVENT_MakeExtButtonReleaseTimeout(
+    fm_main_event_t *p_event,
+    fm_board_keyboard_key_t key)
+{
+    if (p_event == NULL)
+    {
+        return;
+    }
+
+    p_event->kind = (ULONG) FM_MAIN_EVENT_EXT_BUTTON_RELEASE_TIMEOUT;
+    p_event->key = (ULONG) key;
+    p_event->transition = 0U;
     p_event->flags = 0U;
 }
 

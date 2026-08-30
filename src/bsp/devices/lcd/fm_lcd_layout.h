@@ -81,13 +81,13 @@ typedef enum
     FM_LCD_LAYOUT_INDICATOR_E,
     FM_LCD_LAYOUT_INDICATOR_BATCH,
 
-    /* Upper ACM legend. Legacy traceability: ACM_1. */
+    /* Upper ACM legend. Legacy traceability: ACM_2. */
     FM_LCD_LAYOUT_INDICATOR_ACM_TOP,
 
     FM_LCD_LAYOUT_INDICATOR_TTL,
     FM_LCD_LAYOUT_INDICATOR_SLASH,
 
-    /* Lower ACM legend. Legacy traceability: ACM_2. */
+    /* Lower ACM legend. Legacy traceability: ACM_1. */
     FM_LCD_LAYOUT_INDICATOR_ACM_BOTTOM,
 
     FM_LCD_LAYOUT_INDICATOR_H,

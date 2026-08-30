@@ -91,6 +91,7 @@ void FM_PORT_GPIO_Init(void)
     fm_port_gpio_enable_clock_(LED_SIGNAL_GPIO_Port);
     fm_port_gpio_enable_clock_(DBG_MSG_EN_GPIO_Port);
     fm_port_gpio_enable_clock_(DBG_LED_EN_GPIO_Port);
+    fm_port_gpio_enable_clock_(LCD_BACKLIGHT_GPIO_Port);
 
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -107,6 +108,13 @@ void FM_PORT_GPIO_Init(void)
     GPIO_InitStruct.Pin = LED_SIGNAL_Pin;
     HAL_GPIO_Init(LED_SIGNAL_GPIO_Port, &GPIO_InitStruct);
     HAL_GPIO_WritePin(LED_SIGNAL_GPIO_Port, LED_SIGNAL_Pin, GPIO_PIN_RESET);
+
+    HAL_GPIO_WritePin(
+        LCD_BACKLIGHT_GPIO_Port,
+        LCD_BACKLIGHT_Pin,
+        GPIO_PIN_SET);
+    GPIO_InitStruct.Pin = LCD_BACKLIGHT_Pin;
+    HAL_GPIO_Init(LCD_BACKLIGHT_GPIO_Port, &GPIO_InitStruct);
 
     /* Leave jumpers in lowest-power state when not sampling. */
     GPIO_InitStruct.Pin = DBG_MSG_EN_Pin;
@@ -158,4 +166,20 @@ void FM_PORT_GPIO_LedSignalOn(void)
 void FM_PORT_GPIO_LedSignalOff(void)
 {
     HAL_GPIO_WritePin(LED_SIGNAL_GPIO_Port, LED_SIGNAL_Pin, GPIO_PIN_RESET);
+}
+
+void FM_PORT_GPIO_BacklightOn(void)
+{
+    HAL_GPIO_WritePin(
+        LCD_BACKLIGHT_GPIO_Port,
+        LCD_BACKLIGHT_Pin,
+        GPIO_PIN_RESET);
+}
+
+void FM_PORT_GPIO_BacklightOff(void)
+{
+    HAL_GPIO_WritePin(
+        LCD_BACKLIGHT_GPIO_Port,
+        LCD_BACKLIGHT_Pin,
+        GPIO_PIN_SET);
 }

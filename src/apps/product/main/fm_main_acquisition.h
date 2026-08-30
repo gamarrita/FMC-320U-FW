@@ -45,6 +45,7 @@ void FM_MAIN_ACQUISITION_Init(fm_main_acquisition_t *p_acquisition);
  * @param p_acquisition Initialized acquisition state owned by the caller.
  * @param current_count Trusted current 16-bit counter observation.
  * @param p_runtime Initialized runtime owned and serialized by the caller.
+ * @param p_pulse_delta Output delta dispatched to runtime on success.
  *
  * @return `FM_STATUS_OK` when observation and dispatch both succeed.
  * @return `FM_STATUS_EINVAL` when an input pointer is `NULL`.
@@ -53,7 +54,8 @@ void FM_MAIN_ACQUISITION_Init(fm_main_acquisition_t *p_acquisition);
 fm_status_t FM_MAIN_ACQUISITION_ProcessObservation(
     fm_main_acquisition_t *p_acquisition,
     uint16_t current_count,
-    fmc_runtime_t *p_runtime);
+    fmc_runtime_t *p_runtime,
+    uint64_t *p_pulse_delta);
 
 /**
  * @brief Process one trusted pulse/time sample through the runtime boundary.

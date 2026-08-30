@@ -3,7 +3,7 @@
  * @brief   Product main mechanical-key SHORT/LONG recognizer.
  *
  * This app-level helper interprets board keyboard edges and produces semantic
- * FMC runtime input events. It does not own ThreadX timers or queues: callers
+ * FMC semantic input events. It does not own ThreadX timers or queues: callers
  * execute the requested timer action in their own composition layer.
  */
 #ifndef FM_MAIN_INPUT_RECOGNIZER_H
@@ -13,7 +13,7 @@
 
 #include "fm_board_keyboard.h"
 #include "fm_status.h"
-#include "fmc_runtime.h"
+#include "fmc_input.h"
 
 typedef enum
 {
@@ -25,8 +25,8 @@ typedef enum
 typedef struct
 {
     fm_main_input_recognizer_timer_action_t timer_action;
-    bool runtime_event_valid;
-    fmc_runtime_event_t runtime_event;
+    bool input_valid;
+    fmc_input_event_t input;
 } fm_main_input_recognizer_output_t;
 
 typedef struct
@@ -45,14 +45,14 @@ void FM_MAIN_INPUT_RECOGNIZER_Init(
     fm_main_input_recognizer_t *p_recognizer);
 
 /**
- * @brief Handle one board keyboard edge.
+ * @brief Handle one board keyboard pressed/released transition.
  *
- * RISING starts a key hold and requests timer start. FALLING completes the
+ * PRESSED starts a key hold and requests timer start. RELEASED completes the
  * hold; it emits SHORT only when no LONG was already emitted for that hold.
  *
  * @param p_recognizer Caller-owned recognizer state.
  * @param key Board key identity.
- * @param edge Board edge identity.
+ * @param transition Board pressed/released transition.
  * @param p_output Caller-owned output destination.
  *
  * @return `FM_STATUS_OK` when the edge was accepted.
@@ -62,14 +62,14 @@ void FM_MAIN_INPUT_RECOGNIZER_Init(
 fm_status_t FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
     fm_main_input_recognizer_t *p_recognizer,
     fm_board_keyboard_key_t key,
-    fm_board_keyboard_edge_t edge,
+    fm_board_keyboard_transition_t transition,
     fm_main_input_recognizer_output_t *p_output);
 
 /**
  * @brief Handle one key-hold timeout.
  *
  * Emits one LONG for the currently active hold. Duplicate or stale timeout
- * delivery is reported as an abnormal state and produces no runtime event.
+ * delivery is reported as an abnormal state and produces no semantic input.
  *
  * @param p_recognizer Caller-owned recognizer state.
  * @param p_output Caller-owned output destination.

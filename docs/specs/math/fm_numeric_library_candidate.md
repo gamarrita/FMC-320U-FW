@@ -65,7 +65,7 @@ Candidate layering:
    - generic numeric support
 2. `fmc_model.*`
    - FMC domain semantics
-3. `fmc_presentation.*`
+3. `fmc_ui.*`
    - FMC-to-display semantics
 4. LCD adapter
    - rendering onto the validated LCD stack

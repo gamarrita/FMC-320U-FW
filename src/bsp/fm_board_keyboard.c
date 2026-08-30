@@ -13,15 +13,18 @@
 
 typedef struct
 {
+    GPIO_TypeDef *p_gpio_port;
     uint16_t gpio_pin;
     fm_board_keyboard_key_t key;
+    fm_port_gpio_exti_edge_t pressed_edge;
     const char *p_falling_msg;
     const char *p_rising_msg;
 } fm_board_keyboard_map_t;
 
 static void fm_board_keyboard_exti_callback_(uint16_t gpio_pin,
                                              fm_port_gpio_exti_edge_t edge);
-static fm_board_keyboard_edge_t fm_board_keyboard_edge_from_port_(
+static fm_board_keyboard_transition_t fm_board_keyboard_transition_from_port_(
+    const fm_board_keyboard_map_t *p_map,
     fm_port_gpio_exti_edge_t edge);
 static void fm_board_keyboard_on_exti_(uint16_t gpio_pin,
                                        fm_port_gpio_exti_edge_t edge);
@@ -32,28 +35,52 @@ static volatile fm_board_keyboard_callback_t g_fm_board_keyboard_callback =
 static const fm_board_keyboard_map_t g_fm_board_keyboard_map[] =
 {
     {
+        KEY_DOWN_GPIO_Port,
         KEY_DOWN_Pin,
         FM_BOARD_KEYBOARD_KEY_DOWN,
+        FM_PORT_GPIO_EXTI_EDGE_RISING,
         "KEY_INPUT_BRINGUP:KEY=DOWN EDGE=FALLING",
         "KEY_INPUT_BRINGUP:KEY=DOWN EDGE=RISING"
     },
     {
+        KEY_UP_GPIO_Port,
         KEY_UP_Pin,
         FM_BOARD_KEYBOARD_KEY_UP,
+        FM_PORT_GPIO_EXTI_EDGE_RISING,
         "KEY_INPUT_BRINGUP:KEY=UP EDGE=FALLING",
         "KEY_INPUT_BRINGUP:KEY=UP EDGE=RISING"
     },
     {
+        KEY_ENTER_GPIO_Port,
         KEY_ENTER_Pin,
         FM_BOARD_KEYBOARD_KEY_ENTER,
+        FM_PORT_GPIO_EXTI_EDGE_RISING,
         "KEY_INPUT_BRINGUP:KEY=ENTER EDGE=FALLING",
         "KEY_INPUT_BRINGUP:KEY=ENTER EDGE=RISING"
     },
     {
+        KEY_ESC_GPIO_Port,
         KEY_ESC_Pin,
         FM_BOARD_KEYBOARD_KEY_ESC,
+        FM_PORT_GPIO_EXTI_EDGE_RISING,
         "KEY_INPUT_BRINGUP:KEY=ESC EDGE=FALLING",
         "KEY_INPUT_BRINGUP:KEY=ESC EDGE=RISING"
+    },
+    {
+        EXT_BUTTON_1_GPIO_Port,
+        EXT_BUTTON_1_Pin,
+        FM_BOARD_KEYBOARD_KEY_EXT_1,
+        FM_PORT_GPIO_EXTI_EDGE_FALLING,
+        "KEY_INPUT_BRINGUP:KEY=EXT_1 EDGE=FALLING",
+        "KEY_INPUT_BRINGUP:KEY=EXT_1 EDGE=RISING"
+    },
+    {
+        EXT_BUTTON_2_GPIO_Port,
+        EXT_BUTTON_2_Pin,
+        FM_BOARD_KEYBOARD_KEY_EXT_2,
+        FM_PORT_GPIO_EXTI_EDGE_FALLING,
+        "KEY_INPUT_BRINGUP:KEY=EXT_2 EDGE=FALLING",
+        "KEY_INPUT_BRINGUP:KEY=EXT_2 EDGE=RISING"
     }
 };
 
@@ -94,15 +121,48 @@ bool FM_BOARD_KeyboardKeyFromGpioPin(uint16_t gpio_pin,
     return false;
 }
 
-static fm_board_keyboard_edge_t fm_board_keyboard_edge_from_port_(
-    fm_port_gpio_exti_edge_t edge)
+bool FM_BOARD_KeyboardIsPressed(fm_board_keyboard_key_t key,
+                                bool *p_pressed)
 {
-    if (edge == FM_PORT_GPIO_EXTI_EDGE_FALLING)
+    GPIO_PinState pin_state;
+    uint8_t index;
+
+    if (p_pressed == NULL)
     {
-        return FM_BOARD_KEYBOARD_EDGE_FALLING;
+        return false;
     }
 
-    return FM_BOARD_KEYBOARD_EDGE_RISING;
+    for (index = 0U;
+         index < (uint8_t) (sizeof(g_fm_board_keyboard_map) /
+                            sizeof(g_fm_board_keyboard_map[0]));
+         index++)
+    {
+        if (g_fm_board_keyboard_map[index].key == key)
+        {
+            pin_state = HAL_GPIO_ReadPin(
+                g_fm_board_keyboard_map[index].p_gpio_port,
+                g_fm_board_keyboard_map[index].gpio_pin);
+            *p_pressed =
+                ((pin_state == GPIO_PIN_SET) ==
+                 (g_fm_board_keyboard_map[index].pressed_edge ==
+                  FM_PORT_GPIO_EXTI_EDGE_RISING));
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static fm_board_keyboard_transition_t fm_board_keyboard_transition_from_port_(
+    const fm_board_keyboard_map_t *p_map,
+    fm_port_gpio_exti_edge_t edge)
+{
+    if ((p_map != NULL) && (edge == p_map->pressed_edge))
+    {
+        return FM_BOARD_KEYBOARD_TRANSITION_PRESSED;
+    }
+
+    return FM_BOARD_KEYBOARD_TRANSITION_RELEASED;
 }
 
 /* IRQ path: translate the board pin and defer UART formatting to fm_debug. */
@@ -110,7 +170,7 @@ static void fm_board_keyboard_on_exti_(uint16_t gpio_pin,
                                        fm_port_gpio_exti_edge_t edge)
 {
     fm_board_keyboard_callback_t p_callback;
-    fm_board_keyboard_edge_t board_edge;
+    fm_board_keyboard_transition_t transition;
     uint8_t index;
 
     for (index = 0U;
@@ -120,7 +180,8 @@ static void fm_board_keyboard_on_exti_(uint16_t gpio_pin,
     {
         if (g_fm_board_keyboard_map[index].gpio_pin == gpio_pin)
         {
-            board_edge = fm_board_keyboard_edge_from_port_(edge);
+            transition = fm_board_keyboard_transition_from_port_(
+                &g_fm_board_keyboard_map[index], edge);
             if (edge == FM_PORT_GPIO_EXTI_EDGE_FALLING)
             {
                 (void) FM_DEBUG_LogConstISR(
@@ -135,7 +196,7 @@ static void fm_board_keyboard_on_exti_(uint16_t gpio_pin,
             p_callback = g_fm_board_keyboard_callback;
             if (p_callback != NULL)
             {
-                p_callback(g_fm_board_keyboard_map[index].key, board_edge);
+                p_callback(g_fm_board_keyboard_map[index].key, transition);
             }
 
             return;

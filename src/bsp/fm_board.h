@@ -8,8 +8,8 @@
  * board-level RTC wakeup forwarding.
  *
  * `FM_BOARD_Init()` must be called before using the board services that touch
- * GPIO, USART, SPI, PCF8553 control lines, or DWT. Functions do not provide
- * internal synchronization.
+ * GPIO, USART, SPI, PCF8553 control lines, backlight, or DWT. Functions do not
+ * provide internal synchronization.
  */
 #ifndef FM_BOARD_H
 #define FM_BOARD_H
@@ -21,7 +21,8 @@
  * @brief Initialize the shared board baseline for normal apps.
  *
  * Configures clocks, debug GPIO, USART1 debug transport, SPI1 device
- * transport, PCF8553 control GPIO, and DWT cycle counting.
+ * transport, PCF8553 control GPIO, a safely-off LCD backlight, and DWT cycle
+ * counting.
  *
  * This function may call lower-layer initialization paths that stop in
  * `Error_Handler()` on unrecoverable HAL failures.
@@ -63,6 +64,12 @@ void FM_BOARD_LedRunOff(void);
 void FM_BOARD_LedSignalOn(void);
 /** @brief Turn off the signal/activity LED. Foreground use only. */
 void FM_BOARD_LedSignalOff(void);
+
+/** @brief Turn on the LCD backlight. Foreground use only. */
+void FM_BOARD_BacklightOn(void);
+
+/** @brief Turn off the LCD backlight. Foreground use only. */
+void FM_BOARD_BacklightOff(void);
 
 /**
  * @brief Transmit a buffer through the board debug UART channel.

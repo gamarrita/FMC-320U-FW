@@ -88,13 +88,14 @@ Evidence:
   `UNAVAILABLE`, `STALE`, and `INVALID`. Their distinct quality remains
   available in runtime and diagnostics, and a retained non-valid RATE value
   shall not be presented as current. The common RATE-row pattern is
-  `-------`; the normal TTL, RATE, `Lt`, slash, and second indicators remain
-  active.
+  `-------`; the normal TTL, RATE, active-unit legend, slash, and selected
+  time-base indicator remain active.
 - The initial live TTL/RATE screen shall use liters per second, following the
   current active measurement time base without a product-main override.
-- Presentation shall support the bounded `SECOND` and `MINUTE` RATE time bases
-  and their corresponding LCD indicators. `SECOND` is the initial live state;
-  retaining `MINUTE` support does not make it operator-selectable.
+- Presentation shall support `SECOND`, `MINUTE`, `HOUR`, and `DAY` RATE time
+  bases and their corresponding `S`, `M`, `H`, and `D` LCD indicators.
+  `SECOND` is the initial live state; retaining the other bases does not make
+  them operator-selectable.
 - Entry into TTL/RATE, whether caused by timeout or SHORT ESC, shall present
   the latest coherent live snapshot in one accepted transition. A provisional
   or older snapshot shall not be shown and then corrected by a second write.
@@ -102,8 +103,14 @@ Evidence:
   time base explicit.
 - Presentation shall receive accepted TTL and RATE values; it shall not own
   totalization, acquisition, filtering, or the RATE observation window.
-- When the active visible volume unit is liters, presentation shall render its
-  shared alphanumeric legend as `Lt`.
+- Presentation shall render the shared active-volume legend exhaustively as
+  `--` for `CUSTOM`, `Lt` for `L`, `M3` for `M3`, `GL` for `GAL_US`, `BR` for
+  `BBL_US`, `KG` for `KG`, and `MC` for `EQUIV_M3`. It shall not silently
+  represent one configured unit as another.
+- Configuration values shall be validated before they are applied to the
+  active model or supplied to presentation. Presentation shall not duplicate
+  configuration policy; it shall reject only unknown enum values or content
+  that cannot be rendered by the active screen.
 - ACM/RATE shall place ACM on the upper row and RATE on the lower row, reuse
   TTL/RATE unit, time-base, quality, formatting, and overflow rules, and show
   zero ACM as `0.0`.
@@ -154,9 +161,11 @@ authorization remain undecided.
 - Each physical EXT_1 or EXT_2 actuation shall produce at most one SHORT event;
   each button shall remain disarmed at boot until its released level has been
   stable for 100 ms, whether it starts released or held.
-- Every valid physical button press shall request backlight activation without
-  consuming its semantic action, and in normal operation shall restart a fixed
-  ten-second interval.
+- Every physical mechanical or external-button press edge shall request
+  backlight activation before semantic filtering, including presses that are
+  rejected, disarmed, or semantic no-ops. Activity shall not consume a
+  semantic action and each handled request shall restart a fixed ten-second
+  interval.
 - Each accepted periodic presentation event shall cause exactly one
   presentation attempt of the active user-menu screen. Entry into each of the
   five user-menu screens shall cause an immediate presentation attempt,

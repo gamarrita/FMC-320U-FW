@@ -37,7 +37,7 @@ void FM_MAIN_INPUT_RECOGNIZER_Init(
 fm_status_t FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
     fm_main_input_recognizer_t *p_recognizer,
     fm_board_keyboard_key_t key,
-    fm_board_keyboard_edge_t edge,
+    fm_board_keyboard_transition_t transition,
     fm_main_input_recognizer_output_t *p_output)
 {
     if (p_output != NULL)
@@ -51,12 +51,12 @@ fm_status_t FM_MAIN_INPUT_RECOGNIZER_HandleKeyboard(
         return FM_STATUS_EINVAL;
     }
 
-    switch (edge)
+    switch (transition)
     {
-    case FM_BOARD_KEYBOARD_EDGE_RISING:
+    case FM_BOARD_KEYBOARD_TRANSITION_PRESSED:
         return fm_main_input_recognizer_start_(p_recognizer, key, p_output);
 
-    case FM_BOARD_KEYBOARD_EDGE_FALLING:
+    case FM_BOARD_KEYBOARD_TRANSITION_RELEASED:
         return fm_main_input_recognizer_finish_(p_recognizer, key, p_output);
 
     default:
@@ -83,16 +83,16 @@ fm_status_t FM_MAIN_INPUT_RECOGNIZER_HandleHoldTimeout(
         return FM_STATUS_ESTATE;
     }
 
-    if (!FM_MAIN_INPUT_ADAPTER_EventFromBoardKey(
+    if (!FM_MAIN_INPUT_ADAPTER_InputFromBoardKey(
             p_recognizer->active_key,
             FMC_INPUT_ACTION_LONG,
-            &p_output->runtime_event))
+            &p_output->input))
     {
         return FM_STATUS_EINVAL;
     }
 
     p_recognizer->long_emitted = true;
-    p_output->runtime_event_valid = true;
+    p_output->input_valid = true;
 
     return FM_STATUS_OK;
 }
@@ -106,8 +106,9 @@ static void fm_main_input_recognizer_output_clear_(
     }
 
     p_output->timer_action = FM_MAIN_INPUT_RECOGNIZER_TIMER_NONE;
-    p_output->runtime_event_valid = false;
-    p_output->runtime_event.kind = FMC_RUNTIME_EVENT_NONE;
+    p_output->input_valid = false;
+    p_output->input.key = FMC_INPUT_KEY_COUNT;
+    p_output->input.action = FMC_INPUT_ACTION_COUNT;
 }
 
 static bool fm_main_input_recognizer_key_is_valid_(
@@ -121,6 +122,8 @@ static bool fm_main_input_recognizer_key_is_valid_(
     case FM_BOARD_KEYBOARD_KEY_ESC:
         return true;
 
+    case FM_BOARD_KEYBOARD_KEY_EXT_1:
+    case FM_BOARD_KEYBOARD_KEY_EXT_2:
     case FM_BOARD_KEYBOARD_KEY_COUNT:
     default:
         return false;
@@ -161,15 +164,15 @@ static fm_status_t fm_main_input_recognizer_finish_(
 
     if (!p_recognizer->long_emitted)
     {
-        if (!FM_MAIN_INPUT_ADAPTER_EventFromBoardKey(
+        if (!FM_MAIN_INPUT_ADAPTER_InputFromBoardKey(
                 key,
                 FMC_INPUT_ACTION_SHORT,
-                &p_output->runtime_event))
+                &p_output->input))
         {
             return FM_STATUS_EINVAL;
         }
 
-        p_output->runtime_event_valid = true;
+        p_output->input_valid = true;
     }
 
     p_recognizer->active = false;

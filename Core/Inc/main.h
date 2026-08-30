@@ -85,12 +85,20 @@ void Error_Handler(void);
 #define DBG_LED_EN_GPIO_Port GPIOD
 #define DBG_MSG_EN_Pin GPIO_PIN_2
 #define DBG_MSG_EN_GPIO_Port GPIOD
+#define EXT_BUTTON_1_Pin GPIO_PIN_3
+#define EXT_BUTTON_1_GPIO_Port GPIOD
+#define EXT_BUTTON_1_EXTI_IRQn EXTI3_IRQn
+#define EXT_BUTTON_2_Pin GPIO_PIN_4
+#define EXT_BUTTON_2_GPIO_Port GPIOD
+#define EXT_BUTTON_2_EXTI_IRQn EXTI4_IRQn
 #define LED_ERROR_Pin GPIO_PIN_5
 #define LED_ERROR_GPIO_Port GPIOB
 #define LED_ACTIVE_Pin GPIO_PIN_6
 #define LED_ACTIVE_GPIO_Port GPIOB
 #define LED_SIGNAL_Pin GPIO_PIN_7
 #define LED_SIGNAL_GPIO_Port GPIOB
+#define LCD_BACKLIGHT_Pin GPIO_PIN_0
+#define LCD_BACKLIGHT_GPIO_Port GPIOE
 
 /* USER CODE BEGIN Private defines */
 

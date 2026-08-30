@@ -158,23 +158,30 @@ void FM_DEBUG_LedSignal(fm_debug_led_state_t state);
 /**
  * @brief Record an error without an extra parameter.
  *
- * Foreground use is expected. The current implementation may also update the
- * debug error LED through the board layer.
+ * The current implementation may also update the debug error LED through the
+ * board layer.
  *
  * @param err Error code to record. `FM_DEBUG_ERR_NONE` and invalid values are
  *            ignored.
+ *
+ * @warning Foreground only. Not IRQ-safe.
  */
 void FM_DEBUG_ReportError(fm_debug_error_t err);
 
 /**
  * @brief Record an error with an extra signed parameter.
  *
- * Invalid error codes are ignored. This updates counters and queues one
- * bounded event for later flush.
+ * Invalid error codes are ignored. This updates the retained error state and,
+ * when enabled, emits one immediately correlated UART record.
  *
  * @param err Error code to record. `FM_DEBUG_ERR_NONE` and invalid values are
  *            ignored.
  * @param param Signed context value stored with the error.
+ *
+ * @note When debug messages are enabled, this emits a synchronous UART record
+ *       containing the error name, code, and parameter before asserting the
+ *       error LED. The LED and UART enable jumpers remain independent.
+ * @warning Foreground only. Not IRQ-safe.
  */
 void FM_DEBUG_ReportErrorWithParam(fm_debug_error_t err, int32_t param);
 

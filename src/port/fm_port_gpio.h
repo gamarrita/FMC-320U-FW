@@ -26,8 +26,8 @@
  * @brief   Configure debug LEDs and jumper GPIOs.
  *
  * Enables the required GPIO port clocks, configures debug LEDs as push-pull
- * outputs, drives them off, and leaves debug-enable jumper pins in analog mode
- * until sampled.
+ * outputs, drives them off, reasserts the active-low LCD backlight off, and
+ * leaves debug-enable jumper pins in analog mode until sampled.
  */
 void FM_PORT_GPIO_Init(void);
 
@@ -80,5 +80,11 @@ void FM_PORT_GPIO_LedSignalOn(void);
  * @brief   Turn off the signal LED GPIO output.
  */
 void FM_PORT_GPIO_LedSignalOff(void);
+
+/** @brief Turn on the active-low LCD backlight output. */
+void FM_PORT_GPIO_BacklightOn(void);
+
+/** @brief Turn off the active-low LCD backlight output. */
+void FM_PORT_GPIO_BacklightOff(void);
 
 #endif /* FM_PORT_GPIO_H */

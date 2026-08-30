@@ -77,6 +77,16 @@ void FM_BOARD_LedSignalOff(void)
     FM_PORT_GPIO_LedSignalOff();
 }
 
+void FM_BOARD_BacklightOn(void)
+{
+    FM_PORT_GPIO_BacklightOn();
+}
+
+void FM_BOARD_BacklightOff(void)
+{
+    FM_PORT_GPIO_BacklightOff();
+}
+
 /* Board-level debug UART path; the USART1 transport backend remains in the port layer. */
 bool FM_BOARD_DebugUartTransmit(const uint8_t *p_data, uint32_t len, uint32_t timeout_ms)
 {

@@ -20,12 +20,14 @@ void FM_MAIN_ACQUISITION_Init(fm_main_acquisition_t *p_acquisition)
 fm_status_t FM_MAIN_ACQUISITION_ProcessObservation(
     fm_main_acquisition_t *p_acquisition,
     uint16_t current_count,
-    fmc_runtime_t *p_runtime)
+    fmc_runtime_t *p_runtime,
+    uint64_t *p_pulse_delta)
 {
     fmc_runtime_event_t event;
     fm_status_t status;
 
-    if ((p_acquisition == NULL) || (p_runtime == NULL))
+    if ((p_acquisition == NULL) || (p_runtime == NULL) ||
+        (p_pulse_delta == NULL))
     {
         return FM_STATUS_EINVAL;
     }
@@ -39,8 +41,15 @@ fm_status_t FM_MAIN_ACQUISITION_ProcessObservation(
     }
 
     event.kind = FMC_RUNTIME_EVENT_PULSE_DELTA;
+    status = FMC_RUNTIME_Dispatch(p_runtime, &event);
+    if (status != FM_STATUS_OK)
+    {
+        return status;
+    }
 
-    return FMC_RUNTIME_Dispatch(p_runtime, &event);
+    *p_pulse_delta = event.data.pulse_delta;
+
+    return FM_STATUS_OK;
 }
 
 fm_status_t FM_MAIN_ACQUISITION_ProcessFrequencyObservation(

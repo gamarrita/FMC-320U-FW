@@ -26,29 +26,34 @@ typedef enum
     FM_BOARD_KEYBOARD_KEY_ENTER,
     /** Physical ESC key. */
     FM_BOARD_KEYBOARD_KEY_ESC,
+    /** Active-low external button 1. */
+    FM_BOARD_KEYBOARD_KEY_EXT_1,
+    /** Active-low external button 2. */
+    FM_BOARD_KEYBOARD_KEY_EXT_2,
     /** Number of semantic board keys; not a valid key. */
     FM_BOARD_KEYBOARD_KEY_COUNT
 } fm_board_keyboard_key_t;
 
 typedef enum
 {
-    /** Board keyboard rising edge as reported by the port EXTI adapter. */
-    FM_BOARD_KEYBOARD_EDGE_RISING = 0,
-    /** Board keyboard falling edge as reported by the port EXTI adapter. */
-    FM_BOARD_KEYBOARD_EDGE_FALLING
-} fm_board_keyboard_edge_t;
+    /** Physical control has entered its pressed state. */
+    FM_BOARD_KEYBOARD_TRANSITION_PRESSED = 0,
+    /** Physical control has entered its released state. */
+    FM_BOARD_KEYBOARD_TRANSITION_RELEASED
+} fm_board_keyboard_transition_t;
 
 /**
  * @brief Board keyboard event callback.
  *
  * @param key  Board keyboard key identity.
- * @param edge Board keyboard edge observed for that key.
+ * @param transition Physical pressed/released transition after board polarity
+ *                   translation.
  *
  * @warning Runs in IRQ context. Keep work bounded and non-blocking.
  */
 typedef void (*fm_board_keyboard_callback_t)(
     fm_board_keyboard_key_t key,
-    fm_board_keyboard_edge_t edge);
+    fm_board_keyboard_transition_t transition);
 
 /**
  * @brief Initialize the board keyboard interrupt path.
@@ -64,8 +69,9 @@ void FM_BOARD_KeyboardInit(void);
 /**
  * @brief Register the board keyboard event callback.
  *
- * The callback receives board-level key and edge values after GPIO pin mapping.
- * GPIO, HAL, and EXTI details remain hidden inside the board/port layers.
+ * The callback receives board-level key and pressed/released values after GPIO
+ * pin and active-polarity mapping. GPIO, HAL, and EXTI details remain hidden
+ * inside the board/port layers.
  *
  * @param p_callback Callback to run from the keyboard IRQ path, or `NULL` to
  *        unregister.
@@ -86,5 +92,22 @@ void FM_BOARD_KeyboardSetCallback(
  */
 bool FM_BOARD_KeyboardKeyFromGpioPin(uint16_t gpio_pin,
                                      fm_board_keyboard_key_t *p_key);
+
+/**
+ * @brief Sample whether one physical keyboard control is currently pressed.
+ *
+ * Active-high mechanical keys and active-low external buttons are normalized
+ * to the same board-level pressed state.
+ *
+ * @param key Board keyboard identity to sample.
+ * @param p_pressed Caller-owned pressed-state destination.
+ *
+ * @return `true` when @p key is valid and @p p_pressed was updated.
+ * @return `false` for an invalid key or `NULL` destination.
+ *
+ * @warning Foreground use only. The GPIO path must be initialized first.
+ */
+bool FM_BOARD_KeyboardIsPressed(fm_board_keyboard_key_t key,
+                                bool *p_pressed);
 
 #endif /* FM_BOARD_KEYBOARD_H */
