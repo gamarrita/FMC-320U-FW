@@ -99,10 +99,19 @@ static uint32_t timestamp_cycles(void)
 /* ISR-safe enqueue. Drop on full to keep latency bounded. */
 static bool enqueue_event(uint16_t code, uint16_t flags, int32_t param0, int32_t param1, const char *p_text)
 {
-    uint32_t head = evt_head;
-    uint32_t tail = evt_tail;
+    uint32_t head;
+    uint32_t tail;
+    uint32_t queued;
+    ring_entry_t *p_evt;
 
-    uint32_t queued = head - tail;
+    if (!msg_enable)
+    {
+        return true;
+    }
+
+    head = evt_head;
+    tail = evt_tail;
+    queued = head - tail;
 
     if (queued >= FM_DEBUG_EVT_CAPACITY)
     {
@@ -110,7 +119,7 @@ static bool enqueue_event(uint16_t code, uint16_t flags, int32_t param0, int32_t
         return false;
     }
 
-    ring_entry_t *p_evt = &evt_ring[head & FM_DEBUG_EVT_MASK];
+    p_evt = &evt_ring[head & FM_DEBUG_EVT_MASK];
 
     p_evt->ts_cycles = timestamp_cycles();
     p_evt->code = code;
@@ -254,7 +263,20 @@ bool FM_DEBUG_IsEnabled(void)
 
 void FM_DEBUG_RefreshJumpers(void)
 {
-    msg_enable = FM_BOARD_DebugMsgEnabled();
+    bool previous_msg_enable = msg_enable;
+    bool next_msg_enable = FM_BOARD_DebugMsgEnabled();
+
+    msg_enable = next_msg_enable;
+    if (previous_msg_enable && !next_msg_enable)
+    {
+        /*
+         * Publish the disabled policy before advancing the foreground
+         * consumer. The ISR producer then suppresses new events, while every
+         * event published under the previous policy is discarded here.
+         */
+        evt_tail = evt_head;
+    }
+
     leds_enable = FM_BOARD_DebugLedsEnabled();
 }
 
@@ -426,21 +448,24 @@ void FM_DEBUG_ReportErrorWithParam(fm_debug_error_t err, int32_t param)
     err_mask |= (1UL << (uint32_t) err);
     err_param[err] = param;
 
-    len = snprintf(flush_buffer,
-                   FM_DEBUG_FLUSH_TEXT_MAX,
-                   "[%lu] ERROR=%s CODE=%u PARAM=%ld\n",
-                   (unsigned long) timestamp_cycles(),
-                   err_str[err],
-                   (unsigned int) err,
-                   (long) param);
-    if (len > 0)
+    if (msg_enable)
     {
-        if ((uint32_t) len > FM_DEBUG_FLUSH_TEXT_MAX)
+        len = snprintf(flush_buffer,
+                       FM_DEBUG_FLUSH_TEXT_MAX,
+                       "[%lu] ERROR=%s CODE=%u PARAM=%ld\n",
+                       (unsigned long) timestamp_cycles(),
+                       err_str[err],
+                       (unsigned int) err,
+                       (long) param);
+        if (len > 0)
         {
-            len = (int) FM_DEBUG_FLUSH_TEXT_MAX;
-        }
+            if ((uint32_t) len > FM_DEBUG_FLUSH_TEXT_MAX)
+            {
+                len = (int) FM_DEBUG_FLUSH_TEXT_MAX;
+            }
 
-        fm_debug_uart_transmit_(flush_buffer, (uint32_t) len);
+            fm_debug_uart_transmit_(flush_buffer, (uint32_t) len);
+        }
     }
 
     FM_DEBUG_LedError(FM_DEBUG_LED_ON);

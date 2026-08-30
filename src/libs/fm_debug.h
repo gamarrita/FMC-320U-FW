@@ -4,7 +4,8 @@
  *
  * This module owns debug enable sampling, debug LED gating, error counters, a
  * fixed-size ISR-safe event ring, and foreground UART flushing through the
- * board debug channel.
+ * board debug channel. When UART diagnostics are disabled, event-log requests
+ * are successful no-ops and do not consume ring or timestamp resources.
  *
  * Call `FM_DEBUG_Init()` after board initialization and before using debug
  * services. ISR logging functions are bounded and never transmit directly.
@@ -101,6 +102,9 @@ void FM_DEBUG_PanicFault(const char *p_msg);
 
 /**
  * @brief Refresh cached message and LED enables from board configuration.
+ *
+ * Pending UART events are discarded when message output transitions from
+ * enabled to disabled. Error counters and LED policy are unaffected.
  *
  * Foreground use only. May sample board GPIO policy.
  */
@@ -246,8 +250,9 @@ uint32_t FM_DEBUG_TimestampCycles(void);
  *
  * @note Event transmission is deferred until FM_DEBUG_Flush().
  *
- * @return `true` when the event was queued.
- * @return `false` when the ring buffer was full.
+ * @return `true` when the event was queued, or when UART diagnostics are
+ *         disabled and the request was intentionally suppressed.
+ * @return `false` when the enabled UART event ring was full.
  */
 bool FM_DEBUG_LogISR(uint16_t code, int32_t param0);
 
@@ -260,8 +265,9 @@ bool FM_DEBUG_LogISR(uint16_t code, int32_t param0);
  *
  * @note Event transmission is deferred until FM_DEBUG_Flush().
  *
- * @return `true` when the event was queued.
- * @return `false` when the ring buffer was full.
+ * @return `true` when the event was queued, or when UART diagnostics are
+ *         disabled and the request was intentionally suppressed.
+ * @return `false` when the enabled UART event ring was full.
  */
 bool FM_DEBUG_Log2ISR(uint16_t code, int32_t param0, int32_t param1);
 
@@ -270,13 +276,19 @@ bool FM_DEBUG_Log2ISR(uint16_t code, int32_t param0, int32_t param1);
  *
  * @warning p_msg must point to persistent memory.
  *
- * @return `true` when the text event was queued.
- * @return `false` when `p_msg` is `NULL` or the ring buffer was full.
+ * @return `true` when the text event was queued, or when UART diagnostics are
+ *         disabled and the valid request was intentionally suppressed.
+ * @return `false` when `p_msg` is `NULL` or the enabled UART event ring was
+ *         full.
  */
 bool FM_DEBUG_LogConstISR(const char *p_msg);
 
 /**
- * @brief Return how many events were dropped because the ring buffer was full.
+ * @brief Return how many enabled UART events were dropped because the ring
+ *        buffer was full.
+ *
+ * Events intentionally suppressed while UART diagnostics are disabled are not
+ * counted as drops.
  *
  * @return Saturating behavior is not provided; this is the raw drop counter.
  */
