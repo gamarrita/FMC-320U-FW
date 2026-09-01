@@ -41,6 +41,25 @@ Evidence:
 - `AGENTS.md`;
 - `docs/specs/lcd/lcd_true_source.yaml`.
 
+## Screen Modeling And Contract Promotion
+
+**Accepted:** Product requirements and accepted operator behavior remain owned
+by the applicable documents under `docs/product/fmc/`. The LCD Studio project
+is an executable design proposal for screen composition, example values, and
+semantic transitions. It can initiate a screen contract, but neither the tool
+nor an exported project becomes product authority merely by existing or
+rendering successfully.
+
+A modeled screen becomes an accepted detailed contract only after explicit
+human review and a product document identifies the accepted project/schema
+revision and the declarative details it owns. Requirements that the project
+does not express remain in product documentation. In particular, simulated
+variable overrides do not define operator editing, authorization, validation,
+draft, apply, cancel, or persistence behavior.
+
+Generated catalogs and future frame/transition fixtures are derived evidence.
+Generated production firmware is not implied by accepting a screen model.
+
 This product document may state what information the operator needs to see. It
 must not duplicate COM/SEG tables, controller registers, memory bits, or
 physical routing.

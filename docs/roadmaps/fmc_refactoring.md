@@ -26,9 +26,9 @@ The remaining program follows this dependency order:
 7. Add essential acquisition through the dedicated incremental acquisition
    route.
 8. Add the minimum measurement user screens and their navigation.
-9. Add RTC/calendar behavior with its required user and configuration screens
-   and navigation.
-10. Add the minimum measurement configuration screens and their navigation.
+9. Add RTC/calendar observation, validity, and its read-only user screen.
+10. Add the common instrument-configuration interface and the approved RTC
+    and core measurement editors.
 11. Retain the approved high-change state in Backup SRAM.
 12. Persist the approved low-change configuration in Flash.
 13. Add temperature measurement as one vertical capability, including only the
@@ -47,11 +47,14 @@ into another phase; ticket printing retains its explicit Bluetooth dependency.
 This is not a requirement to complete all product documentation before
 programming: breadth comes first, then depth follows the next slice.
 
-Phases 8 and 10 are separate because operational navigation and measurement
-configuration navigation have different behavior, authorization, validation,
-and test boundaries. Phase 9 is a complete RTC/calendar vertical slice, including
-its own user and configuration screens. Phases 13 through 15 likewise do not
-defer their necessary UI to a later generic screen phase.
+Phases 8 and 10 are separate because operational navigation and configuration
+navigation have different behavior, authorization, validation, and test
+boundaries. Phase 9 completes the observable RTC/calendar path without pulling
+in non-blocking configuration. Phase 10 establishes the common instrument
+configuration interaction and includes the RTC editor with the selected core
+measurement editors. Later vertical capabilities include configuration only
+when it is required for the capability to function; optional editing remains a
+configuration-phase concern.
 
 ## Phase 1: Model And Pure Calculations
 
@@ -723,22 +726,23 @@ Exit criteria:
   out of scope;
 - acquisition and Run/Stop2 behavior show no regression.
 
-## Phase 9: RTC, Calendar, And Associated Screens
+## Phase 9: RTC Observation And Date-Time User Screen
 
 Objective:
-- add RTC/calendar as one complete vertical capability;
-- include its user screen, configuration screen, and navigation in the same
-  phase.
+- add RTC/calendar observation and validity as one bounded capability;
+- replace the DATE_TIME placeholder with its read-only user screen and preserve
+  the accepted user-menu navigation.
 
 Dependencies:
 - Phase 8 user navigation;
-- approved time display and editing use cases;
+- human-accepted `UI-MODEL-1` LCD simulator as a prototyping input;
+- an explicitly reviewed read-only DATE_TIME screen contract;
+- approved time display and invalid-time use cases;
 - available CubeMX RTC configuration as the hardware authority.
 
 Decision gates:
-- RTC validity, initialization, format, edit, and recovery behavior;
+- RTC validity, initialization, read coherence, format, and recovery behavior;
 - user-screen placement and return behavior;
-- configuration authorization, save/cancel, and invalid-time feedback;
 - backup-supply behavior before general Backup SRAM retention is introduced;
 - which later reporting, logging, or communication functions may consume time.
 
@@ -748,30 +752,33 @@ Legacy evidence:
 
 Exit criteria:
 - valid and invalid time are distinguishable;
-- approved date/time can be displayed and edited through reviewed navigation;
-- formatting, calendar boundaries, save/cancel, reset, and recovery behavior
+- approved date/time can be displayed through reviewed navigation;
+- formatting, read coherence, calendar boundaries, reset, and recovery behavior
   have focused tests and target validation;
-- RTC UI and configuration are complete inside this phase;
+- RTC editing, authorization, save/cancel, and configuration navigation remain
+  deferred to Phase 10;
 - general Backup SRAM and Flash ownership remain in Phases 11 and 12.
 
-## Phase 10: Minimum Measurement Configuration Screens And Navigation
+## Phase 10: Instrument Configuration Interface And Editors
 
 Objective:
-- add the minimum authorized configuration path required by acquisition and
-  measurement;
-- validate and apply edits to active state before persistence is introduced.
+- add the common authorized instrument-configuration path;
+- add the approved RTC and core measurement editors without persistence;
+- validate and apply edits to their owning active services.
 
 Dependencies:
 - Phase 8 operational navigation;
+- Phase 9 RTC/calendar contract for the RTC editor when RTC editing is selected;
 - approved editable measurement fields and ranges;
 - current model separation between canonical configuration and derived values.
 
 Reuse boundary:
-- if Phase 9 is already implemented, reuse its reviewed
-  configuration-navigation pattern without making RTC a prerequisite.
+- reuse the accepted UI-modeling artifacts and semantic input/display
+  contracts without coupling measurement editors to RTC state.
 
 Minimum candidate scope:
 - configuration entry or authorization screen;
+- RTC date/time editor;
 - calibration factor K;
 - ACM/TTL volume unit and resolution;
 - RATE time base and resolution;
@@ -780,6 +787,7 @@ Minimum candidate scope:
 Decision gates:
 - exact minimum field set and authorization;
 - save/cancel and invalid-edit behavior;
+- shared session/navigation mechanics versus domain-specific editor rules;
 - whether any resolution shortcut remains on an operational screen;
 - whether applied configuration remains volatile until Phases 11 and 12.
 
@@ -790,8 +798,8 @@ Legacy evidence:
   automatically.
 
 Exit criteria:
-- the approved measurement settings can be edited and applied through focused
-  configuration navigation;
+- approved RTC and measurement settings can be edited and applied through one
+  reviewed configuration interface;
 - unit and factor changes update derived TTL, ACM, and RATE consistently;
 - tests cover navigation, validation, cancel/apply, and boundary values;
 - Backup SRAM, Flash, alarms, and advanced capability settings remain out of

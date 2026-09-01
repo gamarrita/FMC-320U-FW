@@ -1,0 +1,141 @@
+schema_version: 1
+project:
+  id: fmc_320u_phase8
+  name: FMC-320U · Contrato visual Fase 8
+  device: fmc_segmented_lcd_v1
+  initial_screen: all_segments
+  description: Pantallas y navegación aceptadas al cierre de Fase 8.
+
+variables:
+  ttl_rate:
+    label: Caudal total simulado
+    type: number
+    value: 42.5
+    decimals: 1
+    unit: L/s
+  acm_rate:
+    label: Caudal acumulado simulado
+    type: number
+    value: 45.6
+    decimals: 1
+    unit: L/s
+  ttl_total:
+    label: Totalizador simulado
+    type: number
+    value: 100.0
+    decimals: 1
+    unit: L
+  acm_total:
+    label: Acumulado simulado
+    type: number
+    value: 12.3
+    decimals: 1
+    unit: L
+  pulse_point:
+    label: Indicador de pulso
+    type: boolean
+    value: true
+
+screens:
+  all_segments:
+    label: Prueba de segmentos
+    description: Enciende todo el vidrio para inspección visual.
+    frame:
+      all_segments: true
+      top: { literal: "", width: 8, align: right }
+      bottom: { literal: "", width: 7, align: right }
+      alpha: { literal: "", width: 2, align: left }
+      indicators: {}
+    interactions:
+      SHORT_ESC: firmware_version
+      SHORT_ENTER: firmware_version
+
+  firmware_version:
+    label: Versión de firmware
+    description: Identificación de versión mostrada antes del menú de usuario.
+    frame:
+      top: { literal: "", width: 8, align: right }
+      bottom: { literal: 00.01.00, width: 7, align: right }
+      alpha: { literal: B0, width: 2, align: left }
+      indicators: {}
+    interactions:
+      SHORT_ESC: ttl_flow_rate
+      SHORT_ENTER: ttl_flow_rate
+      SHORT_EXT1: ttl_flow_rate
+
+  ttl_flow_rate:
+    label: Caudal total
+    description: Pantalla principal TTL con caudal instantáneo y totalizador.
+    frame:
+      top: { variable: ttl_rate, width: 8, decimals: 1, align: right }
+      bottom: { variable: ttl_total, width: 7, decimals: 1, align: right }
+      alpha: { literal: Lt, width: 2, align: left }
+      indicators:
+        TTL: true
+        RATE: true
+        SLASH: true
+        S: true
+        POINT: pulse_point
+    interactions:
+      SHORT_DOWN: acm_flow_rate
+      SHORT_EXT1: acm_flow_rate
+      SHORT_ESC: firmware_version
+
+  acm_flow_rate:
+    label: Caudal acumulado
+    description: Pantalla ACM; las acciones de reset sólo emiten una solicitud.
+    frame:
+      top: { variable: acm_rate, width: 8, decimals: 1, align: right }
+      bottom: { variable: acm_total, width: 7, decimals: 1, align: right }
+      alpha: { literal: Lt, width: 2, align: left }
+      indicators:
+        ACM_TOP: true
+        RATE: true
+        SLASH: true
+        S: true
+        POINT: pulse_point
+    interactions:
+      SHORT_UP: ttl_flow_rate
+      SHORT_DOWN: print_status
+      SHORT_EXT1: print_status
+      SHORT_ENTER: "request:reset_acm"
+      LONG_ENTER: "request:reset_acm_confirmed"
+
+  print_status:
+    label: Estado de impresión
+    description: Placeholder de producto aceptado en Fase 8.
+    frame:
+      top: { literal: "", width: 8, align: right }
+      bottom: { literal: OFF, width: 7, align: right }
+      alpha: { literal: PR, width: 2, align: left }
+      indicators: {}
+    interactions:
+      SHORT_UP: acm_flow_rate
+      SHORT_DOWN: log_download
+      SHORT_EXT1: log_download
+
+  log_download:
+    label: Descarga de registros
+    description: Placeholder de producto aceptado en Fase 8.
+    frame:
+      top: { literal: "", width: 8, align: right }
+      bottom: { literal: OFF, width: 7, align: right }
+      alpha: { literal: LD, width: 2, align: left }
+      indicators: {}
+    interactions:
+      SHORT_UP: print_status
+      SHORT_DOWN: date_time
+      SHORT_EXT1: date_time
+
+  date_time:
+    label: Fecha y hora
+    description: Placeholder de Fase 8; la lectura real del RTC pertenece a Fase 9.
+    frame:
+      top: { literal: "", width: 8, align: right }
+      bottom: { literal: OFF, width: 7, align: right }
+      alpha: { literal: DT, width: 2, align: left }
+      indicators: {}
+    interactions:
+      SHORT_UP: log_download
+      SHORT_EXT1: ttl_flow_rate
+      SHORT_ESC: firmware_version

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fmc.local/schemas/lcd-ui-project-v1.json",
+  "title": "FMC LCD UI Project",
+  "type": "object",
+  "required": ["schema_version", "project", "screens"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "project": {
+      "type": "object",
+      "required": ["id", "name", "device", "initial_screen"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "device": { "const": "fmc_segmented_lcd_v1" },
+        "initial_screen": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "variables": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["label", "type", "value"],
+        "properties": {
+          "label": { "type": "string" },
+          "type": { "enum": ["number", "boolean", "text"] },
+          "value": {},
+          "decimals": { "type": "integer", "minimum": 0 },
+          "unit": { "type": "string" }
+        }
+      }
+    },
+    "screens": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": ["label", "frame"],
+        "properties": {
+          "label": { "type": "string" },
+          "description": { "type": "string" },
+          "frame": { "type": "object" },
+          "interactions": { "type": "object" }
+        }
+      }
+    }
+  }
+}
